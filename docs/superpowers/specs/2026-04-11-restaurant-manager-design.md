@@ -67,12 +67,12 @@ Three languages switchable on every page via a flag selector. Preference saved t
 - On save: appends rows to **Stock** tab with menu name tagged per row
 
 ### 4. Daily Sales
-- For each active menu: enter number of boxes sold + price per box (pre-filled, editable)
+- For each active menu: enter number of boxes sold + price per box (pre-filled from menu config, editable)
 - Cash total and credit card total fields
 - On save: appends to **Daily Sales** tab
 
 ### 5. Manage Stock Items
-- List of all ingredients with current quantity, unit, low-stock alert threshold
+- List of all ingredients with current quantity (computed: sum of receipt additions minus sum of stock deductions), unit, low-stock alert threshold
 - Add new ingredient: name, unit, threshold
 - Edit existing: rename, change unit or threshold
 - Delete ingredient (with confirmation)
@@ -82,6 +82,7 @@ Three languages switchable on every page via a flag selector. Preference saved t
 - List of menus (e.g. ผัดไทย, แกงเขียวหวาน, โรล)
 - Add/edit/delete menus
 - Each menu has an ingredient template list: ingredient + default quantity per pot/batch
+- Each menu has a selling price per box (€) — used to pre-fill Daily Sales
 - Ingredient template add/remove per menu
 - Menu config stored in **Config** tab in Google Sheets
 
@@ -90,7 +91,7 @@ Three languages switchable on every page via a flag selector. Preference saved t
 ## Google Sheets Structure
 
 **One spreadsheet per calendar month** (e.g. "ร้านอาหาร — เมษายน 2569").  
-Each spreadsheet has 5 tabs:
+The app auto-creates the new month's spreadsheet on first use of each month, copying the Config tab forward from the previous month. Each spreadsheet has 5 tabs:
 
 | Tab | Columns | Purpose |
 |---|---|---|
