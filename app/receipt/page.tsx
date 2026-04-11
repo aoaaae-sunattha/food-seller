@@ -54,55 +54,69 @@ export default function ReceiptPage() {
   }
 
   if (done) return (
-    <div className="text-center mt-12 space-y-4">
-      <p className="text-4xl">✅</p>
-      <p className="text-xl font-bold">{t.common.save}</p>
-      <button 
-        onClick={() => window.location.reload()}
-        className="bg-blue-600 text-white px-6 py-2 rounded-lg"
-      >
-        OK
-      </button>
+    <div className="flex flex-col items-center justify-center py-12 animate-in zoom-in-95 duration-500">
+      <div className="bg-white p-12 rounded-[3rem] shadow-xl shadow-slate-200/50 border border-slate-100 flex flex-col items-center space-y-6 text-center max-w-sm w-full">
+        <div className="w-24 h-24 bg-emerald-50 rounded-full flex items-center justify-center text-5xl shadow-inner animate-bounce">
+          ✅
+        </div>
+        <div className="space-y-2">
+          <h2 className="text-2xl font-black text-slate-800 tracking-tight">{t.common.save}</h2>
+          <p className="text-slate-400 font-medium">Receipt has been recorded successfully.</p>
+        </div>
+        <button 
+          onClick={() => window.location.reload()}
+          className="w-full bg-slate-900 text-white py-4 rounded-2xl font-black text-lg shadow-lg hover:bg-slate-800 transition-all active:scale-95"
+        >
+          Great, thanks!
+        </button>
+      </div>
     </div>
   )
 
   return (
-    <div className="space-y-6">
-      <h1 className="text-xl font-bold">{t.nav.receipt}</h1>
+    <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
+      <h1 className="text-2xl font-black text-slate-800 tracking-tight">{t.nav.receipt}</h1>
       
       {!preview ? (
-        <UploadZone onFile={handleFile} preview={preview} />
+        <div className="bg-white p-2 rounded-[2.5rem] shadow-sm border border-slate-100">
+          <UploadZone onFile={handleFile} preview={preview} />
+        </div>
       ) : (
-        <div className="space-y-4">
-          <div className="bg-white p-4 rounded-xl shadow space-y-3">
-            <div>
-              <label className="text-sm text-gray-500">{t.receipt.store}</label>
+        <div className="space-y-6">
+          <div className="bg-white p-8 rounded-[2rem] shadow-sm border border-slate-100 space-y-6">
+            <div className="space-y-2">
+              <label className="text-xs font-bold text-slate-400 uppercase tracking-widest px-1">{t.receipt.store}</label>
               <input 
-                className="w-full border rounded px-3 py-2 mt-1"
+                className="w-full border border-slate-200 rounded-2xl px-4 py-4 text-lg font-bold text-slate-800 bg-slate-50 focus:bg-white focus:ring-4 focus:ring-amber-500/10 focus:border-amber-500 outline-none transition-all shadow-inner"
                 value={store}
                 onChange={e => setStore(e.target.value)}
                 placeholder="e.g. Carrefour, Tang Frères"
               />
             </div>
             
-            {loading ? (
-              <p className="text-center py-4">{t.common.loading}</p>
-            ) : (
-              <ItemReviewTable items={items} onChange={setItems} />
-            )}
+            <div className="pt-2">
+              {loading ? (
+                <div className="text-center py-12 flex flex-col items-center gap-3">
+                  <div className="w-10 h-10 border-4 border-amber-500/20 border-t-amber-500 rounded-full animate-spin" />
+                  <p className="text-slate-400 font-bold animate-pulse">{t.common.loading}</p>
+                </div>
+              ) : (
+                <ItemReviewTable items={items} onChange={setItems} />
+              )}
+            </div>
           </div>
 
-          <div className="flex gap-3">
+          <div className="flex gap-4">
             <button 
               onClick={() => { setPreview(null); setItems([]); setStore('') }}
-              className="flex-1 bg-gray-200 py-3 rounded-xl font-bold"
+              className="flex-1 bg-white border border-slate-200 text-slate-600 py-4 rounded-2xl font-bold hover:bg-slate-50 transition-all active:scale-95"
             >
               {t.common.cancel}
             </button>
             <button 
               onClick={handleConfirm}
               disabled={loading || items.length === 0}
-              className="flex-1 bg-blue-600 text-white py-3 rounded-xl font-bold disabled:opacity-50"
+              className="flex-1 bg-amber-600 text-white py-4 rounded-2xl font-bold text-lg shadow-lg shadow-amber-600/20 hover:bg-amber-700 transition-all active:scale-95 disabled:opacity-50 disabled:active:scale-100"
             >
               {t.receipt.confirm}
             </button>

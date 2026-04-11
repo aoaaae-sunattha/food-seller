@@ -15,13 +15,15 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   const session = await getServerSession(authOptions)
   return (
     <html lang="th">
-      <body className="bg-gray-50 min-h-screen">
+      <body className="bg-slate-50 text-slate-900 min-h-screen font-sans antialiased">
         <SessionProviderWrapper session={session}>
-          <header className="flex items-center justify-between px-4 py-3 bg-white border-b">
-            <span className="font-bold text-lg">🍜 ร้านอาหาร</span>
-            <LanguageSelector />
+          <header className="sticky top-0 z-40 w-full bg-white/80 backdrop-blur-md border-b border-slate-200">
+            <div className="max-w-3xl mx-auto px-6 h-16 flex items-center justify-between">
+              <span className="font-extrabold text-xl tracking-tight text-amber-600">🍜 ร้านอาหาร</span>
+              <LanguageSelector />
+            </div>
           </header>
-          <main className="pb-24 px-4 py-4 max-w-2xl mx-auto">
+          <main className="max-w-3xl mx-auto px-6 py-8 pb-32">
             {children}
           </main>
           <NavBar />

@@ -11,15 +11,25 @@ export default function UploadZone({ onFile, preview }: Props) {
 
   return (
     <div
-      className="border-2 border-dashed border-gray-300 rounded-xl p-8 text-center cursor-pointer hover:border-blue-400 transition"
+      className="group relative border-2 border-dashed border-slate-300 rounded-3xl p-12 text-center cursor-pointer hover:border-amber-400 hover:bg-amber-50/30 transition-all duration-300"
       onClick={() => inputRef.current?.click()}
     >
       {preview ? (
-        <img src={preview} alt="receipt" className="max-h-48 mx-auto rounded" />
+        <div className="relative inline-block">
+          <img src={preview} alt="receipt" className="max-h-64 mx-auto rounded-2xl shadow-lg border-4 border-white rotate-1 group-hover:rotate-0 transition-transform" />
+          <div className="absolute -bottom-2 -right-2 bg-amber-500 text-white p-2 rounded-full shadow-md">
+            <span className="text-sm font-bold">🔄 Change</span>
+          </div>
+        </div>
       ) : (
-        <div className="space-y-2">
-          <p className="text-4xl">📷</p>
-          <p className="text-gray-500">แตะเพื่อถ่ายรูปหรือเลือกไฟล์</p>
+        <div className="space-y-4">
+          <div className="w-20 h-20 bg-slate-100 rounded-3xl flex items-center justify-center mx-auto group-hover:bg-amber-100 group-hover:scale-110 transition-all duration-300">
+            <span className="text-4xl">📷</span>
+          </div>
+          <div className="space-y-1">
+            <p className="text-lg font-black text-slate-700">Scan Receipt</p>
+            <p className="text-slate-400 text-sm font-medium">Tap to take a photo or upload</p>
+          </div>
         </div>
       )}
       <input

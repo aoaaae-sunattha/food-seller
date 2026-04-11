@@ -59,83 +59,99 @@ export default function ManageMenusPage() {
   if (loading) return <p className="text-center py-8">{t.common.loading}</p>
 
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <h1 className="text-xl font-bold">{t.manageMenus.title}</h1>
+    <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700 pb-12 text-slate-800">
+      <div className="flex justify-between items-center px-1">
+        <h1 className="text-2xl font-black tracking-tight">{t.manageMenus.title}</h1>
         <button 
           onClick={() => setShowAdd(!showAdd)}
-          className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-bold"
+          className={`px-6 py-2.5 rounded-xl text-sm font-black transition-all active:scale-95 shadow-sm ${
+            showAdd ? 'bg-white border border-slate-200 text-slate-500' : 'bg-amber-600 text-white shadow-amber-600/20'
+          }`}
         >
-          {showAdd ? t.common.cancel : t.manageMenus.add}
+          {showAdd ? t.common.cancel : `+ ${t.manageMenus.add}`}
         </button>
       </div>
 
       {showAdd && (
-        <div className="bg-white p-4 rounded-xl shadow border-2 border-blue-500 space-y-4">
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="text-[10px] text-gray-400 block font-bold uppercase">{t.manageMenus.name}</label>
+        <div className="bg-white p-8 rounded-[2rem] shadow-xl shadow-slate-200/50 border border-amber-100 space-y-6 animate-in zoom-in-95 duration-300">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-1">
+              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">{t.manageMenus.name}</label>
               <input 
-                className="w-full border rounded px-3 py-2"
+                className="w-full border border-slate-200 rounded-xl px-4 py-3 font-bold text-slate-800 bg-slate-50 focus:bg-white focus:ring-4 focus:ring-amber-500/10 focus:border-amber-500 outline-none transition-all"
                 value={newMenu.nameTh}
                 onChange={e => setNewMenu({ ...newMenu, nameTh: e.target.value })}
               />
             </div>
-            <div>
-              <label className="text-[10px] text-gray-400 block font-bold uppercase">{t.manageMenus.price}</label>
+            <div className="space-y-1">
+              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">{t.manageMenus.price}</label>
               <input 
                 type="number"
-                className="w-full border rounded px-3 py-2"
+                className="w-full border border-slate-200 rounded-xl px-4 py-3 font-bold text-slate-800 bg-slate-50 focus:bg-white focus:ring-4 focus:ring-amber-500/10 focus:border-amber-500 outline-none transition-all"
                 value={newMenu.pricePerBox}
                 onChange={e => setNewMenu({ ...newMenu, pricePerBox: Number(e.target.value) })}
               />
             </div>
           </div>
           
-          <div className="space-y-2">
-            <label className="text-[10px] text-gray-400 block font-bold uppercase">{t.manageMenus.ingredients}</label>
-            {newMenu.ingredients?.map((mi, i) => (
-              <div key={i} className="flex gap-2">
-                <select 
-                  className="flex-1 border rounded px-2 py-1 text-sm"
-                  value={mi.ingredientId}
-                  onChange={e => updateIngredient(i, { ingredientId: e.target.value })}
-                >
-                  <option value="">--</option>
-                  {ingredients.map(ing => (
-                    <option key={ing.id} value={ing.id}>{ing.nameTh}</option>
-                  ))}
-                </select>
-                <input 
-                  type="number"
-                  className="w-20 border rounded px-2 py-1 text-sm text-right"
-                  value={mi.defaultQty}
-                  onChange={e => updateIngredient(i, { defaultQty: Number(e.target.value) })}
-                />
-              </div>
-            ))}
-            <button onClick={addIngredientRow} className="text-blue-600 text-sm font-bold pt-1">+ {t.stock.addIngredient}</button>
+          <div className="space-y-3">
+            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">{t.manageMenus.ingredients}</label>
+            <div className="space-y-2">
+              {newMenu.ingredients?.map((mi, i) => (
+                <div key={i} className="flex gap-2 bg-slate-50 p-2 rounded-xl border border-slate-100">
+                  <select 
+                    className="flex-1 bg-transparent px-2 py-1 text-sm font-bold text-slate-700 outline-none"
+                    value={mi.ingredientId}
+                    onChange={e => updateIngredient(i, { ingredientId: e.target.value })}
+                  >
+                    <option value="">Choose Ingredient</option>
+                    {ingredients.map(ing => (
+                      <option key={ing.id} value={ing.id}>{ing.nameTh}</option>
+                    ))}
+                  </select>
+                  <input 
+                    type="number"
+                    className="w-24 bg-white border border-slate-200 rounded-lg px-3 py-1 text-sm text-right font-black text-amber-600 outline-none focus:border-amber-500 shadow-sm"
+                    value={mi.defaultQty}
+                    onChange={e => updateIngredient(i, { defaultQty: Number(e.target.value) })}
+                  />
+                </div>
+              ))}
+            </div>
+            <button 
+              onClick={addIngredientRow}
+              className="text-amber-600 text-xs font-black uppercase tracking-widest pt-2 flex items-center gap-1 hover:text-amber-700 transition-colors"
+            >
+              <span className="text-lg">+</span> {t.stock.addIngredient}
+            </button>
           </div>
 
           <button 
             onClick={handleAdd}
             disabled={saving || !newMenu.nameTh}
-            className="w-full bg-blue-600 text-white py-2 rounded-lg font-bold disabled:opacity-50"
+            className="w-full bg-amber-600 text-white py-4 rounded-2xl font-black text-lg shadow-lg shadow-amber-600/20 hover:bg-amber-700 transition-all active:scale-[0.98] disabled:opacity-50"
           >
-            {saving ? t.common.loading : t.common.save}
+            {saving ? (
+              <span className="flex items-center justify-center gap-2">
+                <span className="w-5 h-5 border-2 border-white/20 border-t-white rounded-full animate-spin" />
+                {t.common.loading}
+              </span>
+            ) : t.common.save}
           </button>
         </div>
       )}
 
-      <div className="bg-white rounded-xl shadow divide-y overflow-hidden">
+      <div className="bg-white rounded-[2rem] shadow-sm border border-slate-100 overflow-hidden divide-y divide-slate-50">
         {menus.map(menu => (
-          <div key={menu.id} className="p-4 flex justify-between items-center">
+          <div key={menu.id} className="p-6 flex justify-between items-center hover:bg-slate-50 transition-colors">
             <div>
-              <p className="font-bold">{menu.nameTh}</p>
-              <p className="text-xs text-gray-400">{menu.ingredients.length} ingredients · €{menu.pricePerBox}/box</p>
+              <p className="font-black text-slate-700 text-lg">{menu.nameTh}</p>
+              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                {menu.ingredients.length} ingredients · €{menu.pricePerBox}/box
+              </p>
             </div>
             <div className="text-right">
-              <span className="text-xl text-blue-600">🍜</span>
+              <div className="w-12 h-12 bg-amber-50 rounded-2xl flex items-center justify-center text-2xl">🍜</div>
             </div>
           </div>
         ))}

@@ -88,23 +88,37 @@ export default function StockDeductionPage() {
 
   if (loading) return <p className="text-center py-8">{t.common.loading}</p>
   if (done) return (
-    <div className="text-center mt-12 space-y-4">
-      <p className="text-4xl">📦</p>
-      <p className="text-xl font-bold">{t.common.save}</p>
-      <button onClick={() => window.location.reload()} className="bg-blue-600 text-white px-6 py-2 rounded-lg">OK</button>
+    <div className="flex flex-col items-center justify-center py-12 animate-in zoom-in-95 duration-500">
+      <div className="bg-white p-12 rounded-[3rem] shadow-xl shadow-slate-200/50 border border-slate-100 flex flex-col items-center space-y-6 text-center max-w-sm w-full">
+        <div className="w-24 h-24 bg-blue-50 rounded-full flex items-center justify-center text-5xl shadow-inner animate-bounce text-blue-600">
+          📦
+        </div>
+        <div className="space-y-2">
+          <h2 className="text-2xl font-black text-slate-800 tracking-tight">{t.common.save}</h2>
+          <p className="text-slate-400 font-medium">Stock levels have been adjusted successfully.</p>
+        </div>
+        <button 
+          onClick={() => window.location.reload()}
+          className="w-full bg-slate-900 text-white py-4 rounded-2xl font-black text-lg shadow-lg hover:bg-slate-800 transition-all active:scale-95"
+        >
+          Great, thanks!
+        </button>
+      </div>
     </div>
   )
 
   return (
-    <div className="space-y-6">
-      <h1 className="text-xl font-bold">{t.nav.stockDeduction}</h1>
+    <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
+      <h1 className="text-2xl font-black text-slate-800 tracking-tight">{t.nav.stockDeduction}</h1>
       
-      <section className="space-y-3">
-        <label className="text-sm text-gray-500 font-bold">{t.stock.selectMenus}</label>
-        <MenuChips menus={menus} selected={selectedMenus} onChange={setSelectedMenus} t={t} />
+      <section className="space-y-4">
+        <label className="text-xs font-bold text-slate-400 uppercase tracking-widest px-1">{t.stock.selectMenus}</label>
+        <div className="bg-white p-6 rounded-[2rem] shadow-sm border border-slate-100">
+          <MenuChips menus={menus} selected={selectedMenus} onChange={setSelectedMenus} t={t} />
+        </div>
       </section>
 
-      <section className="space-y-4 pb-12">
+      <section className="space-y-6 pb-12">
         {selectedMenus.map(menuName => (
           <IngredientSection
             key={menuName}
@@ -129,13 +143,20 @@ export default function StockDeductionPage() {
       </section>
 
       {selectedMenus.length > 0 && (
-        <button 
-          onClick={handleSave}
-          disabled={saving}
-          className="w-full bg-blue-600 text-white py-3 rounded-xl font-bold sticky bottom-4 shadow-lg disabled:opacity-50"
-        >
-          {saving ? t.common.loading : t.stock.deduct}
-        </button>
+        <div className="fixed bottom-24 left-1/2 -translate-x-1/2 w-full max-w-lg px-6 z-40">
+          <button 
+            onClick={handleSave}
+            disabled={saving}
+            className="w-full bg-amber-600 text-white py-4 rounded-2xl font-black text-lg shadow-xl shadow-amber-600/30 hover:bg-amber-700 transition-all active:scale-[0.98] disabled:opacity-50"
+          >
+            {saving ? (
+              <span className="flex items-center justify-center gap-2">
+                <span className="w-5 h-5 border-2 border-white/20 border-t-white rounded-full animate-spin" />
+                {t.common.loading}
+              </span>
+            ) : t.stock.deduct}
+          </button>
+        </div>
       )}
     </div>
   )
