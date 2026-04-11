@@ -1,5 +1,6 @@
 'use client'
-import { useState, useEffect } from 'react'
+import {  useState, useEffect  } from 'react'
+import { NumberInput } from '@/components/NumberInput'
 import { useLanguage } from '@/hooks/useLanguage'
 import type { Ingredient } from '@/types'
 
@@ -47,10 +48,11 @@ export default function ManageStockPage() {
   if (loading) return <p className="text-center py-8">{t.common.loading}</p>
 
   return (
-    <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700 pb-12 text-slate-800">
+    <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700 pb-40 text-slate-800">
       <div className="flex justify-between items-center px-1">
         <h1 className="text-2xl font-black tracking-tight">{t.manageStock.title}</h1>
         <button 
+          id="manage-stock-add-toggle"
           onClick={() => setShowAdd(!showAdd)}
           className={`px-6 py-2.5 rounded-xl text-sm font-black transition-all active:scale-95 shadow-sm ${
             showAdd ? 'bg-white border border-slate-200 text-slate-500' : 'bg-amber-600 text-white shadow-amber-600/20'
@@ -66,6 +68,7 @@ export default function ManageStockPage() {
             <div className="space-y-1">
               <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">{t.manageStock.name} (TH)</label>
               <input 
+                id="new-ing-name-th"
                 className="w-full border border-slate-200 rounded-xl px-4 py-3 font-bold text-slate-800 bg-slate-50 focus:bg-white focus:ring-4 focus:ring-amber-500/10 focus:border-amber-500 outline-none transition-all"
                 value={newIng.nameTh}
                 onChange={e => setNewIng({ ...newIng, nameTh: e.target.value })}
@@ -74,6 +77,7 @@ export default function ManageStockPage() {
             <div className="space-y-1">
               <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">{t.manageStock.name} (FR)</label>
               <input 
+                id="new-ing-name-fr"
                 className="w-full border border-slate-200 rounded-xl px-4 py-3 font-bold text-slate-800 bg-slate-50 focus:bg-white focus:ring-4 focus:ring-amber-500/10 focus:border-amber-500 outline-none transition-all"
                 value={newIng.nameFr}
                 onChange={e => setNewIng({ ...newIng, nameFr: e.target.value })}
@@ -84,22 +88,36 @@ export default function ManageStockPage() {
             <div className="space-y-1">
               <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">{t.manageStock.unit}</label>
               <input 
+                id="new-ing-unit"
+                list="master-unit-list"
                 className="w-full border border-slate-200 rounded-xl px-4 py-3 font-bold text-slate-800 bg-slate-50 focus:bg-white focus:ring-4 focus:ring-amber-500/10 focus:border-amber-500 outline-none transition-all"
                 value={newIng.unit}
                 onChange={e => setNewIng({ ...newIng, unit: e.target.value })}
               />
+              <datalist id="master-unit-list">
+                <option value="kg">Kilogram (กก.)</option>
+                <option value="g">Gram (กรัม)</option>
+                <option value="pcs">Pieces (ชิ้น)</option>
+                <option value="box">Box (กล่อง)</option>
+                <option value="bottle">Bottle (ขวด)</option>
+                <option value="l">Liter (ลิตร)</option>
+                <option value="ml">Milliliter (มล.)</option>
+                <option value="pack">Pack (แพ็ค)</option>
+                <option value="bunch">Bunch (กำ)</option>
+              </datalist>
             </div>
             <div className="space-y-1">
               <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">{t.manageStock.threshold}</label>
-              <input 
-                type="number"
+              <NumberInput 
+                id="new-ing-threshold"
                 className="w-full border border-slate-200 rounded-xl px-4 py-3 font-bold text-slate-800 bg-slate-50 focus:bg-white focus:ring-4 focus:ring-amber-500/10 focus:border-amber-500 outline-none transition-all"
-                value={newIng.threshold}
-                onChange={e => setNewIng({ ...newIng, threshold: Number(e.target.value) })}
+                value={newIng.threshold ?? 0}
+                onChange={val => setNewIng({ ...newIng, threshold: val })}
               />
             </div>
           </div>
           <button 
+            id="new-ing-save-btn"
             onClick={handleAdd}
             disabled={saving || !newIng.nameTh}
             className="w-full bg-amber-600 text-white py-4 rounded-2xl font-black text-lg shadow-lg shadow-amber-600/20 hover:bg-amber-700 transition-all active:scale-[0.98] disabled:opacity-50"
