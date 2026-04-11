@@ -1,0 +1,74 @@
+{
+  "nav": {
+    "dashboard": "หน้าหลัก",
+    "receipt": "สแกนใบเสร็จ",
+    "stockDeduction": "ตัดสต็อก",
+    "dailySales": "บันทึกยอดขาย",
+    "manageStock": "จัดการสต็อก",
+    "manageMenus": "จัดการเมนู"
+  },
+  "dashboard": {
+    "weeklyIncome": "รายได้สัปดาห์นี้",
+    "weeklyExpenses": "ค่าใช้จ่ายสัปดาห์นี้",
+    "lowStock": "สต็อกใกล้หมด"
+  },
+  "receipt": {
+    "upload": "อัปโหลดใบเสร็จ",
+    "store": "ร้านค้า",
+    "confirm": "ยืนยัน",
+    "itemFr": "ชื่อ (ฝรั่งเศส)",
+    "itemTh": "ชื่อ (ไทย)",
+    "qty": "จำนวน",
+    "unit": "หน่วย",
+    "price": "ราคา/หน่วย",
+    "total": "รวม"
+  },
+  "stock": {
+    "deduct": "ตัดสต็อก",
+    "selectMenus": "เลือกเมนูวันนี้",
+    "other": "✦ อื่นๆ",
+    "currentQty": "คงเหลือ",
+    "amountUsed": "ใช้ไป",
+    "reason": "เหตุผล",
+    "addIngredient": "+ เพิ่มวัตถุดิบ",
+    "reasons": {
+      "cooking": "ใช้ทำอาหาร",
+      "broken": "แตก/เสียหาย",
+      "expired": "เสีย",
+      "lost": "สูญหาย"
+    }
+  },
+  "sales": {
+    "title": "บันทึกยอดขาย",
+    "boxes": "กล่อง",
+    "pricePerBox": "ราคา/กล่อง",
+    "cash": "เงินสด",
+    "card": "บัตรเครดิต",
+    "save": "บันทึก"
+  },
+  "manageStock": {
+    "title": "จัดการวัตถุดิบ",
+    "add": "เพิ่มวัตถุดิบ",
+    "name": "ชื่อ",
+    "unit": "หน่วย",
+    "threshold": "แจ้งเตือนเมื่อเหลือ",
+    "delete": "ลบ",
+    "confirmDelete": "ยืนยันการลบ?"
+  },
+  "manageMenus": {
+    "title": "จัดการเมนู",
+    "add": "เพิ่มเมนู",
+    "name": "ชื่อเมนู",
+    "price": "ราคา/กล่อง (€)",
+    "ingredients": "วัตถุดิบ",
+    "defaultQty": "ปริมาณต่อหม้อ"
+  },
+  "common": {
+    "save": "บันทึก",
+    "cancel": "ยกเลิก",
+    "edit": "แก้ไข",
+    "delete": "ลบ",
+    "loading": "กำลังโหลด...",
+    "error": "เกิดข้อผิดพลาด"
+  }
+}

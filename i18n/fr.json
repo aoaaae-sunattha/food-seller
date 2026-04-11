@@ -1,0 +1,74 @@
+{
+  "nav": {
+    "dashboard": "Tableau de bord",
+    "receipt": "Scanner reçu",
+    "stockDeduction": "Déduire stock",
+    "dailySales": "Ventes du jour",
+    "manageStock": "Gérer le stock",
+    "manageMenus": "Gérer les menus"
+  },
+  "dashboard": {
+    "weeklyIncome": "Revenus cette semaine",
+    "weeklyExpenses": "Dépenses cette semaine",
+    "lowStock": "Stock faible"
+  },
+  "receipt": {
+    "upload": "Télécharger le reçu",
+    "store": "Magasin",
+    "confirm": "Confirmer",
+    "itemFr": "Nom (français)",
+    "itemTh": "Nom (thaï)",
+    "qty": "Qté",
+    "unit": "Unité",
+    "price": "Prix/unité",
+    "total": "Total"
+  },
+  "stock": {
+    "deduct": "Déduire stock",
+    "selectMenus": "Menus d'aujourd'hui",
+    "other": "✦ Autre",
+    "currentQty": "En stock",
+    "amountUsed": "Utilisé",
+    "reason": "Raison",
+    "addIngredient": "+ Ajouter ingrédient",
+    "reasons": {
+      "cooking": "Cuisine",
+      "broken": "Cassé/endommagé",
+      "expired": "Périmé",
+      "lost": "Perdu"
+    }
+  },
+  "sales": {
+    "title": "Ventes du jour",
+    "boxes": "boîtes",
+    "pricePerBox": "Prix/boîte",
+    "cash": "Espèces",
+    "card": "Carte",
+    "save": "Enregistrer"
+  },
+  "manageStock": {
+    "title": "Gérer les ingrédients",
+    "add": "Ajouter",
+    "name": "Nom",
+    "unit": "Unité",
+    "threshold": "Alerte si ≤",
+    "delete": "Supprimer",
+    "confirmDelete": "Confirmer la suppression ?"
+  },
+  "manageMenus": {
+    "title": "Gérer les menus",
+    "add": "Ajouter un menu",
+    "name": "Nom du menu",
+    "price": "Prix/boîte (€)",
+    "ingredients": "Ingrédients",
+    "defaultQty": "Qté par lot"
+  },
+  "common": {
+    "save": "Enregistrer",
+    "cancel": "Annuler",
+    "edit": "Modifier",
+    "delete": "Supprimer",
+    "loading": "Chargement...",
+    "error": "Une erreur s'est produite"
+  }
+}

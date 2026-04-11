@@ -1,0 +1,74 @@
+{
+  "nav": {
+    "dashboard": "Dashboard",
+    "receipt": "Scan Receipt",
+    "stockDeduction": "Deduct Stock",
+    "dailySales": "Daily Sales",
+    "manageStock": "Manage Stock",
+    "manageMenus": "Manage Menus"
+  },
+  "dashboard": {
+    "weeklyIncome": "Weekly Income",
+    "weeklyExpenses": "Weekly Expenses",
+    "lowStock": "Low Stock"
+  },
+  "receipt": {
+    "upload": "Upload Receipt",
+    "store": "Store",
+    "confirm": "Confirm",
+    "itemFr": "Name (French)",
+    "itemTh": "Name (Thai)",
+    "qty": "Qty",
+    "unit": "Unit",
+    "price": "Price/unit",
+    "total": "Total"
+  },
+  "stock": {
+    "deduct": "Deduct Stock",
+    "selectMenus": "Today's Menus",
+    "other": "✦ Other",
+    "currentQty": "In Stock",
+    "amountUsed": "Used",
+    "reason": "Reason",
+    "addIngredient": "+ Add Ingredient",
+    "reasons": {
+      "cooking": "Cooking",
+      "broken": "Broken/Damaged",
+      "expired": "Expired",
+      "lost": "Lost"
+    }
+  },
+  "sales": {
+    "title": "Daily Sales",
+    "boxes": "boxes",
+    "pricePerBox": "Price/box",
+    "cash": "Cash",
+    "card": "Card",
+    "save": "Save"
+  },
+  "manageStock": {
+    "title": "Manage Ingredients",
+    "add": "Add Ingredient",
+    "name": "Name",
+    "unit": "Unit",
+    "threshold": "Alert when ≤",
+    "delete": "Delete",
+    "confirm delete?": "Confirm delete?"
+  },
+  "manageMenus": {
+    "title": "Manage Menus",
+    "add": "Add Menu",
+    "name": "Menu Name",
+    "price": "Price/box (€)",
+    "ingredients": "Ingredients",
+    "defaultQty": "Qty per batch"
+  },
+  "common": {
+    "save": "Save",
+    "cancel": "Cancel",
+    "edit": "Edit",
+    "delete": "Delete",
+    "loading": "Loading...",
+    "error": "An error occurred"
+  }
+}
