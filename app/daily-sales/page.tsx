@@ -23,8 +23,9 @@ export default function DailySalesPage() {
     fetch('/api/sheets/config')
       .then(r => r.json())
       .then((data: { ingredients: any[], menus: MenuTemplate[] }) => {
-        setMenus(data.menus)
-        setMenuSales(data.menus.map((m: MenuTemplate) => ({ menu: m.nameTh, boxes: 0, pricePerBox: m.pricePerBox })))
+        const menus = data.menus ?? []
+        setMenus(menus)
+        setMenuSales(menus.map((m: MenuTemplate) => ({ menu: m.nameTh, boxes: 0, pricePerBox: m.pricePerBox })))
         setLoading(false)
       })
   }, [])

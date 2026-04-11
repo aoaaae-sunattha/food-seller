@@ -45,7 +45,7 @@ export default function DashboardPage() {
           </div>
           <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-1">{t.dashboard.weeklyIncome}</p>
           <div className="flex items-baseline gap-1">
-            <span className="text-4xl font-black text-slate-900 leading-none">€{data.weeklyIncome.toFixed(2)}</span>
+            <span className="text-4xl font-black text-slate-900 leading-none">€{(data.weeklyIncome ?? 0).toFixed(2)}</span>
           </div>
           <div className="mt-4 h-1 w-12 bg-emerald-500 rounded-full" />
         </div>
@@ -57,7 +57,7 @@ export default function DashboardPage() {
           </div>
           <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-1">{t.dashboard.weeklyExpenses}</p>
           <div className="flex items-baseline gap-1">
-            <span className="text-4xl font-black text-slate-900 leading-none">€{data.weeklyExpenses.toFixed(2)}</span>
+            <span className="text-4xl font-black text-slate-900 leading-none">€{(data.weeklyExpenses ?? 0).toFixed(2)}</span>
           </div>
           <div className="mt-4 h-1 w-12 bg-rose-500 rounded-full" />
         </div>
@@ -72,9 +72,9 @@ export default function DashboardPage() {
           </h2>
         </div>
         
-        {data.lowStock.length > 0 ? (
+        {(data.lowStock ?? []).length > 0 ? (
           <div className="divide-y divide-slate-50 px-4 pb-4">
-            {data.lowStock.map(({ ingredient, currentQty }) => {
+            {(data.lowStock ?? []).map(({ ingredient, currentQty }) => {
               const isCritical = currentQty <= 0
               return (
                 <div key={ingredient.id} className="flex justify-between items-center p-4 hover:bg-slate-50 transition-colors rounded-2xl">

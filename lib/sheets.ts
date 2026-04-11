@@ -1,4 +1,5 @@
 import { google } from 'googleapis'
+import { OAuth2Client } from 'google-auth-library'
 
 // --- Pure helpers (testable without network) ---
 
@@ -30,18 +31,24 @@ export function getSheetTitle(tab: TabKey): string {
 
 // --- Google Sheets API client ---
 
-function getAuth() {
+function getAuth(accessToken?: string) {
+  if (accessToken) {
+    const auth = new OAuth2Client()
+    auth.setCredentials({ access_token: accessToken })
+    return auth
+  }
+  // Fallback to ADC (Application Default Credentials)
   return new google.auth.GoogleAuth({
     scopes: ['https://www.googleapis.com/auth/spreadsheets', 'https://www.googleapis.com/auth/drive'],
   })
 }
 
-export function getSheetsClient() {
-  return google.sheets({ version: 'v4', auth: getAuth() })
+export function getSheetsClient(accessToken?: string) {
+  return google.sheets({ version: 'v4', auth: getAuth(accessToken) })
 }
 
-export function getDriveClient() {
-  return google.drive({ version: 'v3', auth: getAuth() })
+export function getDriveClient(accessToken?: string) {
+  return google.drive({ version: 'v3', auth: getAuth(accessToken) })
 }
 
 /**
@@ -49,9 +56,9 @@ export function getDriveClient() {
  * On first creation: adds all 5 tabs and copies Config rows from previous month.
  * Returns the spreadsheet ID.
  */
-export async function getOrCreateMonthSheet(date: Date = new Date()): Promise<string> {
-  const sheets = getSheetsClient()
-  const drive = getDriveClient()
+export async function getOrCreateMonthSheet(accessToken?: string, date: Date = new Date()): Promise<string> {
+  const sheets = getSheetsClient(accessToken)
+  const drive = getDriveClient(accessToken)
   const title = buildMonthTitle(date)
 
   // Search for existing spreadsheet with this title
@@ -121,9 +128,9 @@ export async function getOrCreateMonthSheet(date: Date = new Date()): Promise<st
 /**
  * Appends rows to a tab in the current month's spreadsheet.
  */
-export async function appendRows(tab: TabKey, rows: unknown[][]): Promise<void> {
-  const sheets = getSheetsClient()
-  const spreadsheetId = await getOrCreateMonthSheet()
+export async function appendRows(accessToken?: string, tab: TabKey, rows: unknown[][]): Promise<void> {
+  const sheets = getSheetsClient(accessToken)
+  const spreadsheetId = await getOrCreateMonthSheet(accessToken)
   await sheets.spreadsheets.values.append({
     spreadsheetId,
     range: `${TAB_NAMES[tab]}!A1`,
@@ -136,9 +143,9 @@ export async function appendRows(tab: TabKey, rows: unknown[][]): Promise<void> 
 /**
  * Reads all rows from a tab (excluding header row).
  */
-export async function readRows(tab: TabKey): Promise<string[][]> {
-  const sheets = getSheetsClient()
-  const spreadsheetId = await getOrCreateMonthSheet()
+export async function readRows(accessToken?: string, tab: TabKey): Promise<string[][]> {
+  const sheets = getSheetsClient(accessToken)
+  const spreadsheetId = await getOrCreateMonthSheet(accessToken)
   const res = await sheets.spreadsheets.values.get({
     spreadsheetId,
     range: `${TAB_NAMES[tab]}!A2:Z`,

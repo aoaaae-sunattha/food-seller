@@ -16,8 +16,8 @@ export default function ManageMenusPage() {
     fetch('/api/sheets/config')
       .then(r => r.json())
       .then(data => {
-        setMenus(data.menus)
-        setIngredients(data.ingredients)
+        setMenus(data.menus ?? [])
+        setIngredients(data.ingredients ?? [])
         setLoading(false)
       })
   }, [])

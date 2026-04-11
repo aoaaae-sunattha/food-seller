@@ -29,13 +29,15 @@ export async function POST(req: NextRequest) {
       const cmd = parseTelegramCommand(text)
 
       if (cmd?.type === 'stock') {
-        await appendRows('stock', [[date, cmd.ingredient, cmd.amount, cmd.unit, 'ใช้ทำอาหาร', 'Telegram']])
+        // Pass undefined for accessToken to use ADC fallback
+        await appendRows(undefined, 'stock', [[date, cmd.ingredient, cmd.amount, cmd.unit, 'ใช้ทำอาหาร', 'Telegram']])
         await sendTelegramMessage(chatId, `✅ ตัดสต็อก ${cmd.ingredient} ${cmd.amount} ${cmd.unit} เรียบร้อยแล้ว`)
       } else if (cmd?.type === 'sales') {
-        const configRows = await readRows('config')
+        // Pass undefined for accessToken to use ADC fallback
+        const configRows = await readRows(undefined, 'config')
         const menuRow = configRows.find(r => r[0] === 'menu' && r[2] === cmd.menu)
         const price = menuRow ? Number(menuRow[3]) : 0
-        await appendRows('sales', [[date, cmd.menu, cmd.boxes, price, cmd.boxes * price, 0, 0, cmd.boxes * price]])
+        await appendRows(undefined, 'sales', [[date, cmd.menu, cmd.boxes, price, cmd.boxes * price, 0, 0, cmd.boxes * price]])
         await sendTelegramMessage(chatId, `✅ บันทึกยอดขาย ${cmd.menu} ${cmd.boxes} กล่อง เรียบร้อยแล้ว`)
       } else if (text === '/start' || text === '/help') {
         await sendTelegramMessage(chatId, 'คำสั่งที่ใช้ได้:\n- ตัดสต็อก [ชื่อ] [จำนวน] [หน่วย]\n- ยอดขาย [ชื่อเมนู] [จำนวน] กล่อง\n- ส่งรูปใบเสร็จเพื่อสแกน')
@@ -44,20 +46,16 @@ export async function POST(req: NextRequest) {
 
     // Handle Image — receipt OCR
     if (message.photo && message.photo.length > 0) {
-      // Get the largest photo version
       const photo = message.photo[message.photo.length - 1]
       const fileId = photo.file_id
 
-      // 1. Get file path
       const fileRes = await fetch(`${TELEGRAM_API_BASE}/getFile?file_id=${fileId}`)
       const fileData = await fileRes.json()
       const filePath = fileData.result.file_path
 
-      // 2. Download file
       const imgRes = await fetch(`https://api.telegram.org/file/bot${TELEGRAM_BOT_TOKEN}/${filePath}`)
       const buffer = Buffer.from(await imgRes.arrayBuffer())
 
-      // 3. OCR
       const items = await extractReceiptItems(buffer, 'image/jpeg')
       const summary = items.map(i => `${i.nameFr} x${i.qty} = €${i.total}`).join('\n')
       

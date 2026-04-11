@@ -1,16 +1,22 @@
 import { GET, POST } from '../../app/api/sheets/stock/route'
+import { getServerSession } from 'next-auth'
 
+jest.mock('next-auth')
 jest.mock('../../lib/sheets', () => ({
   readRows: jest.fn(),
   appendRows: jest.fn().mockResolvedValue(undefined),
 }))
 
 const { readRows, appendRows } = require('../../lib/sheets')
+const mockedGetServerSession = getServerSession as jest.Mock
+
+beforeEach(() => {
+  jest.clearAllMocks()
+  mockedGetServerSession.mockResolvedValue({ accessToken: 'fake-token' })
+})
 
 test('GET returns current quantities computed from purchases minus deductions', async () => {
-  // purchases tab: date,store,item_fr,item_th,qty,unit,price,total
-  // stock tab: date,ingredient,amount_used,unit,reason,menu
-  readRows.mockImplementation((tab: string) => {
+  readRows.mockImplementation((token: string, tab: string) => {
     if (tab === 'purchases') return Promise.resolve([
       ['2026-04-01', 'Carrefour', 'Riz', 'ข้าว', '10', 'kg', '2', '20'],
     ])
@@ -23,8 +29,8 @@ test('GET returns current quantities computed from purchases minus deductions', 
   const res = await GET({} as any)
   expect(res.status).toBe(200)
   const data = await res.json()
-  // ข้าว: bought 10, used 3 → 7
   expect(data.quantities['ข้าว']).toBe(7)
+  expect(readRows).toHaveBeenCalledWith('fake-token', 'purchases')
 })
 
 test('POST appends deduction rows', async () => {
@@ -38,7 +44,7 @@ test('POST appends deduction rows', async () => {
   }
   const res = await POST(req as any)
   expect(res.status).toBe(200)
-  expect(appendRows).toHaveBeenCalledWith('stock', [
+  expect(appendRows).toHaveBeenCalledWith('fake-token', 'stock', [
     ['2026-04-11', 'ข้าว', 2, 'kg', 'ใช้ทำอาหาร', 'ผัดไทย'],
   ])
 })

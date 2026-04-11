@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { readRows } from '@/lib/sheets'
-import type { StockQuantity, Ingredient } from '@/types'
+import { readRows } from '../../../../lib/sheets'
+import type { StockQuantity, Ingredient } from '../../../../types'
+import { getServerSession } from 'next-auth'
+import { authOptions } from '@/lib/auth'
 
 function startOfWeek(date: Date): Date {
   const d = new Date(date)
@@ -13,14 +15,18 @@ function startOfWeek(date: Date): Date {
 
 export async function GET(_req: NextRequest) {
   try {
+    const session = await getServerSession(authOptions)
+    const accessToken = (session as any)?.accessToken
+    if (!accessToken) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
     const now = new Date()
     const weekStart = startOfWeek(now).toISOString().slice(0, 10)
 
     const [salesRows, purchaseRows, stockRows, configRows] = await Promise.all([
-      readRows('sales'),
-      readRows('purchases'),
-      readRows('stock'),
-      readRows('config'),
+      readRows(accessToken, 'sales'),
+      readRows(accessToken, 'purchases'),
+      readRows(accessToken, 'stock'),
+      readRows(accessToken, 'config'),
     ])
 
     // Weekly income: sum column 7 (total) for rows in this week

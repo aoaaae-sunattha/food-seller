@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { readRows, appendRows } from '@/lib/sheets'
-import type { Ingredient, MenuTemplate } from '@/types'
+import { readRows, appendRows } from '../../../../lib/sheets'
+import type { Ingredient, MenuTemplate } from '../../../../types'
 import { randomUUID } from 'crypto'
+import { getServerSession } from 'next-auth'
+import { authOptions } from '@/lib/auth'
 
 function parseConfig(rows: string[][]): { ingredients: Ingredient[]; menus: MenuTemplate[] } {
   const ingredients: Ingredient[] = []
@@ -35,7 +37,11 @@ function parseConfig(rows: string[][]): { ingredients: Ingredient[]; menus: Menu
 
 export async function GET(_req: NextRequest) {
   try {
-    const rows = await readRows('config')
+    const session = await getServerSession(authOptions)
+    const accessToken = (session as any)?.accessToken
+    if (!accessToken) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
+    const rows = await readRows(accessToken, 'config')
     return NextResponse.json(parseConfig(rows))
   } catch (error) {
     console.error('Config GET error:', error)
@@ -45,11 +51,15 @@ export async function GET(_req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   try {
+    const session = await getServerSession(authOptions)
+    const accessToken = (session as any)?.accessToken
+    if (!accessToken) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
     const body = await req.json()
     const id = randomUUID().slice(0, 8)
 
     if (body.type === 'ingredient') {
-      await appendRows('config', [[
+      await appendRows(accessToken, 'config', [[
         'ingredient', id, body.nameTh, body.nameFr, body.unit, String(body.threshold),
       ]])
       return NextResponse.json({ id })
@@ -59,7 +69,7 @@ export async function POST(req: NextRequest) {
       const ingredientStr = (body.ingredients || [])
         .map((i: { ingredientId: string; defaultQty: number }) => `${i.ingredientId}:${i.defaultQty}`)
         .join(',')
-      await appendRows('config', [[
+      await appendRows(accessToken, 'config', [[
         'menu', id, body.nameTh, String(body.pricePerBox), ingredientStr,
       ]])
       return NextResponse.json({ id })

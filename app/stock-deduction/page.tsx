@@ -21,9 +21,9 @@ export default function StockDeductionPage() {
       fetch('/api/sheets/config').then(r => r.json()),
       fetch('/api/sheets/stock').then(r => r.json()),
     ]).then(([config, stock]: [{ ingredients: Ingredient[], menus: MenuTemplate[] }, { quantities: Record<string, number> }]) => {
-      setMenus(config.menus)
-      setAllIngredients(config.ingredients)
-      setQuantities(stock.quantities)
+      setMenus(config.menus ?? [])
+      setAllIngredients(config.ingredients ?? [])
+      setQuantities(stock.quantities ?? {})
       setLoading(false)
     })
   }, [])

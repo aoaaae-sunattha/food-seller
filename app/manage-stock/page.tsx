@@ -17,8 +17,8 @@ export default function ManageStockPage() {
       fetch('/api/sheets/config').then(r => r.json()),
       fetch('/api/sheets/stock').then(r => r.json()),
     ]).then(([config, stock]) => {
-      setIngredients(config.ingredients)
-      setQuantities(stock.quantities)
+      setIngredients(config.ingredients ?? [])
+      setQuantities(stock.quantities ?? {})
       setLoading(false)
     })
   }, [])

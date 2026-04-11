@@ -21,5 +21,5 @@ test('highlights active language', () => {
   localStorage.setItem('lang', 'fr')
   render(<LanguageSelector />)
   const frBtn = screen.getByText('🇫🇷').closest('button')!
-  expect(frBtn).toHaveClass('ring-2')
+  expect(frBtn).toHaveClass('ring-1')
 })

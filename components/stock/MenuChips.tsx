@@ -19,7 +19,7 @@ export default function MenuChips({ menus, selected, onChange, t }: Props) {
 
   return (
     <div className="flex flex-wrap gap-2">
-      {menus.map(m => {
+      {(menus ?? []).map(m => {
         const isSelected = selected.includes(m.nameTh)
         return (
           <button

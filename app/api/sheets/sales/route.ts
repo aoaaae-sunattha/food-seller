@@ -1,8 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { appendRows } from '@/lib/sheets'
+import { appendRows } from '../../../../lib/sheets'
+import { getServerSession } from 'next-auth'
+import { authOptions } from '@/lib/auth'
 
 export async function POST(req: NextRequest) {
   try {
+    const session = await getServerSession(authOptions)
+    const accessToken = (session as any)?.accessToken
+    if (!accessToken) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
     const { date, menuSales, cash, card }: {
       date: string
       menuSales: { menu: string; boxes: number; pricePerBox: number }[]
@@ -15,7 +21,7 @@ export async function POST(req: NextRequest) {
       date, s.menu, s.boxes, s.pricePerBox, s.boxes * s.pricePerBox, cash, card, total,
     ])
 
-    await appendRows('sales', rows)
+    await appendRows(accessToken, 'sales', rows)
     return NextResponse.json({ ok: true })
   } catch (error) {
     console.error('Sales POST error:', error)
