@@ -1,5 +1,6 @@
 'use client'
 import { useEffect, useState } from 'react'
+import Link from 'next/link'
 import { useLanguage } from '@/hooks/useLanguage'
 import type { DashboardData } from '@/types'
 
@@ -7,6 +8,14 @@ export default function DashboardPage() {
   const { t } = useLanguage()
   const [data, setData] = useState<DashboardData | null>(null)
   const [loading, setLoading] = useState(true)
+
+  const QUICK_ACTIONS = [
+    { href: '/receipt',         icon: '🧾', color: 'bg-amber-50 text-amber-600 border-amber-100', id: 'nav-card-receipt',        key: 'receipt'        },
+    { href: '/stock-deduction', icon: '📦', color: 'bg-indigo-50 text-indigo-600 border-indigo-100', id: 'nav-card-stock-deduction', key: 'stockDeduction' },
+    { href: '/daily-sales',     icon: '💰', color: 'bg-emerald-50 text-emerald-600 border-emerald-100', id: 'nav-card-daily-sales',     key: 'dailySales'     },
+    { href: '/manage-stock',    icon: '🗂️', color: 'bg-slate-50 text-slate-600 border-slate-100', id: 'nav-card-manage-stock',    key: 'manageStock'    },
+    { href: '/manage-menus',    icon: '🍜', color: 'bg-rose-50 text-rose-600 border-rose-100', id: 'nav-card-manage-menus',    key: 'manageMenus'    },
+  ] as const
 
   useEffect(() => {
     fetch('/api/sheets/dashboard')
@@ -61,6 +70,25 @@ export default function DashboardPage() {
           </div>
           <div className="mt-4 h-1 w-12 bg-rose-500 rounded-full" />
         </div>
+      </div>
+
+      {/* Quick Actions Grid */}
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+        {QUICK_ACTIONS.map((action) => (
+          <Link
+            key={action.href}
+            href={action.href}
+            id={action.id}
+            className={`group p-6 rounded-[2rem] bg-white border border-slate-100 shadow-sm shadow-slate-200/50 hover:shadow-md hover:border-amber-200/50 transition-all flex flex-col items-center text-center gap-3`}
+          >
+            <span className={`text-3xl p-3 rounded-2xl border ${action.color} group-hover:scale-110 transition-transform`}>
+              {action.icon}
+            </span>
+            <span className="text-[11px] font-black text-slate-500 uppercase tracking-wider leading-tight">
+              {t.nav[action.key]}
+            </span>
+          </Link>
+        ))}
       </div>
 
       {/* Low Stock Alerts */}
