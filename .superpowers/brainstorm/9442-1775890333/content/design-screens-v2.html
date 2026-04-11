@@ -1,0 +1,63 @@
+<h2>Section 2 (updated) — Deduct Stock Screen</h2>
+<p class="subtitle">Added reason field for each adjustment</p>
+
+<div style="max-width:500px;margin:0 auto">
+  <div class="mockup">
+    <div class="mockup-header">2. ตัดสต็อก (Stock Adjustment)</div>
+    <div class="mockup-body" style="padding:16px;font-size:0.85em">
+      <div style="color:var(--text-muted);font-size:0.8em;margin-bottom:8px">เลือกวัตถุดิบและเหตุผล</div>
+
+      <!-- Row 1 -->
+      <div style="background:var(--surface-raised);border-radius:8px;padding:12px;margin-bottom:8px">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+          <span style="flex:1;font-weight:500">ข้าว (Riz)</span>
+          <span style="color:var(--text-muted);font-size:0.8em">เหลือ 4.2 kg</span>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+          <div>
+            <div style="font-size:0.75em;color:var(--text-muted);margin-bottom:3px">จำนวน (Amount)</div>
+            <input class="mock-input" style="width:100%;text-align:center" placeholder="kg">
+          </div>
+          <div>
+            <div style="font-size:0.75em;color:var(--text-muted);margin-bottom:3px">เหตุผล (Reason)</div>
+            <select class="mock-input" style="width:100%">
+              <option>🍳 ใช้ทำอาหาร</option>
+              <option>💔 แตก/เสียหาย</option>
+              <option>🗑️ เสีย (expired)</option>
+              <option>❓ สูญหาย</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <!-- Row 2 -->
+      <div style="background:var(--surface-raised);border-radius:8px;padding:12px;margin-bottom:8px">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+          <span style="flex:1;font-weight:500">ไข่ (Oeufs)</span>
+          <span style="color:var(--text-muted);font-size:0.8em">เหลือ 8 ฟอง</span>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+          <div>
+            <div style="font-size:0.75em;color:var(--text-muted);margin-bottom:3px">จำนวน (Amount)</div>
+            <input class="mock-input" style="width:100%;text-align:center" placeholder="ฟอง">
+          </div>
+          <div>
+            <div style="font-size:0.75em;color:var(--text-muted);margin-bottom:3px">เหตุผล (Reason)</div>
+            <select class="mock-input" style="width:100%">
+              <option>🍳 ใช้ทำอาหาร</option>
+              <option selected>💔 แตก/เสียหาย</option>
+              <option>🗑️ เสีย (expired)</option>
+              <option>❓ สูญหาย</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <button class="mock-button" style="width:100%;padding:12px;margin-top:4px">บันทึกการตัดสต็อก</button>
+
+      <div style="margin-top:12px;padding:10px;background:#60a5fa11;border:1px solid #60a5fa44;border-radius:8px;font-size:0.8em;color:var(--text-muted)">
+        ℹ️ ทุกการตัดสต็อกจะบันทึกเหตุผลใน Google Sheets — ใช้ดูรายงานสูญเสียรายเดือนได้
+      </div>
+    </div>
+  </div>
+</div>

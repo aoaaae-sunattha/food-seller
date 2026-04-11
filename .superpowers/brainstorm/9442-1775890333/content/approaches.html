@@ -1,0 +1,42 @@
+<h2>3 Approaches to Build This System</h2>
+<p class="subtitle">All use Next.js + Google Sheets. The difference is scope and complexity.</p>
+
+<div class="options">
+  <div class="option" data-choice="a" onclick="toggleSelect(this)">
+    <div class="letter">A</div>
+    <div class="content">
+      <h3>⭐ Smart Receipt App + Simple Forms <span style="font-size:0.75em;background:#22c55e;color:white;padding:2px 8px;border-radius:12px;margin-left:8px">Recommended</span></h3>
+      <p>Next.js web app (tablet-optimized, Thai UI). 4 screens: Upload Receipt, Deduct Stock, Record Daily Sales, Settlement. Receipt photo → AI (Claude Vision) extracts items + prices → user confirms → saved to Google Sheets. Manual forms for stock deduction and end-of-day. Sheets has tabs: Purchases, Stock, Daily Sales.</p>
+      <div class="pros-cons" style="margin-top:12px">
+        <div class="pros"><h4>Pros</h4><ul><li>Build in 2–3 weeks</li><li>AI receipt scanning saves time</li><li>She can edit Sheets directly if needed</li><li>Low maintenance</li></ul></div>
+        <div class="cons"><h4>Cons</h4><ul><li>No automatic cost-per-dish calculation (manual estimate)</li><li>No real-time stock alerts</li></ul></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="option" data-choice="b" onclick="toggleSelect(this)">
+    <div class="letter">B</div>
+    <div class="content">
+      <h3>Mini POS with Recipe Engine</h3>
+      <p>Everything in option A, plus: define each dish as a recipe (e.g. Pad Thai = 200g noodles + 2 eggs + …). When she records how many boxes sold, the system auto-deducts ingredients from stock and calculates exact cost per box. More structured data.</p>
+      <div class="pros-cons" style="margin-top:12px">
+        <div class="pros"><h4>Pros</h4><ul><li>Accurate cost-per-dish</li><li>Auto stock deduction from sales</li><li>Real profitability tracking</li></ul></div>
+        <div class="cons"><h4>Cons</h4><ul><li>4–6 weeks to build</li><li>Recipes must be set up correctly upfront</li><li>More complex to maintain</li></ul></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="option" data-choice="c" onclick="toggleSelect(this)">
+    <div class="letter">C</div>
+    <div class="content">
+      <h3>Google Sheets + Apps Script Only</h3>
+      <p>No custom web app. A Google Apps Script handles receipt uploads via a Google Form. All logic (stock updates, expense tracking) runs inside Google's ecosystem. Share the spreadsheet with her accountant directly.</p>
+      <div class="pros-cons" style="margin-top:12px">
+        <div class="pros"><h4>Pros</h4><ul><li>Zero hosting cost</li><li>Accountant-friendly</li><li>No deployment needed</li></ul></div>
+        <div class="cons"><h4>Cons</h4><ul><li>No AI receipt scanning</li><li>Clunky on tablet</li><li>Hard to extend later</li></ul></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<p style="margin-top:20px;color:var(--text-muted);font-size:0.9em">My recommendation: Start with <strong>Option A</strong>. It solves 90% of her pain immediately. If she needs recipe-based cost tracking later, that's an upgrade path — not a rebuild.</p>

@@ -1,0 +1,102 @@
+<h2>ตัดสต็อก — แยกตามเมนู (Separated by Menu)</h2>
+<p class="subtitle">Each menu has its own ingredient section — easy to manage and report</p>
+
+<div style="max-width:600px;margin:0 auto">
+  <div class="mockup">
+    <div class="mockup-header">2. ตัดสต็อก — เริ่มจากเมนูวันนี้</div>
+    <div class="mockup-body" style="padding:16px;font-size:0.85em">
+
+      <!-- Menu selector -->
+      <div style="margin-bottom:16px">
+        <div style="font-size:0.8em;color:var(--text-muted);margin-bottom:6px">เลือกเมนูที่ทำวันนี้</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <div style="padding:8px 14px;border-radius:20px;border:2px solid var(--accent);background:#60a5fa22;cursor:pointer;font-size:0.9em">🍜 ผัดไทย ✓</div>
+          <div style="padding:8px 14px;border-radius:20px;border:2px solid var(--accent);background:#60a5fa22;cursor:pointer;font-size:0.9em">🍛 แกงเขียวหวาน ✓</div>
+          <div style="padding:8px 14px;border-radius:20px;border:1px solid var(--border);cursor:pointer;font-size:0.9em">🌯 โรล</div>
+        </div>
+      </div>
+
+      <div style="border-top:1px solid var(--border);padding-top:12px"></div>
+
+      <!-- SECTION: ผัดไทย -->
+      <div style="margin-bottom:16px">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+          <div style="display:flex;align-items:center;gap:8px">
+            <span style="font-size:1.1em">🍜</span>
+            <span style="font-weight:600">ผัดไทย</span>
+            <span style="font-size:0.75em;background:#60a5fa22;color:#60a5fa;border-radius:10px;padding:2px 8px;border:1px solid #60a5fa44">3 รายการ</span>
+          </div>
+          <span style="font-size:0.8em;color:var(--accent);cursor:pointer">▼ ย่อ</span>
+        </div>
+
+        <div style="display:flex;flex-direction:column;gap:6px;padding-left:8px;border-left:2px solid #60a5fa44">
+          <div style="display:flex;align-items:center;gap:8px;background:var(--surface-raised);border-radius:8px;padding:10px">
+            <div style="flex:1"><div style="font-weight:500">เส้นผัดไทย</div><div style="font-size:0.75em;color:var(--text-muted)">เหลือ 800 g</div></div>
+            <input class="mock-input" style="width:65px;text-align:center" value="500">
+            <span style="font-size:0.8em;color:var(--text-muted);width:20px">g</span>
+            <select class="mock-input" style="width:115px;font-size:0.8em"><option>🍳 ใช้ทำอาหาร</option><option>💔 แตก/เสียหาย</option><option>🗑️ เสีย</option><option>❓ สูญหาย</option></select>
+            <button style="background:none;border:none;cursor:pointer;color:#ef4444;font-size:1em">✕</button>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;background:var(--surface-raised);border-radius:8px;padding:10px">
+            <div style="flex:1"><div style="font-weight:500">ไข่</div><div style="font-size:0.75em;color:var(--text-muted)">เหลือ 8 ฟอง</div></div>
+            <input class="mock-input" style="width:65px;text-align:center" value="6">
+            <span style="font-size:0.8em;color:var(--text-muted);width:20px">ฟอง</span>
+            <select class="mock-input" style="width:115px;font-size:0.8em"><option>🍳 ใช้ทำอาหาร</option><option>💔 แตก/เสียหาย</option><option>🗑️ เสีย</option><option>❓ สูญหาย</option></select>
+            <button style="background:none;border:none;cursor:pointer;color:#ef4444;font-size:1em">✕</button>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;background:var(--surface-raised);border-radius:8px;padding:10px">
+            <div style="flex:1"><div style="font-weight:500">น้ำปลา</div><div style="font-size:0.75em;color:var(--text-muted)">เหลือ 0.3 L</div></div>
+            <input class="mock-input" style="width:65px;text-align:center" value="30">
+            <span style="font-size:0.8em;color:var(--text-muted);width:20px">mL</span>
+            <select class="mock-input" style="width:115px;font-size:0.8em"><option>🍳 ใช้ทำอาหาร</option><option>💔 แตก/เสียหาย</option><option>🗑️ เสีย</option><option>❓ สูญหาย</option></select>
+            <button style="background:none;border:none;cursor:pointer;color:#ef4444;font-size:1em">✕</button>
+          </div>
+          <div style="display:flex;align-items:center;gap:6px;border:1px dashed var(--border);border-radius:8px;padding:8px;cursor:pointer;color:var(--accent);font-size:0.85em">
+            + เพิ่มวัตถุดิบใน ผัดไทย
+          </div>
+        </div>
+      </div>
+
+      <!-- SECTION: แกงเขียวหวาน -->
+      <div style="margin-bottom:16px">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+          <div style="display:flex;align-items:center;gap:8px">
+            <span style="font-size:1.1em">🍛</span>
+            <span style="font-weight:600">แกงเขียวหวาน</span>
+            <span style="font-size:0.75em;background:#4ade8022;color:#4ade80;border-radius:10px;padding:2px 8px;border:1px solid #4ade8044">3 รายการ</span>
+          </div>
+          <span style="font-size:0.8em;color:var(--accent);cursor:pointer">▼ ย่อ</span>
+        </div>
+
+        <div style="display:flex;flex-direction:column;gap:6px;padding-left:8px;border-left:2px solid #4ade8044">
+          <div style="display:flex;align-items:center;gap:8px;background:var(--surface-raised);border-radius:8px;padding:10px">
+            <div style="flex:1"><div style="font-weight:500">ไก่</div><div style="font-size:0.75em;color:var(--text-muted)">เหลือ 2.1 kg</div></div>
+            <input class="mock-input" style="width:65px;text-align:center" value="1.5">
+            <span style="font-size:0.8em;color:var(--text-muted);width:20px">kg</span>
+            <select class="mock-input" style="width:115px;font-size:0.8em"><option>🍳 ใช้ทำอาหาร</option><option>💔 แตก/เสียหาย</option><option>🗑️ เสีย</option><option>❓ สูญหาย</option></select>
+            <button style="background:none;border:none;cursor:pointer;color:#ef4444;font-size:1em">✕</button>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;background:var(--surface-raised);border-radius:8px;padding:10px">
+            <div style="flex:1"><div style="font-weight:500">กะทิ</div><div style="font-size:0.75em;color:var(--text-muted)">เหลือ 1.2 L</div></div>
+            <input class="mock-input" style="width:65px;text-align:center" value="400">
+            <span style="font-size:0.8em;color:var(--text-muted);width:20px">mL</span>
+            <select class="mock-input" style="width:115px;font-size:0.8em"><option>🍳 ใช้ทำอาหาร</option><option>💔 แตก/เสียหาย</option><option>🗑️ เสีย</option><option>❓ สูญหาย</option></select>
+            <button style="background:none;border:none;cursor:pointer;color:#ef4444;font-size:1em">✕</button>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;background:var(--surface-raised);border-radius:8px;padding:10px">
+            <div style="flex:1"><div style="font-weight:500">น้ำปลา</div><div style="font-size:0.75em;color:var(--text-muted)">เหลือ 0.3 L</div></div>
+            <input class="mock-input" style="width:65px;text-align:center" value="40">
+            <span style="font-size:0.8em;color:var(--text-muted);width:20px">mL</span>
+            <select class="mock-input" style="width:115px;font-size:0.8em"><option>🍳 ใช้ทำอาหาร</option><option>💔 แตก/เสียหาย</option><option>🗑️ เสีย</option><option>❓ สูญหาย</option></select>
+            <button style="background:none;border:none;cursor:pointer;color:#ef4444;font-size:1em">✕</button>
+          </div>
+          <div style="display:flex;align-items:center;gap:6px;border:1px dashed var(--border);border-radius:8px;padding:8px;cursor:pointer;color:var(--accent);font-size:0.85em">
+            + เพิ่มวัตถุดิบใน แกงเขียวหวาน
+          </div>
+        </div>
+      </div>
+
+      <button class="mock-button" style="width:100%;padding:12px">บันทึกการตัดสต็อก</button>
+    </div>
+  </div>
+</div>

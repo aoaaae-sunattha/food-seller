@@ -1,8 +1,8 @@
 type StockCommand = { type: 'stock'; ingredient: string; amount: number; unit: string }
 type SalesCommand = { type: 'sales'; menu: string; boxes: number }
-export type LineCommand = StockCommand | SalesCommand | null
+export type TelegramCommand = StockCommand | SalesCommand | null
 
-export function parseLineCommand(text: string): LineCommand {
+export function parseTelegramCommand(text: string): TelegramCommand {
   // ตัดสต็อก <ingredient> <amount> <unit>
   const stockMatch = text.match(/^ตัดสต็อก\s+(.+?)\s+(\d+(?:\.\d+)?)\s+(\S+)$/)
   if (stockMatch) {

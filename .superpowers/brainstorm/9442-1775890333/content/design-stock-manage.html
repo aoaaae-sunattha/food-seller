@@ -1,0 +1,86 @@
+<h2>Screen 5 — จัดการสต็อก (Manage Stock Items)</h2>
+<p class="subtitle">Add, edit, or remove ingredients from the master list</p>
+
+<div style="max-width:600px;margin:0 auto">
+  <div class="mockup">
+    <div class="mockup-header">จัดการรายการวัตถุดิบ</div>
+    <div class="mockup-body" style="padding:16px;font-size:0.85em">
+
+      <!-- Add new item -->
+      <div style="background:#4ade8011;border:1px solid #4ade8044;border-radius:8px;padding:12px;margin-bottom:16px">
+        <div style="font-size:0.8em;color:var(--text-muted);margin-bottom:8px;font-weight:500">+ เพิ่มวัตถุดิบใหม่</div>
+        <div style="display:grid;grid-template-columns:2fr 1fr 1fr;gap:8px;margin-bottom:8px">
+          <div>
+            <div style="font-size:0.75em;color:var(--text-muted);margin-bottom:3px">ชื่อ (Name)</div>
+            <input class="mock-input" style="width:100%" placeholder="เช่น น้ำมันหอย">
+          </div>
+          <div>
+            <div style="font-size:0.75em;color:var(--text-muted);margin-bottom:3px">หน่วย (Unit)</div>
+            <select class="mock-input" style="width:100%">
+              <option>kg</option>
+              <option>g</option>
+              <option>L</option>
+              <option>mL</option>
+              <option>ชิ้น</option>
+              <option>ฟอง</option>
+              <option>ขวด</option>
+              <option>ถุง</option>
+            </select>
+          </div>
+          <div>
+            <div style="font-size:0.75em;color:var(--text-muted);margin-bottom:3px">แจ้งเตือนเมื่อเหลือ</div>
+            <input class="mock-input" style="width:100%" placeholder="0.5">
+          </div>
+        </div>
+        <button class="mock-button" style="width:100%;padding:10px">+ เพิ่ม</button>
+      </div>
+
+      <!-- Existing items list -->
+      <div style="font-size:0.8em;color:var(--text-muted);margin-bottom:8px">รายการวัตถุดิบทั้งหมด (5 รายการ)</div>
+
+      <div style="display:flex;flex-direction:column;gap:6px">
+
+        <div style="display:flex;align-items:center;gap:8px;background:var(--surface-raised);border-radius:8px;padding:10px">
+          <div style="flex:2">
+            <div style="font-weight:500">ข้าว (Riz)</div>
+            <div style="font-size:0.75em;color:var(--text-muted)">หน่วย: kg · แจ้งเตือนเมื่อเหลือ &lt; 1 kg</div>
+          </div>
+          <div style="font-size:0.85em;color:#4ade80">เหลือ 4.2 kg</div>
+          <button class="mock-button" style="padding:6px 12px;font-size:0.8em;background:transparent;border:1px solid var(--border)">✏️</button>
+          <button class="mock-button" style="padding:6px 12px;font-size:0.8em;background:transparent;border:1px solid #ef444444;color:#ef4444">🗑️</button>
+        </div>
+
+        <div style="display:flex;align-items:center;gap:8px;background:var(--surface-raised);border-radius:8px;padding:10px">
+          <div style="flex:2">
+            <div style="font-weight:500">ไก่ (Poulet)</div>
+            <div style="font-size:0.75em;color:var(--text-muted)">หน่วย: kg · แจ้งเตือนเมื่อเหลือ &lt; 0.5 kg</div>
+          </div>
+          <div style="font-size:0.85em;color:#4ade80">เหลือ 2.1 kg</div>
+          <button class="mock-button" style="padding:6px 12px;font-size:0.8em;background:transparent;border:1px solid var(--border)">✏️</button>
+          <button class="mock-button" style="padding:6px 12px;font-size:0.8em;background:transparent;border:1px solid #ef444444;color:#ef4444">🗑️</button>
+        </div>
+
+        <div style="display:flex;align-items:center;gap:8px;background:var(--surface-raised);border-radius:8px;padding:10px">
+          <div style="flex:2">
+            <div style="font-weight:500">ไข่ (Oeufs)</div>
+            <div style="font-size:0.75em;color:var(--text-muted)">หน่วย: ฟอง · แจ้งเตือนเมื่อเหลือ &lt; 6 ฟอง</div>
+          </div>
+          <div style="font-size:0.85em;color:#f59e0b">เหลือ 3 ฟอง ⚠️</div>
+          <button class="mock-button" style="padding:6px 12px;font-size:0.8em;background:transparent;border:1px solid var(--border)">✏️</button>
+          <button class="mock-button" style="padding:6px 12px;font-size:0.8em;background:transparent;border:1px solid #ef444444;color:#ef4444">🗑️</button>
+        </div>
+
+        <div style="display:flex;align-items:center;gap:8px;background:var(--surface-raised);border-radius:8px;padding:10px">
+          <div style="flex:2">
+            <div style="font-weight:500">น้ำปลา (Sauce poisson)</div>
+            <div style="font-size:0.75em;color:var(--text-muted)">หน่วย: L · แจ้งเตือนเมื่อเหลือ &lt; 0.2 L</div>
+          </div>
+          <div style="font-size:0.85em;color:#ef4444">เหลือ 0.1 L 🔴</div>
+          <button class="mock-button" style="padding:6px 12px;font-size:0.8em;background:transparent;border:1px solid var(--border)">✏️</button>
+          <button class="mock-button" style="padding:6px 12px;font-size:0.8em;background:transparent;border:1px solid #ef444444;color:#ef4444">🗑️</button>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>

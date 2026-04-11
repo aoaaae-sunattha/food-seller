@@ -1,0 +1,115 @@
+<h2>Design — Section 2: The 4 Screens</h2>
+<p class="subtitle">Tablet-optimized, Thai UI, large touch targets</p>
+
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-top:16px">
+
+  <!-- Screen 1: Upload Receipt -->
+  <div class="mockup">
+    <div class="mockup-header">1. อัพโหลดใบเสร็จ (Upload Receipt)</div>
+    <div class="mockup-body" style="padding:16px;font-size:0.85em">
+      <div style="border:2px dashed var(--border);border-radius:8px;padding:24px;text-align:center;margin-bottom:12px;background:var(--surface-raised)">
+        <div style="font-size:2em">📷</div>
+        <div>ถ่ายรูปหรืออัพโหลดใบเสร็จ</div>
+        <div style="color:var(--text-muted);font-size:0.85em">tap to take photo / upload</div>
+      </div>
+      <div style="background:var(--surface-raised);border-radius:8px;padding:12px;margin-bottom:8px">
+        <div style="color:var(--text-muted);font-size:0.8em;margin-bottom:6px">AI ดึงข้อมูลอัตโนมัติ (AI extracts):</div>
+        <div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid var(--border)"><span>Poulet (ไก่)</span><span>€ 8.50</span></div>
+        <div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid var(--border)"><span>Riz (ข้าว) 5kg</span><span>€ 12.00</span></div>
+        <div style="display:flex;justify-content:space-between;padding:4px 0"><span>Oeufs (ไข่) x12</span><span>€ 3.20</span></div>
+      </div>
+      <button class="mock-button" style="width:100%;padding:12px;font-size:1em">✓ ยืนยันและบันทึก</button>
+    </div>
+  </div>
+
+  <!-- Screen 2: Deduct Stock -->
+  <div class="mockup">
+    <div class="mockup-header">2. ตัดสต็อก (Deduct Stock)</div>
+    <div class="mockup-body" style="padding:16px;font-size:0.85em">
+      <div style="color:var(--text-muted);font-size:0.8em;margin-bottom:8px">เลือกวัตถุดิบที่ใช้วันนี้</div>
+      <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:12px">
+        <div style="display:flex;align-items:center;gap:8px;background:var(--surface-raised);border-radius:8px;padding:10px">
+          <span style="flex:1">ข้าว (Riz)</span>
+          <span style="color:var(--text-muted);font-size:0.8em">เหลือ 4.2kg</span>
+          <input class="mock-input" style="width:70px;text-align:center" placeholder="ใช้ kg">
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;background:var(--surface-raised);border-radius:8px;padding:10px">
+          <span style="flex:1">ไก่ (Poulet)</span>
+          <span style="color:var(--text-muted);font-size:0.8em">เหลือ 2.1kg</span>
+          <input class="mock-input" style="width:70px;text-align:center" placeholder="ใช้ kg">
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;background:var(--surface-raised);border-radius:8px;padding:10px">
+          <span style="flex:1">ไข่ (Oeufs)</span>
+          <span style="color:var(--text-muted);font-size:0.8em">เหลือ 8 ฟอง</span>
+          <input class="mock-input" style="width:70px;text-align:center" placeholder="ใช้ฟอง">
+        </div>
+      </div>
+      <button class="mock-button" style="width:100%;padding:12px">บันทึกการใช้วัตถุดิบ</button>
+    </div>
+  </div>
+
+  <!-- Screen 3: Daily Sales -->
+  <div class="mockup">
+    <div class="mockup-header">3. บันทึกยอดขาย (Daily Sales)</div>
+    <div class="mockup-body" style="padding:16px;font-size:0.85em">
+      <div style="color:var(--text-muted);font-size:0.8em;margin-bottom:8px">จำนวนกล่องที่ขายวันนี้</div>
+      <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:12px">
+        <div style="display:flex;align-items:center;gap:8px;background:var(--surface-raised);border-radius:8px;padding:10px">
+          <span style="flex:1">🍜 ผัดไทย</span>
+          <input class="mock-input" style="width:70px;text-align:center" placeholder="กล่อง">
+          <span style="color:var(--text-muted);font-size:0.8em">× €8</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;background:var(--surface-raised);border-radius:8px;padding:10px">
+          <span style="flex:1">🍛 แกงเขียวหวาน</span>
+          <input class="mock-input" style="width:70px;text-align:center" placeholder="กล่อง">
+          <span style="color:var(--text-muted);font-size:0.8em">× €9</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;background:var(--surface-raised);border-radius:8px;padding:10px">
+          <span style="flex:1">🌯 โรล</span>
+          <input class="mock-input" style="width:70px;text-align:center" placeholder="กล่อง">
+          <span style="color:var(--text-muted);font-size:0.8em">× €6</span>
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px">
+        <div>
+          <div style="font-size:0.8em;color:var(--text-muted);margin-bottom:4px">💵 เงินสด</div>
+          <input class="mock-input" style="width:100%;text-align:right" placeholder="€ 0.00">
+        </div>
+        <div>
+          <div style="font-size:0.8em;color:var(--text-muted);margin-bottom:4px">💳 บัตรเครดิต</div>
+          <input class="mock-input" style="width:100%;text-align:right" placeholder="€ 0.00">
+        </div>
+      </div>
+      <button class="mock-button" style="width:100%;padding:12px">บันทึกยอดขายวันนี้</button>
+    </div>
+  </div>
+
+  <!-- Screen 4: Dashboard -->
+  <div class="mockup">
+    <div class="mockup-header">4. ภาพรวม (Dashboard)</div>
+    <div class="mockup-body" style="padding:16px;font-size:0.85em">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px">
+        <div style="background:#4ade8022;border:1px solid #4ade80;border-radius:8px;padding:12px;text-align:center">
+          <div style="font-size:1.4em;font-weight:bold">€ 847</div>
+          <div style="font-size:0.8em;color:var(--text-muted)">รายได้สัปดาห์นี้</div>
+        </div>
+        <div style="background:#f59e0b22;border:1px solid #f59e0b;border-radius:8px;padding:12px;text-align:center">
+          <div style="font-size:1.4em;font-weight:bold">€ 312</div>
+          <div style="font-size:0.8em;color:var(--text-muted)">ค่าวัตถุดิบสัปดาห์นี้</div>
+        </div>
+      </div>
+      <div style="background:var(--surface-raised);border-radius:8px;padding:12px;margin-bottom:8px">
+        <div style="font-size:0.8em;color:var(--text-muted);margin-bottom:6px">สต็อกต่ำ ⚠️</div>
+        <div style="display:flex;justify-content:space-between;color:#f59e0b;padding:3px 0"><span>ไข่</span><span>เหลือ 3 ฟอง</span></div>
+        <div style="display:flex;justify-content:space-between;color:#ef4444;padding:3px 0"><span>น้ำปลา</span><span>เหลือ 0.1L</span></div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+        <button class="mock-button" style="padding:10px;font-size:0.85em">อัพโหลดใบเสร็จ</button>
+        <button class="mock-button" style="padding:10px;font-size:0.85em">ตัดสต็อก</button>
+        <button class="mock-button" style="padding:10px;font-size:0.85em">บันทึกยอดขาย</button>
+        <button class="mock-button" style="padding:10px;font-size:0.85em">ดูรายงาน</button>
+      </div>
+    </div>
+  </div>
+
+</div>

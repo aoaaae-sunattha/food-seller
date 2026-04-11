@@ -1,0 +1,118 @@
+<h2>Menu & Stock Deduction — Updated Flow</h2>
+<p class="subtitle">Menus are recipe templates. Stock deduction starts by picking a menu.</p>
+
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
+
+  <!-- Screen: Manage Menus -->
+  <div class="mockup">
+    <div class="mockup-header">จัดการเมนู (Manage Menus)</div>
+    <div class="mockup-body" style="padding:16px;font-size:0.85em">
+
+      <!-- Add menu button -->
+      <button class="mock-button" style="width:100%;padding:10px;margin-bottom:12px">+ เพิ่มเมนูใหม่</button>
+
+      <!-- Menu card: Pad Thai -->
+      <div style="background:var(--surface-raised);border-radius:8px;padding:12px;margin-bottom:8px;border:2px solid var(--accent)">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+          <span style="font-weight:600">🍜 ผัดไทย</span>
+          <div style="display:flex;gap:6px">
+            <button class="mock-button" style="padding:4px 10px;font-size:0.8em;background:transparent;border:1px solid var(--border)">✏️ แก้ไข</button>
+            <button class="mock-button" style="padding:4px 10px;font-size:0.8em;background:transparent;border:1px solid #ef444444;color:#ef4444">🗑️</button>
+          </div>
+        </div>
+        <div style="font-size:0.78em;color:var(--text-muted);margin-bottom:6px">วัตถุดิบต่อ 1 หม้อ (ประมาณ 20 กล่อง)</div>
+        <div style="display:flex;flex-direction:column;gap:3px">
+          <div style="display:flex;justify-content:space-between"><span>เส้นผัดไทย</span><span>500 g</span></div>
+          <div style="display:flex;justify-content:space-between"><span>ไข่</span><span>10 ฟอง</span></div>
+          <div style="display:flex;justify-content:space-between"><span>น้ำมันพืช</span><span>100 mL</span></div>
+          <div style="display:flex;justify-content:space-between"><span>น้ำปลา</span><span>50 mL</span></div>
+          <div style="display:flex;justify-content:space-between;color:var(--accent);cursor:pointer"><span>+ เพิ่มวัตถุดิบ</span></div>
+        </div>
+      </div>
+
+      <!-- Menu card: Green Curry -->
+      <div style="background:var(--surface-raised);border-radius:8px;padding:12px;margin-bottom:8px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+          <span style="font-weight:600">🍛 แกงเขียวหวาน</span>
+          <div style="display:flex;gap:6px">
+            <button class="mock-button" style="padding:4px 10px;font-size:0.8em;background:transparent;border:1px solid var(--border)">✏️ แก้ไข</button>
+            <button class="mock-button" style="padding:4px 10px;font-size:0.8em;background:transparent;border:1px solid #ef444444;color:#ef4444">🗑️</button>
+          </div>
+        </div>
+        <div style="font-size:0.78em;color:var(--text-muted)">5 วัตถุดิบ · 1 หม้อ ≈ 15 กล่อง</div>
+      </div>
+
+      <!-- Menu card: Roll -->
+      <div style="background:var(--surface-raised);border-radius:8px;padding:12px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+          <span style="font-weight:600">🌯 โรล</span>
+          <div style="display:flex;gap:6px">
+            <button class="mock-button" style="padding:4px 10px;font-size:0.8em;background:transparent;border:1px solid var(--border)">✏️ แก้ไข</button>
+            <button class="mock-button" style="padding:4px 10px;font-size:0.8em;background:transparent;border:1px solid #ef444444;color:#ef4444">🗑️</button>
+          </div>
+        </div>
+        <div style="font-size:0.78em;color:var(--text-muted)">7 วัตถุดิบ · 1 หม้อ ≈ 25 กล่อง</div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Screen: Stock Deduction with Menu Template -->
+  <div class="mockup">
+    <div class="mockup-header">2. ตัดสต็อก — เริ่มจากเมนูวันนี้</div>
+    <div class="mockup-body" style="padding:16px;font-size:0.85em">
+
+      <!-- Step 1: Pick menu -->
+      <div style="margin-bottom:12px">
+        <div style="font-size:0.8em;color:var(--text-muted);margin-bottom:6px">เลือกเมนูที่ทำวันนี้ (เลือกได้หลายเมนู)</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <div style="padding:8px 14px;border-radius:20px;border:2px solid var(--accent);background:#60a5fa22;cursor:pointer;font-size:0.9em">🍜 ผัดไทย ✓</div>
+          <div style="padding:8px 14px;border-radius:20px;border:2px solid var(--accent);background:#60a5fa22;cursor:pointer;font-size:0.9em">🍛 แกงเขียวหวาน ✓</div>
+          <div style="padding:8px 14px;border-radius:20px;border:1px solid var(--border);cursor:pointer;font-size:0.9em">🌯 โรล</div>
+        </div>
+      </div>
+
+      <div style="border-top:1px solid var(--border);padding-top:12px;margin-bottom:8px">
+        <div style="font-size:0.8em;color:var(--text-muted);margin-bottom:6px">วัตถุดิบที่ต้องตัด (รวมจากทุกเมนูที่เลือก) — แก้ไขได้</div>
+      </div>
+
+      <!-- Auto-populated ingredients -->
+      <div style="display:flex;flex-direction:column;gap:6px;margin-bottom:12px">
+        <div style="display:flex;align-items:center;gap:8px;background:var(--surface-raised);border-radius:8px;padding:10px">
+          <div style="flex:1"><div style="font-weight:500">ไข่</div><div style="font-size:0.75em;color:var(--text-muted)">เหลือ 8 ฟอง</div></div>
+          <input class="mock-input" style="width:70px;text-align:center" value="10">
+          <span style="font-size:0.8em;color:var(--text-muted)">ฟอง</span>
+          <select class="mock-input" style="width:110px;font-size:0.8em">
+            <option>🍳 ใช้ทำอาหาร</option>
+          </select>
+          <button style="background:none;border:none;cursor:pointer;color:#ef4444;font-size:1.1em">✕</button>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;background:var(--surface-raised);border-radius:8px;padding:10px">
+          <div style="flex:1"><div style="font-weight:500">น้ำปลา</div><div style="font-size:0.75em;color:var(--text-muted)">เหลือ 0.3 L</div></div>
+          <input class="mock-input" style="width:70px;text-align:center" value="50">
+          <span style="font-size:0.8em;color:var(--text-muted)">mL</span>
+          <select class="mock-input" style="width:110px;font-size:0.8em">
+            <option>🍳 ใช้ทำอาหาร</option>
+          </select>
+          <button style="background:none;border:none;cursor:pointer;color:#ef4444;font-size:1.1em">✕</button>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;background:var(--surface-raised);border-radius:8px;padding:10px">
+          <div style="flex:1"><div style="font-weight:500">ไก่</div><div style="font-size:0.75em;color:var(--text-muted)">เหลือ 2.1 kg</div></div>
+          <input class="mock-input" style="width:70px;text-align:center" value="1.5">
+          <span style="font-size:0.8em;color:var(--text-muted)">kg</span>
+          <select class="mock-input" style="width:110px;font-size:0.8em">
+            <option>🍳 ใช้ทำอาหาร</option>
+          </select>
+          <button style="background:none;border:none;cursor:pointer;color:#ef4444;font-size:1.1em">✕</button>
+        </div>
+        <!-- Add extra item -->
+        <div style="display:flex;align-items:center;gap:8px;border:1px dashed var(--border);border-radius:8px;padding:10px;cursor:pointer;color:var(--accent)">
+          <span>+ เพิ่มวัตถุดิบเพิ่มเติม (กรณีพิเศษ)</span>
+        </div>
+      </div>
+
+      <button class="mock-button" style="width:100%;padding:12px">บันทึกการตัดสต็อก</button>
+    </div>
+  </div>
+
+</div>

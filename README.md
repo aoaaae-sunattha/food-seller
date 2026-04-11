@@ -1,36 +1,47 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Restaurant Manager
 
-## Getting Started
+A tablet-optimized web application for managing Thai restaurant operations.
 
-First, run the development server:
+## Features
+- **Dashboard:** Weekly income and expense tracking with low-stock alerts.
+- **Receipt Scanning:** OCR powered by Gemini Vision API to extract items from French receipts.
+- **Stock Management:** Record deductions for cooking, damage, or loss.
+- **Daily Sales:** Log end-of-day sales with cash/card breakdown.
+- **Master Data:** Manage ingredients and menu templates with default recipes.
+- **Backup Interface:** Telegram Bot for quick text-based entries and mobile receipt scanning.
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+## Tech Stack
+- **Frontend:** Next.js 15 (App Router), TypeScript, Tailwind CSS.
+- **Database:** Google Sheets API v4.
+- **Intelligence:** Gemini 1.5 Flash.
+- **Auth:** NextAuth.js (Google OAuth).
+- **Messaging:** Telegram Bot API.
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Setup
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+1. **Clone & Install:**
+   ```bash
+   git clone <repo-url>
+   npm install
+   ```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+2. **Environment Variables:**
+   Create a `.env.local` file based on `.env.local.example`:
+   - `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET`: From Google Cloud Console.
+   - `NEXTAUTH_SECRET`: Random string for sessions.
+   - `GEMINI_API_KEY`: From Google AI Studio.
+   - `TELEGRAM_BOT_TOKEN`: Token from BotFather for Telegram integration.
 
-## Learn More
+3. **Google API Scopes:**
+   Ensure the following scopes are enabled in your Google Cloud Project:
+   - `https://www.googleapis.com/auth/spreadsheets`
+   - `https://www.googleapis.com/auth/drive`
 
-To learn more about Next.js, take a look at the following resources:
+4. **Run:**
+   ```bash
+   npm run dev
+   ```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Development
+- **Tests:** `npm test`
+- **Build:** `npm run build`

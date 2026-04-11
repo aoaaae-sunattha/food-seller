@@ -1,0 +1,64 @@
+<h2>Design — Section 1: Architecture</h2>
+<p class="subtitle">How the pieces fit together</p>
+
+<div class="mockup">
+  <div class="mockup-header">System Overview</div>
+  <div class="mockup-body" style="padding:24px;font-family:monospace;font-size:0.9em;line-height:2">
+
+    <div style="display:grid;grid-template-columns:1fr auto 1fr auto 1fr;gap:8px;align-items:center;text-align:center">
+
+      <div style="background:var(--surface-raised);border:1px solid var(--border);border-radius:8px;padding:16px">
+        <div style="font-size:1.5em">📱</div>
+        <strong>Tablet Browser</strong>
+        <div style="font-size:0.8em;color:var(--text-muted);margin-top:4px">Thai UI<br>Next.js frontend</div>
+      </div>
+
+      <div style="color:var(--text-muted);font-size:1.2em">⟷</div>
+
+      <div style="background:var(--surface-raised);border:2px solid var(--accent);border-radius:8px;padding:16px">
+        <div style="font-size:1.5em">⚙️</div>
+        <strong>Next.js API Routes</strong>
+        <div style="font-size:0.8em;color:var(--text-muted);margin-top:4px">Hosted on Vercel<br>Business logic</div>
+      </div>
+
+      <div style="color:var(--text-muted);font-size:1.2em">⟷</div>
+
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <div style="background:var(--surface-raised);border:1px solid var(--border);border-radius:8px;padding:12px">
+          <div style="font-size:1.2em">📊</div>
+          <strong style="font-size:0.9em">Google Sheets</strong>
+          <div style="font-size:0.75em;color:var(--text-muted)">Storage</div>
+        </div>
+        <div style="background:var(--surface-raised);border:1px solid var(--border);border-radius:8px;padding:12px">
+          <div style="font-size:1.2em">🤖</div>
+          <strong style="font-size:0.9em">Claude Vision API</strong>
+          <div style="font-size:0.75em;color:var(--text-muted)">Receipt OCR</div>
+        </div>
+      </div>
+    </div>
+
+    <div style="margin-top:32px">
+      <div style="font-size:0.85em;color:var(--text-muted);margin-bottom:8px;text-transform:uppercase;letter-spacing:0.05em">Google Sheets Structure (1 spreadsheet, multiple tabs)</div>
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;text-align:center">
+        <div style="background:#4ade8022;border:1px solid #4ade80;border-radius:6px;padding:10px;font-size:0.85em">
+          <strong>📋 Purchases</strong><br>
+          <span style="color:var(--text-muted)">date, store,<br>items, total</span>
+        </div>
+        <div style="background:#60a5fa22;border:1px solid #60a5fa;border-radius:6px;padding:10px;font-size:0.85em">
+          <strong>📦 Stock</strong><br>
+          <span style="color:var(--text-muted)">ingredient,<br>unit, amount</span>
+        </div>
+        <div style="background:#f59e0b22;border:1px solid #f59e0b;border-radius:6px;padding:10px;font-size:0.85em">
+          <strong>💰 Daily Sales</strong><br>
+          <span style="color:var(--text-muted)">menu, boxes,<br>cash, card</span>
+        </div>
+        <div style="background:#a78bfa22;border:1px solid #a78bfa;border-radius:6px;padding:10px;font-size:0.85em">
+          <strong>📈 Monthly Summary</strong><br>
+          <span style="color:var(--text-muted)">auto-calculated<br>from above</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<p style="margin-top:16px;font-size:0.9em;color:var(--text-muted)">Authentication: Google OAuth so the app can read/write her Sheets. No separate user database needed — one owner, one login.</p>

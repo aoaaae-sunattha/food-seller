@@ -1,0 +1,76 @@
+<h2>Complete Design Summary</h2>
+<p class="subtitle">Please confirm everything looks right before we write the spec</p>
+
+<div style="display:flex;flex-direction:column;gap:16px">
+
+  <!-- Stack -->
+  <div style="background:var(--surface-raised);border-radius:8px;padding:16px">
+    <div style="font-size:0.75em;text-transform:uppercase;letter-spacing:0.05em;color:var(--text-muted);margin-bottom:8px">Tech Stack</div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <span style="background:#60a5fa22;border:1px solid #60a5fa44;border-radius:6px;padding:4px 10px;font-size:0.85em">Next.js (App Router)</span>
+      <span style="background:#60a5fa22;border:1px solid #60a5fa44;border-radius:6px;padding:4px 10px;font-size:0.85em">Vercel (hosting)</span>
+      <span style="background:#60a5fa22;border:1px solid #60a5fa44;border-radius:6px;padding:4px 10px;font-size:0.85em">Google Sheets API</span>
+      <span style="background:#60a5fa22;border:1px solid #60a5fa44;border-radius:6px;padding:4px 10px;font-size:0.85em">Claude Vision API (OCR)</span>
+      <span style="background:#60a5fa22;border:1px solid #60a5fa44;border-radius:6px;padding:4px 10px;font-size:0.85em">Google OAuth</span>
+      <span style="background:#60a5fa22;border:1px solid #60a5fa44;border-radius:6px;padding:4px 10px;font-size:0.85em">LINE Bot (backup)</span>
+    </div>
+  </div>
+
+  <!-- Screens -->
+  <div style="background:var(--surface-raised);border-radius:8px;padding:16px">
+    <div style="font-size:0.75em;text-transform:uppercase;letter-spacing:0.05em;color:var(--text-muted);margin-bottom:8px">Screens (6)</div>
+    <div style="display:flex;flex-direction:column;gap:6px;font-size:0.9em">
+      <div style="display:flex;gap:10px"><span style="color:var(--accent);width:24px">1.</span><span><strong>Dashboard</strong> — income this week, expenses, low stock alerts, quick nav</span></div>
+      <div style="display:flex;gap:10px"><span style="color:var(--accent);width:24px">2.</span><span><strong>Upload Receipt</strong> — photo → Claude Vision extracts French items → confirm → saves to Sheets</span></div>
+      <div style="display:flex;gap:10px"><span style="color:var(--accent);width:24px">3.</span><span><strong>Stock Deduction</strong> — pick menus (+ Other) → ingredients pre-filled per menu section → adjustable → reason field</span></div>
+      <div style="display:flex;gap:10px"><span style="color:var(--accent);width:24px">4.</span><span><strong>Daily Sales</strong> — boxes per dish + cash/card totals → end-of-day settlement</span></div>
+      <div style="display:flex;gap:10px"><span style="color:var(--accent);width:24px">5.</span><span><strong>Manage Stock Items</strong> — CRUD ingredients: name, unit, low-stock threshold</span></div>
+      <div style="display:flex;gap:10px"><span style="color:var(--accent);width:24px">6.</span><span><strong>Manage Menus</strong> — CRUD menus, each menu has ingredient template list (per pot/batch)</span></div>
+    </div>
+  </div>
+
+  <!-- Google Sheets -->
+  <div style="background:var(--surface-raised);border-radius:8px;padding:16px">
+    <div style="font-size:0.75em;text-transform:uppercase;letter-spacing:0.05em;color:var(--text-muted);margin-bottom:8px">Google Sheets — 1 spreadsheet per month</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:0.85em">
+      <div style="background:#4ade8011;border:1px solid #4ade8033;border-radius:6px;padding:10px">
+        <strong>📋 Purchases</strong><br>
+        <span style="color:var(--text-muted)">date · store · item (FR) · qty · unit · price · total</span>
+      </div>
+      <div style="background:#60a5fa11;border:1px solid #60a5fa33;border-radius:6px;padding:10px">
+        <strong>📦 Stock</strong><br>
+        <span style="color:var(--text-muted)">date · ingredient · amount · unit · reason · menu</span>
+      </div>
+      <div style="background:#f59e0b11;border:1px solid #f59e0b33;border-radius:6px;padding:10px">
+        <strong>💰 Daily Sales</strong><br>
+        <span style="color:var(--text-muted)">date · menu · boxes · price/box · cash · card · total</span>
+      </div>
+      <div style="background:#a78bfa11;border:1px solid #a78bfa33;border-radius:6px;padding:10px">
+        <strong>📈 Monthly Summary</strong><br>
+        <span style="color:var(--text-muted)">auto-calculated · total income · expenses · loss</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Languages -->
+  <div style="background:var(--surface-raised);border-radius:8px;padding:16px">
+    <div style="font-size:0.75em;text-transform:uppercase;letter-spacing:0.05em;color:var(--text-muted);margin-bottom:8px">UI Languages</div>
+    <div style="display:flex;gap:8px">
+      <span style="background:#ef444422;border:1px solid #ef444444;border-radius:6px;padding:6px 14px;font-size:0.9em">🇫🇷 Français</span>
+      <span style="background:#3b82f622;border:1px solid #3b82f644;border-radius:6px;padding:6px 14px;font-size:0.9em">🇹🇭 ภาษาไทย</span>
+      <span style="background:#22c55e22;border:1px solid #22c55e44;border-radius:6px;padding:6px 14px;font-size:0.9em">🇬🇧 English</span>
+    </div>
+    <div style="font-size:0.8em;color:var(--text-muted);margin-top:6px">Language switcher visible on every page. Preference saved locally.</div>
+  </div>
+
+  <!-- Device -->
+  <div style="background:var(--surface-raised);border-radius:8px;padding:16px">
+    <div style="font-size:0.75em;text-transform:uppercase;letter-spacing:0.05em;color:var(--text-muted);margin-bottom:8px">Device & UX</div>
+    <div style="font-size:0.85em;display:flex;flex-direction:column;gap:4px">
+      <div>📱 Tablet-first UI — large touch targets, minimal typing</div>
+      <div>🔒 Single owner login via Google OAuth</div>
+      <div>📡 LINE Bot (backup) for quick stock updates via chat</div>
+    </div>
+  </div>
+
+</div>

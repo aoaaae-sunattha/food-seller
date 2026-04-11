@@ -18,7 +18,7 @@ A tablet-optimized web app to manage a small Thai restaurant's daily operations:
 | Frontend + API | Next.js (App Router) |
 | Hosting | Vercel |
 | Storage | Google Sheets API v4 |
-| OCR | Claude Vision API (Anthropic) |
+| OCR | Gemini Vision API (Google) |
 | Auth | Google OAuth (single owner) |
 | Backup interface | LINE Bot |
 
@@ -52,7 +52,7 @@ Three languages switchable on every page via a flag selector. Preference saved t
 
 ### 2. Upload Receipt
 - Camera/file upload for receipt photo (French receipts, Latin text)
-- Claude Vision API extracts: item name (French), quantity, unit, price per unit, line total
+- Gemini Vision API extracts: item name (French), quantity, unit, price per unit, line total
 - User reviews and edits extracted items before confirming
 - On confirm: appends rows to **Purchases** tab + updates quantity in **Stock** tab
 - One receipt = one shopping trip
@@ -107,7 +107,7 @@ The app auto-creates the new month's spreadsheet on first use of each month, cop
 
 ```
 Receipt photo
-  → Claude Vision API
+  → Gemini Vision API
   → Extracted items (FR name, qty, price)
   → User confirms
   → Purchases tab (expense row)
