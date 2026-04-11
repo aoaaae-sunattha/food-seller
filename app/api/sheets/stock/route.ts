@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { readRows, appendRows } from '../../../../lib/sheets'
-import type { StockDeductionRow } from '../../../../types'
+import { readRows, appendRows } from '@/lib/sheets'
+import type { StockDeductionRow } from '@/types'
 
 export async function GET(_req: NextRequest) {
   try {

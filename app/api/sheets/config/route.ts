@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { readRows, appendRows } from '../../../../lib/sheets'
-import type { Ingredient, MenuTemplate } from '../../../../types'
+import { readRows, appendRows } from '@/lib/sheets'
+import type { Ingredient, MenuTemplate } from '@/types'
 import { randomUUID } from 'crypto'
 
 function parseConfig(rows: string[][]): { ingredients: Ingredient[]; menus: MenuTemplate[] } {

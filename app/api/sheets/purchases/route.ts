@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { appendRows } from '../../../../lib/sheets'
-import type { ReceiptItem } from '../../../../types'
+import { appendRows } from '@/lib/sheets'
+import type { ReceiptItem } from '@/types'
 
 export async function POST(req: NextRequest) {
   try {

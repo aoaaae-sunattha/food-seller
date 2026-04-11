@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { appendRows } from '../../../../lib/sheets'
+import { appendRows } from '@/lib/sheets'
 
 export async function POST(req: NextRequest) {
   try {

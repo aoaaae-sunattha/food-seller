@@ -30,6 +30,6 @@ Return ONLY valid JSON array, no markdown, no explanation.`
 
   const text = result.response.text().trim()
   // Strip markdown code fences if present
-  const json = text.replace(/^\`\`\`json?\\n?/, '').replace(/\\n?\`\`\`$/, '')
+  const json = text.replace(/^```json?\n?/, '').replace(/\n?```$/, '')
   return JSON.parse(json) as ReceiptItem[]
 }

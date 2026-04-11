@@ -6,18 +6,21 @@ import type { Ingredient } from '@/types'
 export default function ManageStockPage() {
   const { t } = useLanguage()
   const [ingredients, setIngredients] = useState<Ingredient[]>([])
+  const [quantities, setQuantities] = useState<Record<string, number>>({})
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [showAdd, setShowAdd] = useState(false)
   const [newIng, setNewIng] = useState<Partial<Ingredient>>({ nameTh: '', nameFr: '', unit: 'kg', threshold: 1 })
 
   useEffect(() => {
-    fetch('/api/sheets/config')
-      .then(r => r.json())
-      .then(data => {
-        setIngredients(data.ingredients)
-        setLoading(false)
-      })
+    Promise.all([
+      fetch('/api/sheets/config').then(r => r.json()),
+      fetch('/api/sheets/stock').then(r => r.json()),
+    ]).then(([config, stock]) => {
+      setIngredients(config.ingredients)
+      setQuantities(stock.quantities)
+      setLoading(false)
+    })
   }, [])
 
   async function handleAdd() {
@@ -105,18 +108,24 @@ export default function ManageStockPage() {
       )}
 
       <div className="bg-white rounded-xl shadow divide-y overflow-hidden">
-        {ingredients.map(ing => (
-          <div key={ing.id} className="p-4 flex justify-between items-center">
-            <div>
-              <p className="font-bold">{ing.nameTh}</p>
-              <p className="text-xs text-gray-400">{ing.nameFr} · {ing.unit}</p>
+        {ingredients.map(ing => {
+          const qty = quantities[ing.nameTh] ?? 0
+          const isLow = qty <= ing.threshold
+          return (
+            <div key={ing.id} className="p-4 flex justify-between items-center">
+              <div>
+                <p className="font-bold">{ing.nameTh}</p>
+                <p className="text-xs text-gray-400">{ing.nameFr} · {ing.unit}</p>
+              </div>
+              <div className="text-right space-y-1">
+                <p className={`font-bold text-lg ${isLow ? 'text-red-600' : 'text-green-600'}`}>
+                  {qty} {ing.unit}
+                </p>
+                <p className="text-[10px] text-gray-400">alert ≤ {ing.threshold}</p>
+              </div>
             </div>
-            <div className="text-right">
-              <p className="text-[10px] text-gray-400 uppercase font-bold">{t.manageStock.threshold}</p>
-              <p className="font-bold text-blue-600">{ing.threshold} {ing.unit}</p>
-            </div>
-          </div>
-        ))}
+          )
+        })}
       </div>
     </div>
   )

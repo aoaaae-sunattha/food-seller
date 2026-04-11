@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { readRows } from '../../../../lib/sheets'
-import type { StockQuantity, Ingredient } from '../../../../types'
+import { readRows } from '@/lib/sheets'
+import type { StockQuantity, Ingredient } from '@/types'
 
 function startOfWeek(date: Date): Date {
   const d = new Date(date)

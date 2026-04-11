@@ -11,18 +11,21 @@ export default function StockDeductionPage() {
   const [allIngredients, setAllIngredients] = useState<Ingredient[]>([])
   const [selectedMenus, setSelectedMenus] = useState<string[]>([])
   const [deductions, setDeductions] = useState<Record<string, DeductionRow[]>>({})
+  const [quantities, setQuantities] = useState<Record<string, number>>({})
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [done, setDone] = useState(false)
 
   useEffect(() => {
-    fetch('/api/sheets/config')
-      .then(r => r.json())
-      .then((data: { ingredients: Ingredient[], menus: MenuTemplate[] }) => {
-        setMenus(data.menus)
-        setAllIngredients(data.ingredients)
-        setLoading(false)
-      })
+    Promise.all([
+      fetch('/api/sheets/config').then(r => r.json()),
+      fetch('/api/sheets/stock').then(r => r.json()),
+    ]).then(([config, stock]: [{ ingredients: Ingredient[], menus: MenuTemplate[] }, { quantities: Record<string, number> }]) => {
+      setMenus(config.menus)
+      setAllIngredients(config.ingredients)
+      setQuantities(stock.quantities)
+      setLoading(false)
+    })
   }, [])
 
   // Pre-fill ingredients when menu selection changes
@@ -103,16 +106,23 @@ export default function StockDeductionPage() {
 
       <section className="space-y-4 pb-12">
         {selectedMenus.map(menuName => (
-          <IngredientSection 
+          <IngredientSection
             key={menuName}
             menuName={menuName}
             allIngredients={allIngredients}
+            quantities={quantities}
             rows={deductions[menuName] || []}
             t={t}
             onRowChange={(idx, patch) => {
               const menuRows = [...(deductions[menuName] || [])]
               menuRows[idx] = { ...menuRows[idx], ...patch }
               setDeductions({ ...deductions, [menuName]: menuRows })
+            }}
+            onAddRow={() => {
+              setDeductions({
+                ...deductions,
+                [menuName]: [...(deductions[menuName] || []), { ingredientName: '', amountUsed: 0, unit: '', reason: 'ใช้ทำอาหาร' as const }]
+              })
             }}
           />
         ))}
