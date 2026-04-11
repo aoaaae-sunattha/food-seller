@@ -87,6 +87,7 @@ export default function ReceiptPage() {
             <div className="space-y-2">
               <label className="text-xs font-bold text-slate-400 uppercase tracking-widest px-1">{t.receipt.store}</label>
               <input 
+                id="receipt-store-input"
                 className="w-full border border-slate-200 rounded-2xl px-4 py-4 text-lg font-bold text-slate-800 bg-slate-50 focus:bg-white focus:ring-4 focus:ring-amber-500/10 focus:border-amber-500 outline-none transition-all shadow-inner"
                 value={store}
                 onChange={e => setStore(e.target.value)}
@@ -108,12 +109,14 @@ export default function ReceiptPage() {
 
           <div className="flex gap-4">
             <button 
+              id="receipt-cancel-btn"
               onClick={() => { setPreview(null); setItems([]); setStore('') }}
               className="flex-1 bg-white border border-slate-200 text-slate-600 py-4 rounded-2xl font-bold hover:bg-slate-50 transition-all active:scale-95"
             >
               {t.common.cancel}
             </button>
             <button 
+              id="receipt-confirm-btn"
               onClick={handleConfirm}
               disabled={loading || items.length === 0}
               className="flex-1 bg-amber-600 text-white py-4 rounded-2xl font-bold text-lg shadow-lg shadow-amber-600/20 hover:bg-amber-700 transition-all active:scale-95 disabled:opacity-50 disabled:active:scale-100"

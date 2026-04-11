@@ -33,6 +33,7 @@ export default function UploadZone({ onFile, preview }: Props) {
         </div>
       )}
       <input
+        id="receipt-upload-input"
         ref={inputRef}
         type="file"
         accept="image/*"

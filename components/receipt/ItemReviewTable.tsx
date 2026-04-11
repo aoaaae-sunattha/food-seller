@@ -1,4 +1,5 @@
 'use client'
+import { NumberInput } from '@/components/NumberInput';
 import type { ReceiptItem } from '@/types'
 
 interface Props {
@@ -28,6 +29,7 @@ export default function ItemReviewTable({ items, onChange }: Props) {
             <tr key={i} className="group bg-slate-50/50 hover:bg-slate-50 transition-colors">
               <td className="py-1 px-1 first:rounded-l-xl">
                 <input
+                  id={`receipt-item-fr-${i}`}
                   className="bg-transparent border-0 focus:ring-2 focus:ring-amber-500/20 rounded-lg px-2 py-2 w-full font-medium text-slate-700 outline-none"
                   value={item.nameFr}
                   onChange={e => onChange(update(items, i, { nameFr: e.target.value }))}
@@ -35,6 +37,7 @@ export default function ItemReviewTable({ items, onChange }: Props) {
               </td>
               <td className="py-1 px-1">
                 <input
+                  id={`receipt-item-th-${i}`}
                   className="bg-white border border-slate-200 focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 rounded-lg px-2 py-2 w-full font-bold text-slate-800 outline-none transition-all shadow-sm"
                   value={item.nameTh}
                   placeholder="Thai name..."
@@ -42,11 +45,11 @@ export default function ItemReviewTable({ items, onChange }: Props) {
                 />
               </td>
               <td className="py-1 px-1">
-                <input
-                  type="number"
+                <NumberInput
+                  id={`receipt-item-qty-${i}`}
                   className="bg-transparent border-0 focus:ring-2 focus:ring-amber-500/20 rounded-lg px-2 py-2 w-16 text-right font-medium text-slate-600 outline-none"
                   value={item.qty}
-                  onChange={e => onChange(update(items, i, { qty: Number(e.target.value) }))}
+                  onChange={val => onChange(update(items, i, { qty: val }))}
                 />
               </td>
               <td className="py-1 px-1">
