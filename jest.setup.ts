@@ -21,3 +21,16 @@ if (typeof Request === 'undefined') {
   global.Response = Response
   global.Headers = Headers
 }
+
+// Mock localStorage
+const localStorageMock = (function() {
+  let store: Record<string, string> = {}
+  return {
+    getItem: (key: string) => store[key] || null,
+    setItem: (key: string, value: string) => { store[key] = value.toString() },
+    clear: () => { store = {} },
+    removeItem: (key: string) => { delete store[key] }
+  }
+})()
+
+Object.defineProperty(global, 'localStorage', { value: localStorageMock })

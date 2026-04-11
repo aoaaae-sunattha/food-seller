@@ -1,3 +1,4 @@
+/** @jest-environment jsdom */
 import { render, screen, fireEvent } from '@testing-library/react'
 import LanguageSelector from '@/components/LanguageSelector'
 
