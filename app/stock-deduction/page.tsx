@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react'
 import { useLanguage } from '@/hooks/useLanguage'
 import MenuChips from '@/components/stock/MenuChips'
+import QuickAddIngredient from '@/components/stock/QuickAddIngredient'
 import IngredientSection, { DeductionRow } from '@/components/stock/IngredientSection'
 import type { MenuTemplate, Ingredient, StockDeductionRow } from '@/types'
 
@@ -14,6 +15,7 @@ export default function StockDeductionPage() {
   const [quantities, setQuantities] = useState<Record<string, number>>({})
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
+  const [showQuickAdd, setShowQuickAdd] = useState(false)
   const [done, setDone] = useState(false)
 
   useEffect(() => {
@@ -55,8 +57,31 @@ export default function StockDeductionPage() {
   async function handleSave() {
     setSaving(true)
     const date = new Date().toISOString().split('T')[0]
-    const rows: StockDeductionRow[] = []
+    
+    // 1. Identify and create any new ingredients typed manually
+    const existingNames = allIngredients.map(ing => ing.nameTh)
+    const allDeductionRows = Object.values(deductions).flat()
+    const uniqueNewRows = allDeductionRows
+      .filter(d => d.ingredientName && !existingNames.includes(d.ingredientName))
+      // deduplicate by name
+      .filter((row, idx, self) => self.findIndex(r => r.ingredientName === row.ingredientName) === idx)
 
+    const newlyCreatedIngs: Ingredient[] = []
+    for (const row of uniqueNewRows) {
+      try {
+        const res = await fetch('/api/sheets/config', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ nameTh: row.ingredientName, nameFr: row.ingredientName, unit: row.unit || 'kg', threshold: 1, type: 'ingredient' })
+        })
+        if (res.ok) {
+          const { id } = await res.json()
+          newlyCreatedIngs.push({ id, nameTh: row.ingredientName, nameFr: row.ingredientName, unit: row.unit || 'kg', threshold: 1 })
+        }
+      } catch (err) { console.error('Quick save failed for', row.ingredientName, err) }
+    }
+
+    const rows: StockDeductionRow[] = []
     selectedMenus.forEach(menuName => {
       deductions[menuName]?.forEach(d => {
         if (d.ingredientName && d.amountUsed > 0) {
@@ -108,8 +133,27 @@ export default function StockDeductionPage() {
   )
 
   return (
-    <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
-      <h1 className="text-2xl font-black text-slate-800 tracking-tight">{t.nav.stockDeduction}</h1>
+    <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700 pb-48">
+      <div className="flex justify-between items-center px-1">
+        <h1 className="text-2xl font-black text-slate-800 tracking-tight">{t.nav.stockDeduction}</h1>
+        <button 
+          id="stock-quick-add-toggle"
+          onClick={() => setShowQuickAdd(!showQuickAdd)}
+          className="text-slate-400 text-[10px] font-black uppercase tracking-widest flex items-center gap-1 hover:text-slate-600 transition-colors"
+        >
+          {showQuickAdd ? t.common.cancel : `✨ ${t.manageStock.add} (Quick)`}
+        </button>
+      </div>
+
+      {showQuickAdd && (
+        <QuickAddIngredient 
+          onAdded={(ing) => {
+            setAllIngredients([...allIngredients, ing])
+            setShowQuickAdd(false)
+          }}
+          onCancel={() => setShowQuickAdd(false)}
+        />
+      )}
       
       <section className="space-y-4">
         <label className="text-xs font-bold text-slate-400 uppercase tracking-widest px-1">{t.stock.selectMenus}</label>
@@ -118,7 +162,7 @@ export default function StockDeductionPage() {
         </div>
       </section>
 
-      <section className="space-y-6 pb-12">
+      <section className="space-y-6">
         {selectedMenus.map(menuName => (
           <IngredientSection
             key={menuName}
@@ -143,8 +187,9 @@ export default function StockDeductionPage() {
       </section>
 
       {selectedMenus.length > 0 && (
-        <div className="fixed bottom-24 left-1/2 -translate-x-1/2 w-full max-w-lg px-6 z-40">
+        <div className="fixed bottom-28 left-1/2 -translate-x-1/2 w-full max-w-lg px-6 z-50">
           <button 
+            id="stock-deduct-submit-btn"
             onClick={handleSave}
             disabled={saving}
             className="w-full bg-amber-600 text-white py-4 rounded-2xl font-black text-lg shadow-xl shadow-amber-600/30 hover:bg-amber-700 transition-all active:scale-[0.98] disabled:opacity-50"

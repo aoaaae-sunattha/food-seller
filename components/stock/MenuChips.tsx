@@ -24,6 +24,7 @@ export default function MenuChips({ menus, selected, onChange, t }: Props) {
         return (
           <button
             key={m.id}
+            id={`menu-chip-${m.nameTh}`}
             onClick={() => toggle(m.nameTh)}
             className={`px-5 py-2.5 rounded-2xl border font-bold transition-all active:scale-95 ${
               isSelected 
@@ -36,6 +37,7 @@ export default function MenuChips({ menus, selected, onChange, t }: Props) {
         )
       })}
       <button
+        id="menu-chip-other"
         onClick={() => toggle('อื่นๆ')}
         className={`px-5 py-2.5 rounded-2xl border font-bold transition-all active:scale-95 ${
           selected.includes('อื่นๆ') 
