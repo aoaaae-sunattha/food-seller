@@ -1,5 +1,6 @@
 'use client'
-import { useState, useEffect } from 'react'
+import {  useState, useEffect  } from 'react'
+import { NumberInput } from '@/components/NumberInput'
 import { useLanguage } from '@/hooks/useLanguage'
 import type { MenuTemplate } from '@/types'
 
@@ -89,7 +90,7 @@ export default function DailySalesPage() {
   )
 
   return (
-    <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
+    <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700 pb-32">
       <h1 className="text-2xl font-black text-slate-800 tracking-tight">{t.sales.title}</h1>
       
       <div className="space-y-4 pb-8">
@@ -98,22 +99,22 @@ export default function DailySalesPage() {
             <div className="flex-1 font-black text-slate-700 text-lg">{sale.menu}</div>
             <div className="w-20">
               <div className="relative">
-                <input 
-                  type="number"
+                <NumberInput 
+                  id={`sales-qty-${sale.menu}`}
                   className="w-full bg-slate-50 border border-slate-200 rounded-xl px-2 py-2 text-center font-black text-slate-800 focus:bg-white focus:ring-2 focus:ring-amber-500/20 outline-none transition-all"
                   value={sale.boxes}
-                  onChange={e => handleBoxChange(i, Number(e.target.value))}
+                  onChange={val => handleBoxChange(i, val)}
                 />
                 <span className="absolute -top-4 left-0 w-full text-[9px] font-black text-slate-300 uppercase tracking-tighter text-center">{t.sales.boxes}</span>
               </div>
             </div>
             <div className="w-24">
               <div className="relative">
-                <input 
-                  type="number"
+                <NumberInput 
+                  id={`sales-price-${sale.menu}`}
                   className="w-full bg-slate-50 border border-slate-200 rounded-xl px-2 py-2 text-right font-black text-slate-600 focus:bg-white focus:ring-2 focus:ring-amber-500/20 outline-none transition-all"
                   value={sale.pricePerBox}
-                  onChange={e => handlePriceChange(i, Number(e.target.value))}
+                  onChange={val => handlePriceChange(i, val)}
                 />
                 <span className="absolute -top-4 left-0 w-full text-[9px] font-black text-slate-300 uppercase tracking-tighter text-right pr-1">€/box</span>
               </div>
@@ -140,20 +141,20 @@ export default function DailySalesPage() {
         <div className="grid grid-cols-2 gap-4 relative z-10">
           <div className="space-y-2">
             <label className="text-[10px] font-black text-slate-400 uppercase tracking-wider px-1">{t.sales.cash}</label>
-            <input 
-              type="number"
+            <NumberInput 
+              id="sales-cash-amount"
               className="w-full bg-white/10 border border-white/10 rounded-2xl px-4 py-4 text-right font-black text-2xl text-white focus:bg-white/20 focus:ring-4 focus:ring-amber-500/20 outline-none transition-all"
               value={cash}
-              onChange={e => setCash(Number(e.target.value))}
+              onChange={val => setCash(val)}
             />
           </div>
           <div className="space-y-2">
             <label className="text-[10px] font-black text-slate-400 uppercase tracking-wider px-1">{t.sales.card}</label>
-            <input 
-              type="number"
+            <NumberInput 
+              id="sales-card-amount"
               className="w-full bg-white/10 border border-white/10 rounded-2xl px-4 py-4 text-right font-black text-2xl text-white focus:bg-white/20 focus:ring-4 focus:ring-amber-500/20 outline-none transition-all"
               value={card}
-              onChange={e => setCard(Number(e.target.value))}
+              onChange={val => setCard(val)}
             />
           </div>
         </div>
@@ -167,6 +168,7 @@ export default function DailySalesPage() {
       </div>
 
       <button 
+        id="sales-save-btn"
         onClick={handleSave}
         disabled={saving || totalSales === 0}
         className="w-full bg-amber-600 text-white py-5 rounded-[2rem] font-black text-xl shadow-xl shadow-amber-600/30 hover:bg-amber-700 transition-all active:scale-[0.98] disabled:opacity-50 disabled:active:scale-100"
