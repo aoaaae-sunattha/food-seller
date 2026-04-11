@@ -60,9 +60,14 @@ export default function DailySalesPage() {
           card,
         })
       })
-      if (res.ok) setDone(true)
-    } catch (err) {
-      console.error(err); alert(t.common.error)
+      if (res.ok) {
+        setDone(true)
+      } else {
+        const err = await res.json().catch(() => ({}))
+        throw new Error(`บันทึกยอดขายไม่สำเร็จ: ${err.details || err.error || res.status}`)
+      }
+    } catch (err: any) {
+      console.error(err); alert(err.message || t.common.error)
     } finally {
       setSaving(false)
     }

@@ -42,18 +42,17 @@ export default function StockDeductionPage() {
             return {
               ingredientName: ing?.nameTh || '',
               amountUsed: ti.defaultQty,
-              unit: ing?.unit || '',
+              unit: ing?.unit || 'kg',
               reason: 'ใช้ทำอาหาร' as const
             }
-          })
-        } else {
-          nextDeductions[menuName] = [{ ingredientName: '', amountUsed: 0, unit: '', reason: 'ใช้ทำอาหาร' as const }]
-        }
-      }
-    })
-    setDeductions(nextDeductions)
-  }, [selectedMenus, menus, allIngredients])
-
+            })
+            } else {
+            nextDeductions[menuName] = [{ ingredientName: '', amountUsed: 0, unit: 'kg', reason: 'ใช้ทำอาหาร' as const }]
+            }
+            }
+            })
+            setDeductions(nextDeductions)
+            }, [selectedMenus, menus, allIngredients])
   async function handleSave() {
     setSaving(true)
     const date = new Date().toISOString().split('T')[0]
@@ -103,9 +102,14 @@ export default function StockDeductionPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ rows })
       })
-      if (res.ok) setDone(true)
-    } catch (err) {
-      console.error(err); alert(t.common.error)
+      if (res.ok) {
+        setDone(true)
+      } else {
+        const err = await res.json().catch(() => ({}))
+        throw new Error(`บันทึกการตัดสต็อกไม่สำเร็จ: ${err.details || err.error || res.status}`)
+      }
+    } catch (err: any) {
+      console.error(err); alert(err.message || t.common.error)
     } finally {
       setSaving(false)
     }
@@ -179,7 +183,7 @@ export default function StockDeductionPage() {
             onAddRow={() => {
               setDeductions({
                 ...deductions,
-                [menuName]: [...(deductions[menuName] || []), { ingredientName: '', amountUsed: 0, unit: '', reason: 'ใช้ทำอาหาร' as const }]
+                [menuName]: [...(deductions[menuName] || []), { ingredientName: '', amountUsed: 0, unit: 'kg', reason: 'ใช้ทำอาหาร' as const }]
               })
             }}
           />

@@ -55,6 +55,7 @@ export default function ItemReviewTable({ items, onChange }: Props) {
               <td className="py-1 px-1">
                 <input
                   className="bg-transparent border-0 focus:ring-2 focus:ring-amber-500/20 rounded-lg px-2 py-2 w-16 font-medium text-slate-500 outline-none uppercase text-xs tracking-tighter"
+                  list="unit-suggestions"
                   value={item.unit}
                   onChange={e => onChange(update(items, i, { unit: e.target.value }))}
                 />

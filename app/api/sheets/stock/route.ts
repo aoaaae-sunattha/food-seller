@@ -8,6 +8,10 @@ export async function GET(_req: NextRequest) {
   try {
     const session = await getServerSession(authOptions)
     const accessToken = (session as any)?.accessToken
+    console.log('--- API Debug: GET /api/sheets/stock ---')
+    console.log('Session present:', !!session)
+    console.log('AccessToken present:', !!accessToken)
+
     if (!accessToken) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
     const [purchaseRows, stockRows] = await Promise.all([
@@ -32,9 +36,13 @@ export async function GET(_req: NextRequest) {
     }
 
     return NextResponse.json({ quantities })
-  } catch (error) {
-    console.error('Stock GET error:', error)
-    return NextResponse.json({ error: 'Failed to compute quantities' }, { status: 500 })
+  } catch (error: any) {
+    console.error('Stock GET error:', error.message)
+    return NextResponse.json({ 
+      error: 'Failed to compute quantities',
+      details: error.message,
+      code: error.code
+    }, { status: 500 })
   }
 }
 
@@ -42,6 +50,10 @@ export async function POST(req: NextRequest) {
   try {
     const session = await getServerSession(authOptions)
     const accessToken = (session as any)?.accessToken
+    console.log('--- API Debug: POST /api/sheets/stock ---')
+    console.log('Session present:', !!session)
+    console.log('AccessToken present:', !!accessToken)
+
     if (!accessToken) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
     const { rows }: { rows: StockDeductionRow[] } = await req.json()
@@ -52,8 +64,12 @@ export async function POST(req: NextRequest) {
 
     await appendRows(accessToken, 'stock', data)
     return NextResponse.json({ ok: true })
-  } catch (error) {
-    console.error('Stock POST error:', error)
-    return NextResponse.json({ error: 'Failed to record deductions' }, { status: 500 })
+  } catch (error: any) {
+    console.error('Stock POST error:', error.message)
+    return NextResponse.json({ 
+      error: 'Failed to record deductions',
+      details: error.message,
+      code: error.code
+    }, { status: 500 })
   }
 }

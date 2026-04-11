@@ -5,6 +5,7 @@ import { authOptions } from '@/lib/auth'
 import SessionProviderWrapper from '@/components/SessionProviderWrapper'
 import NavBar from '@/components/NavBar'
 import LanguageSelector from '@/components/LanguageSelector'
+import CommonDatalists from '@/components/CommonDatalists'
 
 export const metadata: Metadata = {
   title: 'ร้านอาหาร Manager',
@@ -26,6 +27,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           <main className="max-w-3xl mx-auto px-6 py-8 pb-32">
             {children}
           </main>
+          <CommonDatalists />
           <NavBar />
         </SessionProviderWrapper>
       </body>

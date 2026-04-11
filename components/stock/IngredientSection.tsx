@@ -29,7 +29,7 @@ export default function IngredientSection({ menuName, rows, onRowChange, onAddRo
           onClick={onAddRow}
           className="text-[10px] font-bold text-amber-600 bg-amber-50 px-2 py-1 rounded-lg hover:bg-amber-100 transition-colors"
         >
-          + {t.stock.addIngredient}
+          {t.stock.addIngredient}
         </button>
       </div>
       
@@ -55,11 +55,6 @@ export default function IngredientSection({ menuName, rows, onRowChange, onAddRo
                       })
                     }}
                   />
-                  <datalist id="ing-suggestions">
-                    {allIngredients.map(ing => (
-                      <option key={ing.id} value={ing.nameTh}>{ing.nameFr}</option>
-                    ))}
-                  </datalist>
                 </div>
                 <div className="w-24 text-right">
                   <span className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter block">
@@ -78,17 +73,6 @@ export default function IngredientSection({ menuName, rows, onRowChange, onAddRo
                         value={row.unit}
                         onChange={e => onRowChange(i, { unit: e.target.value })}
                       />
-                      <datalist id="unit-suggestions">
-                        <option value="kg">Kilogram (กก.)</option>
-                        <option value="g">Gram (กรัม)</option>
-                        <option value="pcs">Pieces (ชิ้น)</option>
-                        <option value="box">Box (กล่อง)</option>
-                        <option value="bottle">Bottle (ขวด)</option>
-                        <option value="l">Liter (ลิตร)</option>
-                        <option value="ml">Milliliter (มล.)</option>
-                        <option value="pack">Pack (แพ็ค)</option>
-                        <option value="bunch">Bunch (กำ)</option>
-                      </datalist>
                     </>
                   )}
                 </div>
@@ -123,6 +107,12 @@ export default function IngredientSection({ menuName, rows, onRowChange, onAddRo
           )
         })}
       </div>
+
+      <datalist id="ing-suggestions">
+        {allIngredients.map(ing => (
+          <option key={ing.id} value={ing.nameTh}>{ing.nameFr} ({ing.unit})</option>
+        ))}
+      </datalist>
     </div>
   )
 }

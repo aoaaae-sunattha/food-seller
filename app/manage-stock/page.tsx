@@ -11,6 +11,7 @@ export default function ManageStockPage() {
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [showAdd, setShowAdd] = useState(false)
+  const [success, setSuccess] = useState(false)
   const [newIng, setNewIng] = useState<Partial<Ingredient>>({ nameTh: '', nameFr: '', unit: 'kg', threshold: 1 })
 
   useEffect(() => {
@@ -35,11 +36,16 @@ export default function ManageStockPage() {
       if (res.ok) {
         const { id } = await res.json()
         setIngredients([...ingredients, { ...newIng, id } as Ingredient])
+        setSuccess(true)
+        setTimeout(() => setSuccess(false), 3000)
         setShowAdd(false)
         setNewIng({ nameTh: '', nameFr: '', unit: 'kg', threshold: 1 })
+      } else {
+        const err = await res.json().catch(() => ({}))
+        throw new Error(`บันทึกวัตถุดิบไม่สำเร็จ: ${err.details || err.error || res.status}`)
       }
-    } catch (err) {
-      console.error(err); alert(t.common.error)
+    } catch (err: any) {
+      console.error(err); alert(err.message || t.common.error)
     } finally {
       setSaving(false)
     }
@@ -51,8 +57,14 @@ export default function ManageStockPage() {
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700 pb-40 text-slate-800">
       <div className="flex justify-between items-center px-1">
         <h1 className="text-2xl font-black tracking-tight">{t.manageStock.title}</h1>
-        <button 
-          id="manage-stock-add-toggle"
+        <div className="flex items-center gap-3">
+          {success && (
+            <span className="text-[10px] font-black text-emerald-600 bg-emerald-50 px-3 py-1.5 rounded-lg uppercase tracking-widest animate-in fade-in zoom-in duration-300">
+              ✅ {t.common.save} Success
+            </span>
+          )}
+          <button 
+            id="manage-stock-add-toggle"
           onClick={() => setShowAdd(!showAdd)}
           className={`px-6 py-2.5 rounded-xl text-sm font-black transition-all active:scale-95 shadow-sm ${
             showAdd ? 'bg-white border border-slate-200 text-slate-500' : 'bg-amber-600 text-white shadow-amber-600/20'
@@ -60,6 +72,7 @@ export default function ManageStockPage() {
         >
           {showAdd ? t.common.cancel : `+ ${t.manageStock.add}`}
         </button>
+        </div>
       </div>
 
       {showAdd && (
@@ -89,22 +102,11 @@ export default function ManageStockPage() {
               <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">{t.manageStock.unit}</label>
               <input 
                 id="new-ing-unit"
-                list="master-unit-list"
+                list="unit-suggestions"
                 className="w-full border border-slate-200 rounded-xl px-4 py-3 font-bold text-slate-800 bg-slate-50 focus:bg-white focus:ring-4 focus:ring-amber-500/10 focus:border-amber-500 outline-none transition-all"
                 value={newIng.unit}
                 onChange={e => setNewIng({ ...newIng, unit: e.target.value })}
               />
-              <datalist id="master-unit-list">
-                <option value="kg">Kilogram (กก.)</option>
-                <option value="g">Gram (กรัม)</option>
-                <option value="pcs">Pieces (ชิ้น)</option>
-                <option value="box">Box (กล่อง)</option>
-                <option value="bottle">Bottle (ขวด)</option>
-                <option value="l">Liter (ลิตร)</option>
-                <option value="ml">Milliliter (มล.)</option>
-                <option value="pack">Pack (แพ็ค)</option>
-                <option value="bunch">Bunch (กำ)</option>
-              </datalist>
             </div>
             <div className="space-y-1">
               <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">{t.manageStock.threshold}</label>

@@ -8,6 +8,7 @@ export default function DashboardPage() {
   const { t } = useLanguage()
   const [data, setData] = useState<DashboardData | null>(null)
   const [loading, setLoading] = useState(true)
+  const [dbUrl, setDbUrl] = useState<string | null>(null)
 
   const QUICK_ACTIONS = [
     { href: '/receipt',         icon: '🧾', color: 'bg-amber-50 text-amber-600 border-amber-100', id: 'nav-card-receipt',        key: 'receipt'        },
@@ -18,14 +19,21 @@ export default function DashboardPage() {
   ] as const
 
   useEffect(() => {
+    fetch('/api/sheets/url').then(r => r.json()).then(d => setDbUrl(d.url)).catch(() => {})
+
     fetch('/api/sheets/dashboard')
-      .then(r => r.json())
+      .then(async r => {
+        const d = await r.json()
+        if (!r.ok) throw new Error(d.details || d.error || r.statusText)
+        return d
+      })
       .then(d => {
         setData(d)
         setLoading(false)
       })
-      .catch((err) => {
+      .catch((err: any) => {
         console.error('Failed to fetch dashboard data:', err)
+        setData({ error: err.message } as any)
         setLoading(false)
       })
   }, [])
@@ -37,15 +45,30 @@ export default function DashboardPage() {
     </div>
   )
   
-  if (!data) return (
+  if (!data || (data as any).error) return (
     <div className="bg-white rounded-3xl p-12 text-center shadow-sm border border-slate-100">
       <div className="text-4xl mb-4">❌</div>
       <p className="text-rose-500 font-bold">{t.common.error}</p>
+      {(data as any)?.error && <p className="text-xs text-slate-400 mt-2 font-mono">{(data as any).error}</p>}
     </div>
   )
 
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
+      <div className="flex justify-between items-center px-1">
+        <h1 className="text-2xl font-black text-slate-800 tracking-tight">{t.nav.dashboard}</h1>
+        {dbUrl && (
+          <a 
+            href={dbUrl} 
+            target="_blank" 
+            rel="noopener noreferrer"
+            className="text-[10px] font-black text-amber-600 bg-amber-50 px-4 py-2 rounded-xl uppercase tracking-widest hover:bg-amber-100 transition-all flex items-center gap-2 border border-amber-100 shadow-sm"
+          >
+            📊 Open Database (Google Sheets)
+          </a>
+        )}
+      </div>
+
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Weekly Income */}
         <div className="bg-white rounded-[2rem] shadow-sm shadow-slate-200/50 border border-slate-100 p-8 relative overflow-hidden group hover:shadow-md transition-shadow">

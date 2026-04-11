@@ -23,10 +23,14 @@ export default function ReceiptPage() {
     try {
       const res = await fetch('/api/ocr', { method: 'POST', body: formData })
       const data = await res.json()
-      if (data.items) setItems(data.items)
-    } catch (err) {
+      if (res.ok) {
+        if (data.items) setItems(data.items)
+      } else {
+        throw new Error(`OCR failed: ${data.details || data.error || res.status}`)
+      }
+    } catch (err: any) {
       console.error('OCR failed:', err)
-      alert(t.common.error)
+      alert(err.message || t.common.error)
     } finally {
       setLoading(false)
     }
@@ -44,10 +48,15 @@ export default function ReceiptPage() {
           items,
         }),
       })
-      if (res.ok) setDone(true)
-    } catch (err) {
+      if (res.ok) {
+        setDone(true)
+      } else {
+        const err = await res.json().catch(() => ({}))
+        throw new Error(`บันทึกใบเสร็จไม่สำเร็จ: ${err.details || err.error || res.status}`)
+      }
+    } catch (err: any) {
       console.error('Save failed:', err)
-      alert(t.common.error)
+      alert(err.message || t.common.error)
     } finally {
       setLoading(false)
     }

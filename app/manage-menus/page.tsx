@@ -13,7 +13,8 @@ export default function ManageMenusPage() {
   const [saving, setSaving] = useState(false)
   const [showAdd, setShowAdd] = useState(false)
   const [showQuickAdd, setShowQuickAdd] = useState(false)
-  const [newMenu, setNewMenu] = useState<Partial<MenuTemplate>>({ nameTh: '', pricePerBox: 12, ingredients: [] })
+  const [editingId, setEditingId] = useState<string | null>(null)
+  const [newMenu, setNewMenu] = useState<Partial<MenuTemplate>>({ nameTh: '', pricePerBox: 0, ingredients: [] })
 
   useEffect(() => {
     fetch('/api/sheets/config')
@@ -29,53 +30,108 @@ export default function ManageMenusPage() {
     setSaving(true)
     try {
       // 1. Resolve manually typed ingredient names to real IDs
-      const finalIngredients = []
+      const finalIngredients: MenuIngredient[] = []
       for (const mi of (newMenu.ingredients || [])) {
         if (!mi.ingredientId) continue
         
-        // Check if ingredient already exists by nameTh
+        // Check if ingredient already exists by nameTh or ID
         const existing = ingredients.find(ing => ing.id === mi.ingredientId || ing.nameTh === mi.ingredientId)
+        const unit = (mi as any).tempUnit
+        
         if (existing) {
-          finalIngredients.push({ ...mi, ingredientId: existing.id })
+          // If the unit was changed in the form, update the master ingredient
+          if (unit && unit !== existing.unit) {
+            console.log('Updating existing ingredient unit:', existing.nameTh, 'to', unit)
+            await fetch('/api/sheets/config', {
+              method: 'PUT',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ ...existing, unit, type: 'ingredient' })
+            })
+          }
+          finalIngredients.push({ ingredientId: existing.id, defaultQty: mi.defaultQty })
         } else {
           // It's a brand new typed name - create it first!
-          const unit = (mi as any).tempUnit || 'kg'
+          const newUnit = unit || 'kg'
+          console.log('Creating brand new ingredient:', mi.ingredientId, 'with unit', newUnit)
           const res = await fetch('/api/sheets/config', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ nameTh: mi.ingredientId, nameFr: mi.ingredientId, unit, threshold: 1, type: 'ingredient' })
+            body: JSON.stringify({ nameTh: mi.ingredientId, nameFr: mi.ingredientId, unit: newUnit, threshold: 1, type: 'ingredient' })
           })
           if (res.ok) {
             const { id } = await res.json()
-            finalIngredients.push({ ...mi, ingredientId: id })
+            finalIngredients.push({ ingredientId: id, defaultQty: mi.defaultQty })
+          } else {
+            const err = await res.json().catch(() => ({}))
+            throw new Error(`บันทึกวัตถุดิบไม่สำเร็จ: ${err.error || res.status}`)
           }
         }
       }
 
       const res = await fetch('/api/sheets/config', {
-        method: 'POST',
+        method: editingId ? 'PUT' : 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...newMenu, ingredients: finalIngredients, type: 'menu' })
+        body: JSON.stringify({ 
+          ...(editingId ? { id: editingId } : {}), 
+          ...newMenu, 
+          ingredients: finalIngredients, 
+          type: 'menu' 
+        })
       })
       if (res.ok) {
-        const { id } = await res.json()
-        setMenus([...menus, { ...newMenu, id, ingredients: finalIngredients } as MenuTemplate])
+        if (editingId) {
+          setMenus(menus.map(m => m.id === editingId ? { ...newMenu, id: editingId, ingredients: finalIngredients } as MenuTemplate : m))
+        } else {
+          const { id } = await res.json()
+          setMenus([...menus, { ...newMenu, id, ingredients: finalIngredients } as MenuTemplate])
+        }
         setShowAdd(false)
-        setNewMenu({ nameTh: '', pricePerBox: 12, ingredients: [] })
+        setEditingId(null)
+        setNewMenu({ nameTh: '', pricePerBox: 0, ingredients: [] })
         // Refresh ingredients list for next time
         fetch('/api/sheets/config').then(r => r.json()).then(data => setIngredients(data.ingredients ?? []))
+      } else {
+        const err = await res.json().catch(() => ({}))
+        throw new Error(`บันทึกเมนูไม่สำเร็จ: ${err.details || err.error || res.status}`)
       }
-    } catch (err) {
-      console.error(err); alert(t.common.error)
+    } catch (err: any) {
+      console.error(err); alert(err.message || t.common.error)
     } finally {
       setSaving(false)
+    }
+  }
+
+  function handleEdit(menu: MenuTemplate) {
+    setEditingId(menu.id)
+    setNewMenu({
+      nameTh: menu.nameTh,
+      pricePerBox: menu.pricePerBox,
+      ingredients: [...menu.ingredients]
+    })
+    setShowAdd(true)
+  }
+
+  async function handleDelete(id: string) {
+    if (!confirm('Are you sure you want to delete this menu?')) return
+    try {
+      const res = await fetch(`/api/sheets/config?id=${id}&type=menu`, {
+        method: 'DELETE'
+      })
+      if (res.ok) {
+        setMenus(menus.filter(m => m.id !== id))
+      } else {
+        const err = await res.json().catch(() => ({}))
+        throw new Error(err.error || 'Delete failed')
+      }
+    } catch (err: any) {
+      alert(err.message)
     }
   }
 
   const addIngredientRow = () => {
     setNewMenu({
       ...newMenu,
-      ingredients: [...(newMenu.ingredients || []), { ingredientId: '', defaultQty: 0 }]
+      ingredients: [...(newMenu.ingredients || []), { ingredientId: '', defaultQty: 0, tempUnit: 'kg' } as any]
     })
   }
 
@@ -83,6 +139,14 @@ export default function ManageMenusPage() {
     const next = [...(newMenu.ingredients || [])]
     next[idx] = { ...next[idx], ...patch }
     setNewMenu({ ...newMenu, ingredients: next })
+  }
+
+  const toggleAdd = () => {
+    if (showAdd) {
+      setEditingId(null)
+      setNewMenu({ nameTh: '', pricePerBox: 0, ingredients: [] })
+    }
+    setShowAdd(!showAdd)
   }
 
   if (loading) return <p className="text-center py-8">{t.common.loading}</p>
@@ -93,7 +157,7 @@ export default function ManageMenusPage() {
         <h1 className="text-2xl font-black tracking-tight">{t.manageMenus.title}</h1>
         <button 
           id="manage-menus-add-toggle"
-          onClick={() => setShowAdd(!showAdd)}
+          onClick={toggleAdd}
           className={`px-6 py-2.5 rounded-xl text-sm font-black transition-all active:scale-95 shadow-sm ${
             showAdd ? 'bg-white border border-slate-200 text-slate-500' : 'bg-amber-600 text-white shadow-amber-600/20'
           }`}
@@ -120,6 +184,7 @@ export default function ManageMenusPage() {
                 id="new-menu-price"
                 className="w-full border border-slate-200 rounded-xl px-4 py-3 font-bold text-slate-800 bg-slate-50 focus:bg-white focus:ring-4 focus:ring-amber-500/10 focus:border-amber-500 outline-none transition-all"
                 value={newMenu.pricePerBox ?? 0}
+                placeholder="0"
                 onChange={val => setNewMenu({ ...newMenu, pricePerBox: val })}
               />
             </div>
@@ -135,36 +200,28 @@ export default function ManageMenusPage() {
                     className="flex-1 bg-transparent px-2 py-1 text-sm font-bold text-slate-700 outline-none border-b border-transparent focus:border-amber-500/20"
                     placeholder="Search or Type Ingredient..."
                     value={ingredients.find(ing => ing.id === mi.ingredientId)?.nameTh || mi.ingredientId}
-                    onChange={e => updateIngredient(i, { ingredientId: e.target.value })}
+                    onChange={e => {
+                      const val = e.target.value
+                      const existing = ingredients.find(ing => ing.nameTh === val)
+                      updateIngredient(i, { 
+                        ingredientId: val, 
+                        tempUnit: existing?.unit || (mi as any).tempUnit || 'kg' 
+                      } as any)
+                    }}
                   />
-                  {!ingredients.some(ing => ing.id === mi.ingredientId || ing.nameTh === mi.ingredientId) && (
-                    <>
-                      <input 
-                        list="unit-suggestions"
-                        className="w-16 bg-amber-50 border border-amber-200 rounded px-2 py-0.5 text-[10px] font-black text-amber-600 outline-none"
-                        placeholder="kg"
-                        onChange={e => {
-                          (mi as any).tempUnit = e.target.value
-                        }}
-                      />
-                      <datalist id="unit-suggestions">
-                        <option value="kg">Kilogram (กก.)</option>
-                        <option value="g">Gram (กรัม)</option>
-                        <option value="pcs">Pieces (ชิ้น)</option>
-                        <option value="box">Box (กล่อง)</option>
-                        <option value="bottle">Bottle (ขวด)</option>
-                        <option value="l">Liter (ลิตร)</option>
-                        <option value="ml">Milliliter (มล.)</option>
-                        <option value="pack">Pack (แพ็ค)</option>
-                        <option value="bunch">Bunch (กำ)</option>
-                      </datalist>
-                    </>
-                  )}
-                  <datalist id="menu-ing-list">
-                    {ingredients.map(ing => (
-                      <option key={ing.id} value={ing.nameTh}>{ing.nameFr}</option>
-                    ))}
-                  </datalist>
+                  
+                  <div className="relative">
+                    <input 
+                      list="unit-suggestions"
+                      className="w-16 bg-amber-50 border border-amber-200 rounded px-2 py-0.5 text-[10px] font-black text-amber-600 outline-none"
+                      placeholder="unit"
+                      value={(mi as any).tempUnit || ingredients.find(ing => ing.nameTh === mi.ingredientId || ing.id === mi.ingredientId)?.unit || ''}
+                      onChange={e => {
+                        updateIngredient(i, { tempUnit: e.target.value } as any)
+                      }}
+                    />
+                  </div>
+
                   <NumberInput 
                     
                     className="w-24 bg-white border border-slate-200 rounded-lg px-3 py-1 text-sm text-right font-black text-amber-600 outline-none focus:border-amber-500 shadow-sm"
@@ -174,13 +231,19 @@ export default function ManageMenusPage() {
                 </div>
               ))}
             </div>
+
+            <datalist id="menu-ing-list">
+              {ingredients.map(ing => (
+                <option key={ing.id} value={ing.nameTh}>{ing.nameFr} ({ing.unit})</option>
+              ))}
+            </datalist>
             <div className="flex justify-between items-center pt-2">
               <button 
                 id="new-menu-add-ing-row"
                 onClick={addIngredientRow}
                 className="text-amber-600 text-xs font-black uppercase tracking-widest flex items-center gap-1 hover:text-amber-700 transition-colors"
               >
-                <span className="text-lg">+</span> {t.stock.addIngredient}
+                {t.stock.addIngredient}
               </button>
               
               <button 
@@ -220,14 +283,30 @@ export default function ManageMenusPage() {
 
       <div className="bg-white rounded-[2rem] shadow-sm border border-slate-100 overflow-hidden divide-y divide-slate-50">
         {menus.map(menu => (
-          <div key={menu.id} className="p-6 flex justify-between items-center hover:bg-slate-50 transition-colors">
-            <div>
+          <div key={menu.id} id={`menu-item-${menu.id}`} className="p-6 flex justify-between items-center hover:bg-slate-50 transition-colors">
+            <div className="flex-1">
               <p className="font-black text-slate-700 text-lg">{menu.nameTh}</p>
               <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
                 {menu.ingredients.length} ingredients · €{menu.pricePerBox}/box
               </p>
             </div>
-            <div className="text-right">
+            <div className="flex items-center gap-3">
+              <div className="flex flex-col gap-1">
+                <button
+                  id={`menu-edit-${menu.id}`}
+                  onClick={() => handleEdit(menu)}
+                  className="px-3 py-1.5 text-[10px] font-black uppercase tracking-widest text-amber-600 hover:bg-amber-50 rounded-lg transition-colors"
+                >
+                  Edit
+                </button>
+                <button
+                  id={`menu-delete-${menu.id}`}
+                  onClick={() => handleDelete(menu.id)}
+                  className="px-3 py-1.5 text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                >
+                  Delete
+                </button>
+              </div>
               <div className="w-12 h-12 bg-amber-50 rounded-2xl flex items-center justify-center text-2xl">🍜</div>
             </div>
           </div>
