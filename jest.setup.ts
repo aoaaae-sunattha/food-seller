@@ -1,12 +1,20 @@
 import '@testing-library/jest-dom'
-const { Blob, File, FormData } = require('node:buffer')
+const { TextEncoder, TextDecoder } = require('node:util')
+global.TextEncoder = TextEncoder
+global.TextDecoder = TextDecoder
 
-// Map these for tests
+const { ReadableStream } = require('node:stream/web')
+global.ReadableStream = ReadableStream
+
+const { MessagePort, MessageChannel } = require('node:worker_threads')
+global.MessagePort = MessagePort
+global.MessageChannel = MessageChannel
+
+const { Blob, File, FormData } = require('node:buffer')
 global.Blob = Blob
 global.File = File
 global.FormData = FormData
 
-// Ensure Request and Response are global (they should be in Node 25, but let's be sure)
 if (typeof Request === 'undefined') {
   const { Request, Response, Headers } = require('undici')
   global.Request = Request
