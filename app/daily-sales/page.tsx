@@ -22,9 +22,9 @@ export default function DailySalesPage() {
   useEffect(() => {
     fetch('/api/sheets/config')
       .then(r => r.json())
-      .then(data => {
+      .then((data: { ingredients: any[], menus: MenuTemplate[] }) => {
         setMenus(data.menus)
-        setMenuSales(data.menus.map(m => ({ menu: m.nameTh, boxes: 0, pricePerBox: m.pricePerBox })))
+        setMenuSales(data.menus.map((m: MenuTemplate) => ({ menu: m.nameTh, boxes: 0, pricePerBox: m.pricePerBox })))
         setLoading(false)
       })
   }, [])

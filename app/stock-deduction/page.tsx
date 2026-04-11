@@ -18,7 +18,7 @@ export default function StockDeductionPage() {
   useEffect(() => {
     fetch('/api/sheets/config')
       .then(r => r.json())
-      .then(data => {
+      .then((data: { ingredients: Ingredient[], menus: MenuTemplate[] }) => {
         setMenus(data.menus)
         setAllIngredients(data.ingredients)
         setLoading(false)
