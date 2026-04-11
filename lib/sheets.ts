@@ -33,10 +33,16 @@ export function getSheetTitle(tab: TabKey): string {
 
 function getAuth(accessToken?: string) {
   if (accessToken) {
-    const auth = new OAuth2Client()
+    console.log('--- Sheets Debug: getAuth called with token ---')
+    console.log('Token starts with:', accessToken.substring(0, 4))
+    const auth = new OAuth2Client(
+      process.env.GOOGLE_CLIENT_ID,
+      process.env.GOOGLE_CLIENT_SECRET
+    )
     auth.setCredentials({ access_token: accessToken })
     return auth
   }
+  console.log('--- Sheets Debug: getAuth using ADC fallback ---')
   // Fallback to ADC (Application Default Credentials)
   return new google.auth.GoogleAuth({
     scopes: ['https://www.googleapis.com/auth/spreadsheets', 'https://www.googleapis.com/auth/drive'],
@@ -57,78 +63,101 @@ export function getDriveClient(accessToken?: string) {
  * Returns the spreadsheet ID.
  */
 export async function getOrCreateMonthSheet(accessToken?: string, date: Date = new Date()): Promise<string> {
+  console.log('--- Sheets Debug: getOrCreateMonthSheet start ---')
   const sheets = getSheetsClient(accessToken)
   const drive = getDriveClient(accessToken)
   const title = buildMonthTitle(date)
+  console.log('Target Spreadsheet Title:', title)
 
-  // Search for existing spreadsheet with this title
-  const search = await drive.files.list({
-    q: `mimeType='application/vnd.google-apps.spreadsheet' and name='${title}' and trashed=false`,
-    fields: 'files(id,name)',
-  })
-
-  if (search.data.files && search.data.files.length > 0) {
-    return search.data.files[0].id!
-  }
-
-  // Create new spreadsheet
-  const created = await sheets.spreadsheets.create({
-    requestBody: {
-      properties: { title },
-      sheets: [
-        { properties: { title: 'Purchases' } },
-        { properties: { title: 'Stock' } },
-        { properties: { title: 'Daily Sales' } },
-        { properties: { title: 'Monthly Summary' } },
-        { properties: { title: 'Config' } },
-      ],
-    },
-  })
-  const newId = created.data.spreadsheetId!
-
-  // Add headers
-  await sheets.spreadsheets.values.batchUpdate({
-    spreadsheetId: newId,
-    requestBody: {
-      valueInputOption: 'RAW',
-      data: [
-        { range: 'Purchases!A1', values: [['date','store','item_fr','item_th','qty','unit','price','total']] },
-        { range: 'Stock!A1', values: [['date','ingredient','amount_used','unit','reason','menu']] },
-        { range: 'Daily Sales!A1', values: [['date','menu','boxes','price_per_box','subtotal','cash','card','total']] },
-      ],
-    },
-  })
-
-  // Copy Config from previous month if it exists
-  const prevDate = new Date(date.getFullYear(), date.getMonth() - 1, 1)
-  const prevTitle = buildMonthTitle(prevDate)
-  const prevSearch = await drive.files.list({
-    q: `mimeType='application/vnd.google-apps.spreadsheet' and name='${prevTitle}' and trashed=false`,
-    fields: 'files(id)',
-  })
-  if (prevSearch.data.files && prevSearch.data.files.length > 0) {
-    const prevId = prevSearch.data.files[0].id!
-    const prevConfig = await sheets.spreadsheets.values.get({
-      spreadsheetId: prevId,
-      range: 'Config!A:Z',
+  try {
+    // Search for existing spreadsheet with this title
+    console.log('Searching for existing file...')
+    const search = await drive.files.list({
+      q: `mimeType='application/vnd.google-apps.spreadsheet' and name='${title}' and trashed=false`,
+      fields: 'files(id,name)',
     })
-    if (prevConfig.data.values && prevConfig.data.values.length > 0) {
-      await sheets.spreadsheets.values.update({
-        spreadsheetId: newId,
-        range: 'Config!A1',
-        valueInputOption: 'RAW',
-        requestBody: { values: prevConfig.data.values },
-      })
-    }
-  }
 
-  return newId
+    if (search.data.files && search.data.files.length > 0) {
+      const existingId = search.data.files[0].id!
+      console.log('Found existing spreadsheet:', existingId)
+      return existingId
+    }
+
+    console.log('No existing spreadsheet found. Creating new one...')
+    // Create new spreadsheet
+    const created = await sheets.spreadsheets.create({
+      requestBody: {
+        properties: { title },
+        sheets: [
+          { properties: { title: 'Purchases' } },
+          { properties: { title: 'Stock' } },
+          { properties: { title: 'Daily Sales' } },
+          { properties: { title: 'Monthly Summary' } },
+          { properties: { title: 'Config' } },
+        ],
+      },
+    })
+    const newId = created.data.spreadsheetId!
+    console.log('New spreadsheet created successfully! ID:', newId)
+
+    // Add headers
+    console.log('Adding headers to new spreadsheet...')
+    await sheets.spreadsheets.values.batchUpdate({
+      spreadsheetId: newId,
+      requestBody: {
+        valueInputOption: 'RAW',
+        data: [
+          { range: 'Purchases!A1', values: [['date','store','item_fr','item_th','qty','unit','price','total']] },
+          { range: 'Stock!A1', values: [['date','ingredient','amount_used','unit','reason','menu']] },
+          { range: 'Daily Sales!A1', values: [['date','menu','boxes','price_per_box','subtotal','cash','card','total']] },
+          { range: 'Config!A1', values: [['type','id','name_th','name_fr_or_price','unit_or_ingredients','threshold']] },
+          { range: 'Monthly Summary!A1', values: [['category','metric','value']] },
+        ],
+      },
+    })
+    console.log('Headers added.')
+
+    // Copy Config from previous month if it exists
+    const prevDate = new Date(date.getFullYear(), date.getMonth() - 1, 1)
+    const prevTitle = buildMonthTitle(prevDate)
+    console.log('Checking for previous month config:', prevTitle)
+    const prevSearch = await drive.files.list({
+      q: `mimeType='application/vnd.google-apps.spreadsheet' and name='${prevTitle}' and trashed=false`,
+      fields: 'files(id)',
+    })
+    if (prevSearch.data.files && prevSearch.data.files.length > 0) {
+      const prevId = prevSearch.data.files[0].id!
+      console.log('Copying config from:', prevId)
+      const prevConfig = await sheets.spreadsheets.values.get({
+        spreadsheetId: prevId,
+        range: 'Config!A:Z',
+      })
+      if (prevConfig.data.values && prevConfig.data.values.length > 0) {
+        await sheets.spreadsheets.values.update({
+          spreadsheetId: newId,
+          range: 'Config!A1',
+          valueInputOption: 'RAW',
+          requestBody: { values: prevConfig.data.values },
+        })
+        console.log('Config copied.')
+      }
+    }
+
+    console.log('--- Sheets Debug: getOrCreateMonthSheet end ---')
+    return newId
+  } catch (error: any) {
+    console.error('CRITICAL ERROR in getOrCreateMonthSheet:', error.message)
+    if (error.response?.data) {
+      console.error('Google API Error Details:', JSON.stringify(error.response.data, null, 2))
+    }
+    throw error
+  }
 }
 
 /**
  * Appends rows to a tab in the current month's spreadsheet.
  */
-export async function appendRows(accessToken?: string, tab: TabKey, rows: unknown[][]): Promise<void> {
+export async function appendRows(accessToken: string | undefined, tab: TabKey, rows: unknown[][]): Promise<void> {
   const sheets = getSheetsClient(accessToken)
   const spreadsheetId = await getOrCreateMonthSheet(accessToken)
   await sheets.spreadsheets.values.append({
@@ -143,7 +172,7 @@ export async function appendRows(accessToken?: string, tab: TabKey, rows: unknow
 /**
  * Reads all rows from a tab (excluding header row).
  */
-export async function readRows(accessToken?: string, tab: TabKey): Promise<string[][]> {
+export async function readRows(accessToken: string | undefined, tab: TabKey): Promise<string[][]> {
   const sheets = getSheetsClient(accessToken)
   const spreadsheetId = await getOrCreateMonthSheet(accessToken)
   const res = await sheets.spreadsheets.values.get({
@@ -151,4 +180,18 @@ export async function readRows(accessToken?: string, tab: TabKey): Promise<strin
     range: `${TAB_NAMES[tab]}!A2:Z`,
   })
   return (res.data.values as string[][]) || []
+}
+
+/**
+ * Overwrites a tab with a header and rows.
+ */
+export async function updateTab(accessToken: string | undefined, tab: TabKey, header: string[], rows: unknown[][]): Promise<void> {
+  const sheets = getSheetsClient(accessToken)
+  const spreadsheetId = await getOrCreateMonthSheet(accessToken)
+  await sheets.spreadsheets.values.update({
+    spreadsheetId,
+    range: `${TAB_NAMES[tab]}!A1`,
+    valueInputOption: 'RAW',
+    requestBody: { values: [header, ...rows] },
+  })
 }
