@@ -76,6 +76,11 @@ export default function DailySalesPage() {
       })
       if (res.ok) {
         setDone(true)
+        setTimeout(() => setDone(false), 3000)
+        // Reset form
+        setCash(0)
+        setCard(0)
+        setMenuSales(menus.map(m => ({ menu: m.nameTh, boxes: 0, pricePerBox: m.pricePerBox })))
         // Refresh history
         const hRes = await fetch('/api/sheets/sales')
         const hData = await hRes.json()
@@ -92,61 +97,77 @@ export default function DailySalesPage() {
   }
 
   if (loading) return <p className="text-center py-8">{t.common.loading}</p>
-  
-  if (done) return (
-    <div className="space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-700 pb-32">
-      <div className="flex flex-col items-center justify-center py-8">
-        <div className="bg-white p-10 rounded-[3rem] shadow-xl shadow-slate-200/50 border border-slate-100 flex flex-col items-center space-y-6 text-center max-w-sm w-full">
-          <div className="w-20 h-20 bg-emerald-50 rounded-full flex items-center justify-center text-4xl shadow-inner animate-bounce text-emerald-600">
-            ✅
-          </div>
-          <div className="space-y-2">
-            <h2 className="text-2xl font-black text-slate-800 tracking-tight">{t.common.save}</h2>
-            <p className="text-slate-400 font-medium">Daily sales have been logged successfully.</p>
-          </div>
-          <button 
-            onClick={() => { setDone(false); setCash(0); setCard(0); setMenuSales(menus.map(m => ({ menu: m.nameTh, boxes: 0, pricePerBox: m.pricePerBox }))); }}
-            className="w-full bg-slate-900 text-white py-4 rounded-2xl font-black text-lg shadow-lg hover:bg-slate-800 transition-all active:scale-95"
-          >
-            Record More
-          </button>
+
+  return (
+    <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700 pb-32">
+      <div className="flex justify-between items-center px-1">
+        <h1 className="text-2xl font-black text-slate-800 tracking-tight">{t.sales.title}</h1>
+        {done && (
+          <span className="text-[10px] font-black text-emerald-600 bg-emerald-50 px-3 py-1.5 rounded-lg uppercase tracking-widest animate-in fade-in zoom-in duration-300">
+            ✅ {t.common.save} Success
+          </span>
+        )}
+      </div>
+      
+      <div className="space-y-4 pb-8">
+...
+        <div className={`flex justify-between items-center text-[10px] font-black uppercase tracking-widest px-1 relative z-10 ${totalRecorded !== totalSales ? 'text-amber-400' : 'text-slate-500'}`}>
+          <span>Total Recorded: €{totalRecorded.toFixed(2)}</span>
+          {totalRecorded !== totalSales && (
+            <span className="bg-amber-400/10 px-2 py-1 rounded-lg">Gap: €{(totalRecorded - totalSales).toFixed(2)}</span>
+          )}
         </div>
       </div>
 
-      <div className="space-y-6">
+      <button 
+        id="sales-save-btn"
+        onClick={handleSave}
+        disabled={saving || totalSales === 0}
+        className="w-full bg-amber-600 text-white py-5 rounded-[2rem] font-black text-xl shadow-xl shadow-amber-600/30 hover:bg-amber-700 transition-all active:scale-[0.98] disabled:opacity-50 disabled:active:scale-100"
+      >
+        {saving ? (
+          <span className="flex items-center justify-center gap-2">
+            <span className="w-6 h-6 border-2 border-white/20 border-t-white rounded-full animate-spin" />
+            {t.common.loading}
+          </span>
+        ) : t.sales.save}
+      </button>
+
+      {/* History Table */}
+      <div className="pt-12 space-y-6">
         <h2 className="text-xl font-black text-slate-800 px-1">{t.sales.history}</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {history.map((h, i) => (
-            <div key={i} className="bg-white p-6 rounded-[2rem] shadow-sm border border-slate-100 flex flex-col gap-3 group hover:shadow-md transition-all">
-              <div className="flex justify-between items-start">
-                <div>
-                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">{h.date}</p>
-                  <p className="font-black text-slate-700 text-lg">{h.menu}</p>
-                </div>
-                <div className="text-right">
-                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">{h.boxes} {t.sales.boxes}</p>
-                  <p className="font-black text-amber-600 text-lg">€{h.total.toFixed(1)}</p>
-                </div>
-              </div>
-              <div className="pt-3 border-t border-slate-50 flex justify-between items-center text-[11px] font-bold text-slate-500">
-                <div className="flex gap-3">
-                  <span className="bg-slate-50 px-2 py-1 rounded-lg">💵 {t.sales.cash}: €{h.cash.toFixed(1)}</span>
-                  <span className="bg-slate-50 px-2 py-1 rounded-lg">💳 {t.sales.card}: €{h.card.toFixed(1)}</span>
-                </div>
-                <span className="text-slate-300">Sum: €{h.totalRecorded.toFixed(1)}</span>
-              </div>
-            </div>
-          ))}
+        <div className="bg-white rounded-[2rem] shadow-sm border border-slate-100 overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-sm font-bold border-collapse">
+              <thead className="bg-slate-50 text-[10px] font-black uppercase text-slate-400 sticky top-0 z-10">
+                <tr>
+                  <th className="px-6 py-4">{t.receipt.store || 'Date'}</th>
+                  <th className="px-6 py-4">{t.manageMenus.name}</th>
+                  <th className="px-6 py-4 text-center">{t.receipt.qty}</th>
+                  <th className="px-6 py-4 text-right">{t.sales.cash}</th>
+                  <th className="px-6 py-4 text-right">{t.sales.card}</th>
+                  <th className="px-6 py-4 text-right">{t.sales.total}</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-50">
+                {history.map((h, i) => (
+                  <tr key={i} className="hover:bg-slate-50 transition-colors">
+                    <td className="px-6 py-4 text-slate-400 text-[10px] font-black uppercase tracking-tighter whitespace-nowrap">{h.date}</td>
+                    <td className="px-6 py-4 text-slate-700 font-black">{h.menu}</td>
+                    <td className="px-6 py-4 text-center text-slate-600">{h.boxes}</td>
+                    <td className="px-6 py-4 text-right text-slate-500 font-medium">€{h.cash.toFixed(1)}</td>
+                    <td className="px-6 py-4 text-right text-slate-500 font-medium">€{h.card.toFixed(1)}</td>
+                    <td className="px-6 py-4 text-right text-amber-600 font-black">€{h.total.toFixed(1)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
     </div>
   )
-
-  return (
-    <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700 pb-32">
-      <h1 className="text-2xl font-black text-slate-800 tracking-tight">{t.sales.title}</h1>
-      
-      <div className="space-y-4 pb-8">
+}
         {menuSales.map((sale, i) => (
           <div key={sale.menu} className="bg-white p-6 rounded-[2rem] shadow-sm border border-slate-100 flex items-center gap-4 group hover:shadow-md transition-all">
             <div className="flex-1 font-black text-slate-700 text-lg">{sale.menu}</div>
