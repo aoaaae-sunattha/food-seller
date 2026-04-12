@@ -10,17 +10,18 @@ export async function GET(_req: NextRequest) {
     if (!accessToken) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
     const rows = await readRows(accessToken, 'sales')
-    // Expecting columns: date, menu, boxes, pricePerBox, total, cash, card, totalRecorded
+    // Columns: id, date, menu, boxes, pricePerBox, total, cash, card, totalRecorded
     const history = rows.map(row => ({
-      date: row[0],
-      menu: row[1],
-      boxes: Number(row[2]),
-      pricePerBox: Number(row[3]),
-      total: Number(row[4]),
-      cash: Number(row[5]),
-      card: Number(row[6]),
-      totalRecorded: Number(row[7]),
-    })).reverse() // Show latest first
+      id: row[0],
+      date: row[1],
+      menu: row[2],
+      boxes: Number(row[3]),
+      pricePerBox: Number(row[4]),
+      total: Number(row[5]),
+      cash: Number(row[6]),
+      card: Number(row[7]),
+      totalRecorded: Number(row[8]),
+    })).reverse()
 
     return NextResponse.json({ history })
   } catch (error: any) {
@@ -29,14 +30,13 @@ export async function GET(_req: NextRequest) {
   }
 }
 
+import { randomUUID } from 'crypto'
+import { updateTab } from '../../../../lib/sheets'
+
 export async function POST(req: NextRequest) {
   try {
     const session = await getServerSession(authOptions)
     const accessToken = (session as any)?.accessToken
-    console.log('--- API Debug: POST /api/sheets/sales ---')
-    console.log('Session present:', !!session)
-    console.log('AccessToken present:', !!accessToken)
-
     if (!accessToken) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
     const { date, menuSales, cash, card }: {
@@ -48,6 +48,7 @@ export async function POST(req: NextRequest) {
 
     const total = cash + card
     const rows = menuSales.map(s => [
+      randomUUID().slice(0, 8),
       date, s.menu, s.boxes, s.pricePerBox, s.boxes * s.pricePerBox, cash, card, total,
     ])
 
@@ -55,10 +56,34 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ ok: true })
   } catch (error: any) {
     console.error('Sales POST error:', error.message)
-    return NextResponse.json({ 
-      error: 'Failed to record sales',
-      details: error.message,
-      code: error.code
-    }, { status: 500 })
+    return NextResponse.json({ error: 'Failed to record sales' }, { status: 500 })
+  }
+}
+
+export async function PUT(req: NextRequest) {
+  try {
+    const session = await getServerSession(authOptions)
+    const accessToken = (session as any)?.accessToken
+    if (!accessToken) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
+    const body = await req.json()
+    const { id, date, menu, boxes, pricePerBox, cash, card } = body
+
+    const rows = await readRows(accessToken, 'sales')
+    const updatedRows = rows.map(row => {
+      if (row[0] === id) {
+        const total = Number(boxes) * Number(pricePerBox)
+        const totalRecorded = Number(cash) + Number(card)
+        return [id, date, menu, boxes, pricePerBox, total, cash, card, totalRecorded]
+      }
+      return row
+    })
+
+    const header = ['id', 'date', 'menu', 'boxes', 'price_per_box', 'subtotal', 'cash', 'card', 'total']
+    await updateTab(accessToken, 'sales', header, updatedRows)
+    return NextResponse.json({ ok: true })
+  } catch (error: any) {
+    console.error('Sales PUT error:', error.message)
+    return NextResponse.json({ error: 'Failed to update sales' }, { status: 500 })
   }
 }

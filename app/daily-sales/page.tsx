@@ -11,6 +11,7 @@ interface MenuSale {
 }
 
 interface SaleHistoryItem {
+  id: string
   date: string
   menu: string
   boxes: number
@@ -31,6 +32,10 @@ export default function DailySalesPage() {
   const [saving, setSaving] = useState(false)
   const [done, setDone] = useState(false)
   const [history, setHistory] = useState<SaleHistoryItem[]>([])
+
+  // Edit state
+  const [editingId, setEditingId] = useState<string | null>(null)
+  const [editForm, setEditForm] = useState<Partial<SaleHistoryItem>>({})
 
   useEffect(() => {
     Promise.all([
@@ -75,8 +80,7 @@ export default function DailySalesPage() {
         })
       })
       if (res.ok) {
-        setDone(true)
-        setTimeout(() => setDone(false), 3000)
+        showSuccess()
         // Reset form
         setCash(0)
         setCard(0)
@@ -94,6 +98,37 @@ export default function DailySalesPage() {
     } finally {
       setSaving(false)
     }
+  }
+
+  async function handleUpdate() {
+    if (!editingId) return
+    setSaving(true)
+    try {
+      const res = await fetch('/api/sheets/sales', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(editForm)
+      })
+      if (res.ok) {
+        setEditingId(null)
+        // Refresh history
+        const hRes = await fetch('/api/sheets/sales')
+        const hData = await hRes.json()
+        setHistory(hData.history ?? [])
+        showSuccess()
+      } else {
+        throw new Error('Update failed')
+      }
+    } catch (err: any) {
+      alert(err.message)
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  function showSuccess() {
+    setDone(true)
+    setTimeout(() => setDone(false), 3000)
   }
 
   if (loading) return <p className="text-center py-8">{t.common.loading}</p>
@@ -215,17 +250,86 @@ export default function DailySalesPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-50">
-                {history.map((h, i) => (
-                  <tr key={i} className="hover:bg-slate-50 transition-colors">
-                    <td className="px-6 py-4 text-slate-400 text-[10px] font-black uppercase tracking-tighter whitespace-nowrap">{h.date}</td>
-                    <td className="px-6 py-4 text-slate-700 font-black">{h.menu}</td>
-                    <td className="px-6 py-4 text-center text-slate-600">{h.boxes}</td>
-                    <td className="px-6 py-4 text-right text-slate-400 font-bold">€{h.pricePerBox.toFixed(1)}</td>
-                    <td className="px-6 py-4 text-right text-slate-500 font-medium">€{h.cash.toFixed(1)}</td>
-                    <td className="px-6 py-4 text-right text-slate-500 font-medium">€{h.card.toFixed(1)}</td>
-                    <td className="px-6 py-4 text-right text-amber-600 font-black">€{h.total.toFixed(1)}</td>
-                  </tr>
-                ))}
+                {history.map((h, i) => {
+                  const isEditing = editingId === h.id
+                  return (
+                    <tr key={i} className="hover:bg-slate-50 transition-colors group">
+                      <td className="px-6 py-4 text-slate-400 text-[10px] font-black uppercase tracking-tighter whitespace-nowrap">
+                        {isEditing ? (
+                          <input 
+                            type="date"
+                            className="bg-slate-100 border-0 rounded px-1 py-1 text-[10px] font-black w-24"
+                            value={editForm.date}
+                            onChange={e => setEditForm({...editForm, date: e.target.value})}
+                          />
+                        ) : h.date}
+                      </td>
+                      <td className="px-6 py-4 text-slate-700 font-black">
+                        {isEditing ? (
+                          <input 
+                            className="bg-slate-100 border-0 rounded px-2 py-1 w-full"
+                            value={editForm.menu}
+                            onChange={e => setEditForm({...editForm, menu: e.target.value})}
+                          />
+                        ) : h.menu}
+                      </td>
+                      <td className="px-6 py-4 text-center text-slate-600">
+                        {isEditing ? (
+                          <NumberInput 
+                            className="w-16 bg-slate-100 border-0 rounded px-2 py-1 text-center"
+                            value={editForm.boxes ?? 0}
+                            onChange={val => setEditForm({...editForm, boxes: val})}
+                          />
+                        ) : h.boxes}
+                      </td>
+                      <td className="px-6 py-4 text-right text-slate-400 font-bold">
+                        {isEditing ? (
+                          <NumberInput 
+                            className="w-16 bg-slate-100 border-0 rounded px-2 py-1 text-right"
+                            value={editForm.pricePerBox ?? 0}
+                            onChange={val => setEditForm({...editForm, pricePerBox: val})}
+                          />
+                        ) : `€${h.pricePerBox.toFixed(1)}`}
+                      </td>
+                      <td className="px-6 py-4 text-right text-slate-500 font-medium">
+                        {isEditing ? (
+                          <NumberInput 
+                            className="w-20 bg-slate-100 border-0 rounded px-2 py-1 text-right"
+                            value={editForm.cash ?? 0}
+                            onChange={val => setEditForm({...editForm, cash: val})}
+                          />
+                        ) : `€${h.cash.toFixed(1)}`}
+                      </td>
+                      <td className="px-6 py-4 text-right text-slate-500 font-medium">
+                        {isEditing ? (
+                          <NumberInput 
+                            className="w-20 bg-slate-100 border-0 rounded px-2 py-1 text-right"
+                            value={editForm.card ?? 0}
+                            onChange={val => setEditForm({...editForm, card: val})}
+                          />
+                        ) : `€${h.card.toFixed(1)}`}
+                      </td>
+                      <td className="px-6 py-4 text-right text-amber-600 font-black">
+                        {isEditing ? (
+                          <div className="flex gap-2 justify-end">
+                            <button onClick={handleUpdate} className="text-emerald-600 hover:scale-110 transition-transform">✓</button>
+                            <button onClick={() => setEditingId(null)} className="text-rose-400 hover:scale-110 transition-transform">✕</button>
+                          </div>
+                        ) : (
+                          <div className="flex items-center justify-end gap-3">
+                            <span>€{h.total.toFixed(1)}</span>
+                            <button 
+                              onClick={() => { setEditingId(h.id); setEditForm(h); }}
+                              className="opacity-0 group-hover:opacity-100 text-[10px] text-slate-300 hover:text-amber-600 transition-all uppercase tracking-widest font-black"
+                            >
+                              {t.common.edit}
+                            </button>
+                          </div>
+                        )}
+                      </td>
+                    </tr>
+                  )
+                })}
               </tbody>
             </table>
           </div>
