@@ -274,8 +274,8 @@ export default function DailySalesPage() {
             <table className="w-full text-left text-sm font-bold border-collapse">
               <thead className="bg-slate-50 text-[10px] font-black uppercase text-slate-400 sticky top-0 z-10">
                 <tr>
-                  <th className="px-6 py-4">{t.manageStock.name}</th>
-                  <th className="px-6 py-4 text-center">{t.receipt.qty}</th>
+                  <th className="px-6 py-4">{t.manageMenus.name}</th>
+                  <th className="px-6 py-4 text-center">{t.sales.boxes}</th>
                   <th className="px-6 py-4 text-right">{t.sales.pricePerBox}</th>
                   <th className="px-6 py-4 text-right">{t.sales.cash}</th>
                   <th className="px-6 py-4 text-right">{t.sales.card}</th>

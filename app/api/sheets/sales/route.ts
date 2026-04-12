@@ -10,18 +10,21 @@ export async function GET(_req: NextRequest) {
     if (!accessToken) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
     const rows = await readRows(accessToken, 'sales')
-    // Columns: id, date, menu, boxes, pricePerBox, total, cash, card, totalRecorded
-    const history = rows.map(row => ({
-      id: row[0],
-      date: row[1],
-      menu: row[2],
-      boxes: Number(row[3]),
-      pricePerBox: Number(row[4]),
-      total: Number(row[5]),
-      cash: Number(row[6]),
-      card: Number(row[7]),
-      totalRecorded: Number(row[8]),
-    })).reverse()
+    // Columns might be 9 (with ID) or 8 (legacy without ID)
+    const history = rows.map(row => {
+      const hasId = row.length === 9
+      return {
+        id: hasId ? row[0] : `legacy-${row[0]}-${row[1]}`, // fallback ID if missing
+        date: hasId ? row[1] : row[0],
+        menu: hasId ? row[2] : row[1],
+        boxes: Number(hasId ? row[3] : row[2]),
+        pricePerBox: Number(hasId ? row[4] : row[3]),
+        total: Number(hasId ? row[5] : row[4]),
+        cash: Number(hasId ? row[6] : row[5]),
+        card: Number(hasId ? row[7] : row[6]),
+        totalRecorded: Number(hasId ? row[8] : row[7]),
+      }
+    }).reverse()
 
     return NextResponse.json({ history })
   } catch (error: any) {
