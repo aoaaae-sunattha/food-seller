@@ -184,10 +184,16 @@ export async function readRows(accessToken: string | undefined, tab: TabKey): Pr
 
 /**
  * Overwrites a tab with a header and rows.
+ * Clears the sheet first so stale rows beyond the new data are removed.
  */
 export async function updateTab(accessToken: string | undefined, tab: TabKey, header: string[], rows: unknown[][]): Promise<void> {
   const sheets = getSheetsClient(accessToken)
   const spreadsheetId = await getOrCreateMonthSheet(accessToken)
+  // Clear existing content first; without this, rows beyond the new data persist
+  await sheets.spreadsheets.values.clear({
+    spreadsheetId,
+    range: TAB_NAMES[tab],
+  })
   await sheets.spreadsheets.values.update({
     spreadsheetId,
     range: `${TAB_NAMES[tab]}!A1`,

@@ -90,6 +90,13 @@ test('DELETE /api/sheets/config removes row', async () => {
   )
 })
 
+test('POST /api/sheets/config returns 401 for unauthenticated bulk request', async () => {
+  mockedGetServerSession.mockResolvedValue(null)
+  const req = { json: jest.fn().mockResolvedValue({ bulk: true, items: [] }) }
+  const res = await POST(req as any)
+  expect(res.status).toBe(401)
+})
+
 test('POST /api/sheets/config bulk updates and adds ingredients', async () => {
   const body = {
     bulk: true,
