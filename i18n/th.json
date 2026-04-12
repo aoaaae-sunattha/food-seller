@@ -63,6 +63,20 @@
     "ingredients": "วัตถุดิบ",
     "defaultQty": "ปริมาณต่อหม้อ"
   },
+  "bulkImport": {
+    "title": "นำเข้าข้อมูลจำนวนมาก",
+    "downloadTemplate": "ดาวน์โหลดตัวอย่าง CSV",
+    "importCount": "นำเข้าวัตถุดิบ {{count}} รายการ",
+    "status": "สถานะ",
+    "new": "ใหม่",
+    "update": "อัปเดต",
+    "warning": "คำเตือน",
+    "error": "ข้อผิดพลาด",
+    "added": "เพิ่มแล้ว",
+    "updated": "อัปเดตแล้ว",
+    "skipped": "ข้าม",
+    "close": "ปิด"
+  },
   "common": {
     "save": "บันทึก",
     "cancel": "ยกเลิก",

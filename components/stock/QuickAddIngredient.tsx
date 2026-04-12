@@ -22,12 +22,18 @@ export default function QuickAddIngredient({ onAdded, onCancel }: Props) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ ...newIng, type: 'ingredient' })
       })
-      if (res.ok) {
-        const { id } = await res.json()
-        onAdded({ ...newIng, id } as Ingredient)
+      const data = await res.json().catch(() => ({}))
+      if (res.status === 409) {
+        alert(`วัตถุดิบ "${newIng.nameTh}" มีอยู่แล้ว`)
+        return
       }
-    } catch (err) {
-      console.error(err); alert(t.common.error)
+      if (res.ok) {
+        onAdded({ ...newIng, id: data.id } as Ingredient)
+      } else {
+        throw new Error(data.details || data.error || 'บันทึกไม่สำเร็จ')
+      }
+    } catch (err: any) {
+      console.error(err); alert(err.message || t.common.error)
     } finally {
       setSaving(false)
     }
@@ -58,13 +64,27 @@ export default function QuickAddIngredient({ onAdded, onCancel }: Props) {
       <div className="grid grid-cols-2 gap-3">
         <div className="space-y-1">
           <label className="text-[9px] font-black text-amber-800 uppercase tracking-tighter px-1">{t.manageStock.unit}</label>
-          <input 
-            list="unit-suggestions"
-            className="w-full border border-amber-200 rounded-lg px-3 py-2 text-sm font-bold text-slate-800 bg-white focus:ring-2 focus:ring-amber-500/20 outline-none"
+          <select
+            className="w-full border border-amber-200 rounded-lg px-3 py-2 text-sm font-bold text-slate-800 bg-white focus:ring-2 focus:ring-amber-500/20 outline-none cursor-pointer"
             value={newIng.unit}
             onChange={e => setNewIng({ ...newIng, unit: e.target.value })}
-            placeholder="kg, pcs, box..."
-          />
+          >
+            <option value="kg">kg — Kilogram</option>
+            <option value="g">g — Gram</option>
+            <option value="mg">mg — Milligram</option>
+            <option value="l">l — Liter</option>
+            <option value="ml">ml — Milliliter</option>
+            <option value="pcs">pcs — Pieces</option>
+            <option value="box">box — Box</option>
+            <option value="bottle">bottle — Bottle</option>
+            <option value="can">can — Can</option>
+            <option value="pack">pack — Pack</option>
+            <option value="bag">bag — Bag</option>
+            <option value="bunch">bunch — Bunch</option>
+            <option value="tray">tray — Tray</option>
+            <option value="tbsp">tbsp — Tablespoon</option>
+            <option value="tsp">tsp — Teaspoon</option>
+          </select>
         </div>
         <div className="space-y-1">
           <label className="text-[9px] font-black text-amber-800 uppercase tracking-tighter px-1">{t.manageStock.threshold}</label>

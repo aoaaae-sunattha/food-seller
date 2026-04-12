@@ -63,6 +63,20 @@
     "ingredients": "Ingredients",
     "defaultQty": "Qty per batch"
   },
+  "bulkImport": {
+    "title": "Bulk Import",
+    "downloadTemplate": "Download CSV Template",
+    "importCount": "Import {{count}} ingredients",
+    "status": "Status",
+    "new": "New",
+    "update": "Update",
+    "warning": "Warning",
+    "error": "Error",
+    "added": "Added",
+    "updated": "Updated",
+    "skipped": "Skipped",
+    "close": "Close"
+  },
   "common": {
     "save": "Save",
     "cancel": "Cancel",

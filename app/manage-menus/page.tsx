@@ -58,12 +58,14 @@ export default function ManageMenusPage() {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ nameTh: mi.ingredientId, nameFr: mi.ingredientId, unit: newUnit, threshold: 1, type: 'ingredient' })
           })
+          const data = await res.json().catch(() => ({}))
           if (res.ok) {
-            const { id } = await res.json()
-            finalIngredients.push({ ingredientId: id, defaultQty: mi.defaultQty })
+            finalIngredients.push({ ingredientId: data.id, defaultQty: mi.defaultQty })
+          } else if (res.status === 409 && data.id) {
+            // Already exists — reuse the existing ingredient id
+            finalIngredients.push({ ingredientId: data.id, defaultQty: mi.defaultQty })
           } else {
-            const err = await res.json().catch(() => ({}))
-            throw new Error(`บันทึกวัตถุดิบไม่สำเร็จ: ${err.error || res.status}`)
+            throw new Error(`บันทึกวัตถุดิบไม่สำเร็จ: ${data.error || res.status}`)
           }
         }
       }
@@ -92,6 +94,9 @@ export default function ManageMenusPage() {
         fetch('/api/sheets/config').then(r => r.json()).then(data => setIngredients(data.ingredients ?? []))
       } else {
         const err = await res.json().catch(() => ({}))
+        if (res.status === 409) {
+          throw new Error(`เมนู "${newMenu.nameTh}" มีอยู่แล้ว`)
+        }
         throw new Error(`บันทึกเมนูไม่สำเร็จ: ${err.details || err.error || res.status}`)
       }
     } catch (err: any) {
@@ -210,17 +215,27 @@ export default function ManageMenusPage() {
                     }}
                   />
                   
-                  <div className="relative">
-                    <input 
-                      list="unit-suggestions"
-                      className="w-16 bg-amber-50 border border-amber-200 rounded px-2 py-0.5 text-[10px] font-black text-amber-600 outline-none"
-                      placeholder="unit"
-                      value={(mi as any).tempUnit || ingredients.find(ing => ing.nameTh === mi.ingredientId || ing.id === mi.ingredientId)?.unit || ''}
-                      onChange={e => {
-                        updateIngredient(i, { tempUnit: e.target.value } as any)
-                      }}
-                    />
-                  </div>
+                  <select
+                    className="w-20 bg-amber-50 border border-amber-200 rounded px-1 py-0.5 text-[10px] font-black text-amber-600 outline-none cursor-pointer"
+                    value={(mi as any).tempUnit || ingredients.find(ing => ing.nameTh === mi.ingredientId || ing.id === mi.ingredientId)?.unit || 'kg'}
+                    onChange={e => updateIngredient(i, { tempUnit: e.target.value } as any)}
+                  >
+                    <option value="kg">kg</option>
+                    <option value="g">g</option>
+                    <option value="mg">mg</option>
+                    <option value="l">l</option>
+                    <option value="ml">ml</option>
+                    <option value="pcs">pcs</option>
+                    <option value="box">box</option>
+                    <option value="bottle">bottle</option>
+                    <option value="can">can</option>
+                    <option value="pack">pack</option>
+                    <option value="bag">bag</option>
+                    <option value="bunch">bunch</option>
+                    <option value="tray">tray</option>
+                    <option value="tbsp">tbsp</option>
+                    <option value="tsp">tsp</option>
+                  </select>
 
                   <NumberInput 
                     
