@@ -7,6 +7,7 @@ interface Props {
   rows: DeductionRow[]
   onRowChange: (index: number, patch: Partial<DeductionRow>) => void
   onAddRow: () => void
+  onRemoveRow: (index: number) => void
   allIngredients: Ingredient[]
   quantities: Record<string, number>
   t: any
@@ -19,7 +20,7 @@ export interface DeductionRow {
   reason: StockReason
 }
 
-export default function IngredientSection({ menuName, rows, onRowChange, onAddRow, allIngredients, quantities, t }: Props) {
+export default function IngredientSection({ menuName, rows, onRowChange, onAddRow, onRemoveRow, allIngredients, quantities, t }: Props) {
   return (
     <div className="bg-white rounded-[2rem] shadow-sm border border-slate-100 p-6 space-y-4 animate-in zoom-in-95 duration-300">
       <div className="flex justify-between items-center px-2">
@@ -37,7 +38,13 @@ export default function IngredientSection({ menuName, rows, onRowChange, onAddRo
         {rows.map((row, i) => {
           const currentStock = quantities[row.ingredientName] || 0
           return (
-            <div key={i} className="flex flex-col gap-2 bg-slate-50/50 p-4 rounded-2xl border border-slate-50">
+            <div key={i} className="flex flex-col gap-2 bg-slate-50/50 p-4 rounded-2xl border border-slate-50 relative group">
+              <button 
+                onClick={() => onRemoveRow(i)}
+                className="absolute -top-2 -right-2 w-6 h-6 bg-white border border-slate-100 rounded-full flex items-center justify-center text-slate-300 hover:text-rose-500 hover:border-rose-100 shadow-sm opacity-0 group-hover:opacity-100 transition-all z-10"
+              >
+                ✕
+              </button>
               <div className="flex gap-2 items-center">
                 <div className="flex-1">
                   <input 

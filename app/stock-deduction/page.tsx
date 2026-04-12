@@ -186,6 +186,11 @@ export default function StockDeductionPage() {
                 [menuName]: [...(deductions[menuName] || []), { ingredientName: '', amountUsed: 0, unit: 'kg', reason: 'ใช้ทำอาหาร' as const }]
               })
             }}
+            onRemoveRow={(idx) => {
+              const menuRows = [...(deductions[menuName] || [])]
+              menuRows.splice(idx, 1)
+              setDeductions({ ...deductions, [menuName]: menuRows })
+            }}
           />
         ))}
       </section>

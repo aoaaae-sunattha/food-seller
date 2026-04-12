@@ -1,9 +1,30 @@
 'use client'
-import {  useState, useEffect  } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { NumberInput } from '@/components/NumberInput'
 import QuickAddIngredient from '@/components/stock/QuickAddIngredient'
 import { useLanguage } from '@/hooks/useLanguage'
 import type { MenuTemplate, Ingredient, MenuIngredient } from '@/types'
+
+// Minimal RFC-4180 CSV line parser — handles quoted fields with commas inside
+function parseCSVLine(line: string): string[] {
+  const result: string[] = []
+  let current = ''
+  let inQuotes = false
+  for (let i = 0; i < line.length; i++) {
+    const ch = line[i]
+    if (ch === '"') {
+      if (inQuotes && line[i + 1] === '"') { current += '"'; i++ }
+      else inQuotes = !inQuotes
+    } else if (ch === ',' && !inQuotes) {
+      result.push(current.trim())
+      current = ''
+    } else {
+      current += ch
+    }
+  }
+  result.push(current.trim())
+  return result
+}
 
 export default function ManageMenusPage() {
   const { t } = useLanguage()
@@ -15,6 +36,7 @@ export default function ManageMenusPage() {
   const [showQuickAdd, setShowQuickAdd] = useState(false)
   const [editingId, setEditingId] = useState<string | null>(null)
   const [newMenu, setNewMenu] = useState<Partial<MenuTemplate>>({ nameTh: '', pricePerBox: 0, ingredients: [] })
+  const csvInputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
     fetch('/api/sheets/config')
@@ -146,6 +168,58 @@ export default function ManageMenusPage() {
     setNewMenu({ ...newMenu, ingredients: next })
   }
 
+  const downloadIngredientTemplate = () => {
+    const current = newMenu.ingredients || []
+    let csv = 'ingredientTh,unit,qty\n'
+    if (current.length > 0) {
+      current.forEach(mi => {
+        const ing = ingredients.find(i => i.id === mi.ingredientId)
+        const name = ing?.nameTh || mi.ingredientId
+        const unit = (mi as any).tempUnit || ing?.unit || 'kg'
+        csv += `${name},${unit},${mi.defaultQty}\n`
+      })
+    } else {
+      csv += 'กระเทียม,tbsp,5\nพริกขี้หนู,pcs,3\nน้ำมันพืช,ml,15\n'
+    }
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' })
+    const url = URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    link.href = url
+    link.download = `ingredients_${newMenu.nameTh || 'menu'}.csv`
+    link.style.visibility = 'hidden'
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+  }
+
+  const handleIngredientCSV = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    const reader = new FileReader()
+    reader.onload = (event) => {
+      const text = (event.target?.result as string).replace(/^\uFEFF/, '')
+      const lines = text.split('\n').filter(l => l.trim() !== '').slice(1)
+      const parsed: Array<MenuIngredient & { tempUnit: string }> = []
+      for (const line of lines) {
+        const parts = parseCSVLine(line)
+        const nameTh = parts[0]?.trim()
+        const unit = parts[1]?.trim() || 'kg'
+        const qty = Number(parts[2]) || 0
+        if (!nameTh) continue
+        const existing = ingredients.find(i => i.nameTh.trim().toLowerCase() === nameTh.toLowerCase())
+        parsed.push({
+          ingredientId: existing?.id || nameTh,
+          defaultQty: qty,
+          tempUnit: unit,
+        } as any)
+      }
+      if (parsed.length > 0) setNewMenu(m => ({ ...m, ingredients: parsed }))
+      // Reset so the same file can be re-loaded if needed
+      if (csvInputRef.current) csvInputRef.current.value = ''
+    }
+    reader.readAsText(file)
+  }
+
   const toggleAdd = () => {
     if (showAdd) {
       setEditingId(null)
@@ -196,7 +270,33 @@ export default function ManageMenusPage() {
           </div>
           
           <div className="space-y-3">
-            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">{t.manageMenus.ingredients}</label>
+            <div className="flex items-center justify-between px-1">
+              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{t.manageMenus.ingredients}</label>
+              <div className="flex items-center gap-3">
+                <button
+                  type="button"
+                  onClick={downloadIngredientTemplate}
+                  className="text-[10px] font-black text-slate-400 uppercase tracking-widest hover:text-amber-600 transition-colors"
+                >
+                  {t.manageMenus.loadCsvTemplate}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => csvInputRef.current?.click()}
+                  className="text-[10px] font-black text-amber-600 uppercase tracking-widest hover:text-amber-700 transition-colors"
+                >
+                  📂 {t.manageMenus.loadCsv}
+                </button>
+                <input
+                  ref={csvInputRef}
+                  type="file"
+                  accept=".csv"
+                  onChange={handleIngredientCSV}
+                  className="hidden"
+                  data-testid="menu-csv-input"
+                />
+              </div>
+            </div>
             <div className="space-y-2">
               {newMenu.ingredients?.map((mi, i) => (
                 <div key={i} className="flex gap-2 bg-slate-50 p-2 rounded-xl border border-slate-100">

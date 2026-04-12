@@ -89,14 +89,16 @@ export async function POST(req: NextRequest) {
         if (updatedRowsMap.has(nameLower)) {
           updated++
           const existingRow = updatedRowsMap.get(nameLower)!
+          const threshold = String(Number(item.threshold) || 1)
           updatedRowsMap.set(nameLower, [
-            'ingredient', existingRow[1], item.nameTh, item.nameFr, item.unit, String(item.threshold)
+            'ingredient', existingRow[1], item.nameTh, item.nameFr || '', item.unit || 'kg', threshold
           ])
         } else {
           added++
           const id = randomUUID().slice(0, 8)
+          const threshold = String(Number(item.threshold) || 1)
           updatedRowsMap.set(nameLower, [
-            'ingredient', id, item.nameTh, item.nameFr, item.unit, String(item.threshold)
+            'ingredient', id, item.nameTh, item.nameFr || '', item.unit || 'kg', threshold
           ])
         }
       })

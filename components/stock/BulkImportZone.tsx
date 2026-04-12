@@ -93,11 +93,8 @@ export default function BulkImportZone({ ingredients, onImportComplete }: Props)
         let status: ParsedItem['status'] = 'new'
         let isValid = true
 
-        // Validation
+        // Only the Thai name is required — threshold and unit are lenient
         if (!nameTh) {
-          status = 'error'
-          isValid = false
-        } else if (thresholdRaw && isNaN(Number(thresholdRaw))) {
           status = 'error'
           isValid = false
         } else {

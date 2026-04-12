@@ -7,7 +7,7 @@ interface NumberInputProps extends Omit<InputHTMLAttributes<HTMLInputElement>, '
   onChange: (value: number) => void
 }
 
-export function NumberInput({ value, onChange, ...props }: NumberInputProps) {
+export function NumberInput({ value, onChange, className = '', ...props }: NumberInputProps) {
   const [localValue, setLocalValue] = useState(value === 0 ? '' : value.toString())
 
   useEffect(() => {
@@ -24,10 +24,16 @@ export function NumberInput({ value, onChange, ...props }: NumberInputProps) {
     <input
       {...props}
       type="number"
+      min="0"
+      className={`${className} [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none`}
       value={localValue}
       onChange={e => {
-        setLocalValue(e.target.value)
-        onChange(e.target.value === '' ? 0 : Number(e.target.value))
+        const val = e.target.value
+        // Only allow non-negative numbers
+        if (val !== '' && Number(val) < 0) return
+        
+        setLocalValue(val)
+        onChange(val === '' ? 0 : Number(val))
       }}
     />
   )

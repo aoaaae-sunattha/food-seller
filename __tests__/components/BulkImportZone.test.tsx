@@ -81,12 +81,12 @@ describe('BulkImportZone', () => {
 
     const csvContent = [
       'nameTh,nameFr,unit,threshold',
-      'ข้าว,Riz Jasmin,kg,10',
-      'กระเทียม,Ail,kg,1',
-      'พริก,,box,2',
-      'เกลือ,Sel,invalid,1',
-      ',Missing Name,kg,1',
-      'น้ำตาล,Sucre,kg,abc'
+      'ข้าว,Riz Jasmin,kg,10',       // update (exists)
+      'กระเทียม,Ail,kg,1',            // new
+      'พริก,,box,2',                  // new
+      'เกลือ,Sel,invalid,1',          // warning (non-standard unit)
+      'น้ำตาล,Sucre,kg,abc',          // new — invalid threshold is now allowed (defaults to 1)
+      ',Missing Name,kg,1'            // error (no Thai name)
     ].join('\n')
 
     await loadCSV(csvContent)
@@ -100,8 +100,8 @@ describe('BulkImportZone', () => {
       expect(screen.getAllByText('Error').length).toBeGreaterThan(0)
     })
 
-    // Valid count should be 4 (ข้าว, กระเทียม, พริก, เกลือ)
-    expect(screen.getByText('Import 4 ingredients')).toBeInTheDocument()
+    // Valid count: 5 (ข้าว, กระเทียม, พริก, เกลือ, น้ำตาล) — bad threshold no longer blocks
+    expect(screen.getByText('Import 5 ingredients')).toBeInTheDocument()
     // Warning note should appear for เกลือ (invalid unit)
     expect(screen.getByText(/1 items have non-standard units/)).toBeInTheDocument()
   })
