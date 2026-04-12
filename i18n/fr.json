@@ -63,6 +63,20 @@
     "ingredients": "Ingrédients",
     "defaultQty": "Qté par lot"
   },
+  "bulkImport": {
+    "title": "Importation en masse",
+    "downloadTemplate": "Télécharger le modèle CSV",
+    "importCount": "Importer {{count}} ingrédients",
+    "status": "Statut",
+    "new": "Nouveau",
+    "update": "Mise à jour",
+    "warning": "Avertissement",
+    "error": "Erreur",
+    "added": "Ajouté",
+    "updated": "Mis à jour",
+    "skipped": "Ignoré",
+    "close": "Fermer"
+  },
   "common": {
     "save": "Enregistrer",
     "cancel": "Annuler",

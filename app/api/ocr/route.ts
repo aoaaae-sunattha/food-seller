@@ -13,8 +13,11 @@ export async function POST(req: NextRequest) {
     const buffer = Buffer.from(await file.arrayBuffer())
     const items = await extractReceiptItems(buffer, file.type || 'image/jpeg')
     return NextResponse.json({ items })
-  } catch (error) {
-    console.error('OCR error:', error)
-    return NextResponse.json({ error: 'Failed to extract items' }, { status: 500 })
+  } catch (error: any) {
+    console.error('OCR error:', error.message)
+    return NextResponse.json({ 
+      error: 'Failed to extract items',
+      details: error.message
+    }, { status: 500 })
   }
 }

@@ -8,6 +8,10 @@ export async function POST(req: NextRequest) {
   try {
     const session = await getServerSession(authOptions)
     const accessToken = (session as any)?.accessToken
+    console.log('--- API Debug: POST /api/sheets/purchases ---')
+    console.log('Session present:', !!session)
+    console.log('AccessToken present:', !!accessToken)
+
     if (!accessToken) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
     const { date, store, items }: { date: string; store: string; items: ReceiptItem[] } = await req.json()
@@ -18,8 +22,12 @@ export async function POST(req: NextRequest) {
 
     await appendRows(accessToken, 'purchases', rows)
     return NextResponse.json({ ok: true })
-  } catch (error) {
-    console.error('Purchases POST error:', error)
-    return NextResponse.json({ error: 'Failed to record purchases' }, { status: 500 })
+  } catch (error: any) {
+    console.error('Purchases POST error:', error.message)
+    return NextResponse.json({ 
+      error: 'Failed to record purchases',
+      details: error.message,
+      code: error.code
+    }, { status: 500 })
   }
 }

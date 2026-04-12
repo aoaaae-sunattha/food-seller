@@ -1,4 +1,5 @@
 'use client'
+import { NumberInput } from '@/components/NumberInput';
 import type { Ingredient, StockReason } from '@/types'
 
 interface Props {
@@ -24,10 +25,11 @@ export default function IngredientSection({ menuName, rows, onRowChange, onAddRo
       <div className="flex justify-between items-center px-2">
         <h2 className="text-sm font-black text-slate-400 uppercase tracking-widest">{menuName}</h2>
         <button 
+          id={`stock-add-row-${menuName}`}
           onClick={onAddRow}
           className="text-[10px] font-bold text-amber-600 bg-amber-50 px-2 py-1 rounded-lg hover:bg-amber-100 transition-colors"
         >
-          + {t.stock.addIngredient}
+          {t.stock.addIngredient}
         </button>
       </div>
       
@@ -38,41 +40,58 @@ export default function IngredientSection({ menuName, rows, onRowChange, onAddRo
             <div key={i} className="flex flex-col gap-2 bg-slate-50/50 p-4 rounded-2xl border border-slate-50">
               <div className="flex gap-2 items-center">
                 <div className="flex-1">
-                  <select 
-                    className="w-full bg-transparent font-bold text-slate-800 outline-none text-base cursor-pointer"
+                  <input 
+                    id={`stock-item-name-${menuName}-${i}`}
+                    list="ing-suggestions"
+                    className="w-full bg-transparent font-bold text-slate-800 outline-none text-base border-b border-transparent focus:border-amber-500/20"
+                    placeholder="Type or Choose Ingredient..."
                     value={row.ingredientName}
-                    onChange={e => onRowChange(i, { 
-                      ingredientName: e.target.value,
-                      unit: allIngredients.find(ing => ing.nameTh === e.target.value)?.unit || ''
-                    })}
-                  >
-                    <option value="">Choose Ingredient</option>
-                    {allIngredients.map(ing => (
-                      <option key={ing.id} value={ing.nameTh}>{ing.nameTh}</option>
-                    ))}
-                  </select>
+                    onChange={e => {
+                      const val = e.target.value
+                      const existing = allIngredients.find(ing => ing.nameTh === val)
+                      onRowChange(i, { 
+                        ingredientName: val,
+                        unit: existing?.unit || row.unit || 'kg'
+                      })
+                    }}
+                  />
                 </div>
                 <div className="w-24 text-right">
-                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter block">{t.stock.currentQty}</span>
-                  <span className={`text-xs font-black ${currentStock <= 0 ? 'text-rose-500' : 'text-slate-600'}`}>
-                    {currentStock} {row.unit}
+                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter block">
+                    {allIngredients.some(ing => ing.nameTh === row.ingredientName) ? t.stock.currentQty : t.manageStock.unit}
                   </span>
+                  {allIngredients.some(ing => ing.nameTh === row.ingredientName) ? (
+                    <span className={`text-xs font-black ${currentStock <= 0 ? 'text-rose-500' : 'text-slate-600'}`}>
+                      {currentStock} {row.unit}
+                    </span>
+                  ) : (
+                    <>
+                      <input 
+                        list="unit-suggestions"
+                        className="w-full bg-amber-50 border border-amber-200 rounded-lg px-2 py-1 text-right text-xs font-black text-amber-600 outline-none"
+                        placeholder="kg/pcs..."
+                        value={row.unit}
+                        onChange={e => onRowChange(i, { unit: e.target.value })}
+                      />
+                    </>
+                  )}
                 </div>
               </div>
 
               <div className="flex gap-3 items-center pt-1">
                 <div className="flex-1 relative">
                   <span className="absolute -top-3 left-1 text-[9px] font-black text-slate-300 uppercase tracking-tighter">{t.stock.amountUsed}</span>
-                  <input 
-                    type="number"
+                  <NumberInput 
+                    id={`stock-item-qty-${menuName}-${i}`}
                     className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 font-black text-amber-600 outline-none focus:border-amber-500 shadow-sm transition-all"
                     value={row.amountUsed}
-                    onChange={e => onRowChange(i, { amountUsed: Number(e.target.value) })}
+                    onChange={val => onRowChange(i, { amountUsed: val })}
                   />
                 </div>
                 <div className="flex-1 relative">
                   <span className="absolute -top-3 left-1 text-[9px] font-black text-slate-300 uppercase tracking-tighter">{t.stock.reason}</span>
                   <select 
+                    id={`stock-item-reason-${menuName}-${i}`}
                     className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold text-slate-500 outline-none cursor-pointer uppercase tracking-tight shadow-sm"
                     value={row.reason}
                     onChange={e => onRowChange(i, { reason: e.target.value as StockReason })}
@@ -88,6 +107,12 @@ export default function IngredientSection({ menuName, rows, onRowChange, onAddRo
           )
         })}
       </div>
+
+      <datalist id="ing-suggestions">
+        {allIngredients.map(ing => (
+          <option key={ing.id} value={ing.nameTh}>{ing.nameFr} ({ing.unit})</option>
+        ))}
+      </datalist>
     </div>
   )
 }

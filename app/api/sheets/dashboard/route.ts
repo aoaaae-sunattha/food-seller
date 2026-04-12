@@ -17,6 +17,10 @@ export async function GET(_req: NextRequest) {
   try {
     const session = await getServerSession(authOptions)
     const accessToken = (session as any)?.accessToken
+    console.log('--- API Debug: GET /api/sheets/dashboard ---')
+    console.log('Session present:', !!session)
+    console.log('AccessToken present:', !!accessToken)
+
     if (!accessToken) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
     const now = new Date()
@@ -57,8 +61,12 @@ export async function GET(_req: NextRequest) {
       .map(ing => ({ ingredient: ing, currentQty: quantities[ing.nameTh] || 0 }))
 
     return NextResponse.json({ weeklyIncome, weeklyExpenses, lowStock })
-  } catch (error) {
-    console.error('Dashboard GET error:', error)
-    return NextResponse.json({ error: 'Failed to aggregate dashboard data' }, { status: 500 })
+  } catch (error: any) {
+    console.error('Dashboard GET error:', error.message)
+    return NextResponse.json({ 
+      error: 'Failed to aggregate dashboard data',
+      details: error.message,
+      code: error.code
+    }, { status: 500 })
   }
 }
