@@ -44,9 +44,11 @@
     "pricePerBox": "Price/box",
     "cash": "Cash",
     "card": "Card",
-    "save": "Save"
-  },
-  "manageStock": {
+    "save": "Save",
+    "history": "Sale History",
+    "total": "Total"
+    },
+    "bulkImport": {
     "title": "Manage Ingredients",
     "add": "Add Ingredient",
     "name": "Name",
@@ -61,7 +63,9 @@
     "name": "Menu Name",
     "price": "Price/box (€)",
     "ingredients": "Ingredients",
-    "defaultQty": "Qty per batch"
+    "defaultQty": "Qty per batch",
+    "loadCsv": "Load from CSV",
+    "loadCsvTemplate": "Download template"
   },
   "bulkImport": {
     "title": "Bulk Import",

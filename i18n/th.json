@@ -44,7 +44,9 @@
     "pricePerBox": "ราคา/กล่อง",
     "cash": "เงินสด",
     "card": "บัตรเครดิต",
-    "save": "บันทึก"
+    "save": "บันทึก",
+    "history": "ประวัติการขาย",
+    "total": "รวม"
   },
   "manageStock": {
     "title": "จัดการวัตถุดิบ",
@@ -61,7 +63,9 @@
     "name": "ชื่อเมนู",
     "price": "ราคา/กล่อง (€)",
     "ingredients": "วัตถุดิบ",
-    "defaultQty": "ปริมาณต่อหม้อ"
+    "defaultQty": "ปริมาณต่อหม้อ",
+    "loadCsv": "โหลดจาก CSV",
+    "loadCsvTemplate": "ดาวน์โหลดตัวอย่าง"
   },
   "bulkImport": {
     "title": "นำเข้าข้อมูลจำนวนมาก",

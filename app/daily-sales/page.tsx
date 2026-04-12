@@ -10,6 +10,17 @@ interface MenuSale {
   pricePerBox: number
 }
 
+interface SaleHistoryItem {
+  date: string
+  menu: string
+  boxes: number
+  pricePerBox: number
+  total: number
+  cash: number
+  card: number
+  totalRecorded: number
+}
+
 export default function DailySalesPage() {
   const { t } = useLanguage()
   const [menus, setMenus] = useState<MenuTemplate[]>([])
@@ -19,16 +30,19 @@ export default function DailySalesPage() {
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [done, setDone] = useState(false)
+  const [history, setHistory] = useState<SaleHistoryItem[]>([])
 
   useEffect(() => {
-    fetch('/api/sheets/config')
-      .then(r => r.json())
-      .then((data: { ingredients: any[], menus: MenuTemplate[] }) => {
-        const menus = data.menus ?? []
-        setMenus(menus)
-        setMenuSales(menus.map((m: MenuTemplate) => ({ menu: m.nameTh, boxes: 0, pricePerBox: m.pricePerBox })))
-        setLoading(false)
-      })
+    Promise.all([
+      fetch('/api/sheets/config').then(r => r.json()),
+      fetch('/api/sheets/sales').then(r => r.json()).catch(() => ({ history: [] }))
+    ]).then(([configData, salesData]) => {
+      const menus = configData.menus ?? []
+      setMenus(menus)
+      setMenuSales(menus.map((m: MenuTemplate) => ({ menu: m.nameTh, boxes: 0, pricePerBox: m.pricePerBox })))
+      setHistory(salesData.history ?? [])
+      setLoading(false)
+    })
   }, [])
 
   const handleBoxChange = (idx: number, val: number) => {
@@ -62,6 +76,10 @@ export default function DailySalesPage() {
       })
       if (res.ok) {
         setDone(true)
+        // Refresh history
+        const hRes = await fetch('/api/sheets/sales')
+        const hData = await hRes.json()
+        setHistory(hData.history ?? [])
       } else {
         const err = await res.json().catch(() => ({}))
         throw new Error(`บันทึกยอดขายไม่สำเร็จ: ${err.details || err.error || res.status}`)
@@ -74,22 +92,52 @@ export default function DailySalesPage() {
   }
 
   if (loading) return <p className="text-center py-8">{t.common.loading}</p>
+  
   if (done) return (
-    <div className="flex flex-col items-center justify-center py-12 animate-in zoom-in-95 duration-500">
-      <div className="bg-white p-12 rounded-[3rem] shadow-xl shadow-slate-200/50 border border-slate-100 flex flex-col items-center space-y-6 text-center max-w-sm w-full">
-        <div className="w-24 h-24 bg-amber-50 rounded-full flex items-center justify-center text-5xl shadow-inner animate-bounce text-amber-600">
-          💰
+    <div className="space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-700 pb-32">
+      <div className="flex flex-col items-center justify-center py-8">
+        <div className="bg-white p-10 rounded-[3rem] shadow-xl shadow-slate-200/50 border border-slate-100 flex flex-col items-center space-y-6 text-center max-w-sm w-full">
+          <div className="w-20 h-20 bg-emerald-50 rounded-full flex items-center justify-center text-4xl shadow-inner animate-bounce text-emerald-600">
+            ✅
+          </div>
+          <div className="space-y-2">
+            <h2 className="text-2xl font-black text-slate-800 tracking-tight">{t.common.save}</h2>
+            <p className="text-slate-400 font-medium">Daily sales have been logged successfully.</p>
+          </div>
+          <button 
+            onClick={() => { setDone(false); setCash(0); setCard(0); setMenuSales(menus.map(m => ({ menu: m.nameTh, boxes: 0, pricePerBox: m.pricePerBox }))); }}
+            className="w-full bg-slate-900 text-white py-4 rounded-2xl font-black text-lg shadow-lg hover:bg-slate-800 transition-all active:scale-95"
+          >
+            Record More
+          </button>
         </div>
-        <div className="space-y-2">
-          <h2 className="text-2xl font-black text-slate-800 tracking-tight">{t.common.save}</h2>
-          <p className="text-slate-400 font-medium">Daily sales have been logged successfully.</p>
+      </div>
+
+      <div className="space-y-6">
+        <h2 className="text-xl font-black text-slate-800 px-1">{t.sales.history}</h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {history.map((h, i) => (
+            <div key={i} className="bg-white p-6 rounded-[2rem] shadow-sm border border-slate-100 flex flex-col gap-3 group hover:shadow-md transition-all">
+              <div className="flex justify-between items-start">
+                <div>
+                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">{h.date}</p>
+                  <p className="font-black text-slate-700 text-lg">{h.menu}</p>
+                </div>
+                <div className="text-right">
+                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">{h.boxes} {t.sales.boxes}</p>
+                  <p className="font-black text-amber-600 text-lg">€{h.total.toFixed(1)}</p>
+                </div>
+              </div>
+              <div className="pt-3 border-t border-slate-50 flex justify-between items-center text-[11px] font-bold text-slate-500">
+                <div className="flex gap-3">
+                  <span className="bg-slate-50 px-2 py-1 rounded-lg">💵 {t.sales.cash}: €{h.cash.toFixed(1)}</span>
+                  <span className="bg-slate-50 px-2 py-1 rounded-lg">💳 {t.sales.card}: €{h.card.toFixed(1)}</span>
+                </div>
+                <span className="text-slate-300">Sum: €{h.totalRecorded.toFixed(1)}</span>
+              </div>
+            </div>
+          ))}
         </div>
-        <button 
-          onClick={() => window.location.reload()}
-          className="w-full bg-slate-900 text-white py-4 rounded-2xl font-black text-lg shadow-lg hover:bg-slate-800 transition-all active:scale-95"
-        >
-          Great, thanks!
-        </button>
       </div>
     </div>
   )
