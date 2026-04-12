@@ -208,6 +208,7 @@ export default function DailySalesPage() {
                   <th className="px-6 py-4">{t.receipt.store || 'Date'}</th>
                   <th className="px-6 py-4">{t.manageMenus.name}</th>
                   <th className="px-6 py-4 text-center">{t.receipt.qty}</th>
+                  <th className="px-6 py-4 text-right">{t.sales.pricePerBox}</th>
                   <th className="px-6 py-4 text-right">{t.sales.cash}</th>
                   <th className="px-6 py-4 text-right">{t.sales.card}</th>
                   <th className="px-6 py-4 text-right">{t.sales.total}</th>
@@ -219,6 +220,7 @@ export default function DailySalesPage() {
                     <td className="px-6 py-4 text-slate-400 text-[10px] font-black uppercase tracking-tighter whitespace-nowrap">{h.date}</td>
                     <td className="px-6 py-4 text-slate-700 font-black">{h.menu}</td>
                     <td className="px-6 py-4 text-center text-slate-600">{h.boxes}</td>
+                    <td className="px-6 py-4 text-right text-slate-400 font-bold">€{h.pricePerBox.toFixed(1)}</td>
                     <td className="px-6 py-4 text-right text-slate-500 font-medium">€{h.cash.toFixed(1)}</td>
                     <td className="px-6 py-4 text-right text-slate-500 font-medium">€{h.card.toFixed(1)}</td>
                     <td className="px-6 py-4 text-right text-amber-600 font-black">€{h.total.toFixed(1)}</td>
