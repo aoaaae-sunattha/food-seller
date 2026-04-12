@@ -22,6 +22,12 @@ interface SaleHistoryItem {
   totalRecorded: number
 }
 
+interface DeleteLog {
+  item: SaleHistoryItem
+  reason: string
+  timestamp: string
+}
+
 export default function DailySalesPage() {
   const { t } = useLanguage()
   const [menus, setMenus] = useState<MenuTemplate[]>([])
@@ -32,6 +38,7 @@ export default function DailySalesPage() {
   const [saving, setSaving] = useState(false)
   const [done, setDone] = useState(false)
   const [history, setHistory] = useState<SaleHistoryItem[]>([])
+  const [deletedLogs, setDeletedLogs] = useState<DeleteLog[]>([])
 
   // Edit state
   const [editingId, setEditingId] = useState<string | null>(null)
@@ -118,6 +125,33 @@ export default function DailySalesPage() {
         showSuccess()
       } else {
         throw new Error('Update failed')
+      }
+    } catch (err: any) {
+      alert(err.message)
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  async function handleDelete(item: SaleHistoryItem) {
+    const reason = prompt(`${t.sales.delete} "${item.menu}"? ${t.sales.reason}:`)
+    if (reason === null) return // Cancelled
+    
+    setSaving(true)
+    try {
+      const res = await fetch(`/api/sheets/sales?id=${item.id}&reason=${encodeURIComponent(reason)}`, {
+        method: 'DELETE'
+      })
+      if (res.ok) {
+        // Add to local logs
+        setDeletedLogs(prev => [{ item, reason, timestamp: new Date().toLocaleTimeString() }, ...prev])
+        // Refresh history
+        const hRes = await fetch('/api/sheets/sales')
+        const hData = await hRes.json()
+        setHistory(hData.history ?? [])
+        showSuccess()
+      } else {
+        throw new Error('Delete failed')
       }
     } catch (err: any) {
       alert(err.message)
@@ -240,8 +274,7 @@ export default function DailySalesPage() {
             <table className="w-full text-left text-sm font-bold border-collapse">
               <thead className="bg-slate-50 text-[10px] font-black uppercase text-slate-400 sticky top-0 z-10">
                 <tr>
-                  <th className="px-6 py-4">{t.receipt.store || 'Date'}</th>
-                  <th className="px-6 py-4">{t.manageMenus.name}</th>
+                  <th className="px-6 py-4">{t.manageStock.name}</th>
                   <th className="px-6 py-4 text-center">{t.receipt.qty}</th>
                   <th className="px-6 py-4 text-right">{t.sales.pricePerBox}</th>
                   <th className="px-6 py-4 text-right">{t.sales.cash}</th>
@@ -254,16 +287,6 @@ export default function DailySalesPage() {
                   const isEditing = editingId === h.id
                   return (
                     <tr key={i} className="hover:bg-slate-50 transition-colors group">
-                      <td className="px-6 py-4 text-slate-400 text-[10px] font-black uppercase tracking-tighter whitespace-nowrap">
-                        {isEditing ? (
-                          <input 
-                            type="date"
-                            className="bg-slate-100 border-0 rounded px-1 py-1 text-[10px] font-black w-24"
-                            value={editForm.date}
-                            onChange={e => setEditForm({...editForm, date: e.target.value})}
-                          />
-                        ) : h.date}
-                      </td>
                       <td className="px-6 py-4 text-slate-700 font-black">
                         {isEditing ? (
                           <input 
@@ -271,7 +294,12 @@ export default function DailySalesPage() {
                             value={editForm.menu}
                             onChange={e => setEditForm({...editForm, menu: e.target.value})}
                           />
-                        ) : h.menu}
+                        ) : (
+                          <div className="flex flex-col">
+                            <span>{h.menu}</span>
+                            <span className="text-[9px] text-slate-400 uppercase tracking-widest">{h.date}</span>
+                          </div>
+                        )}
                       </td>
                       <td className="px-6 py-4 text-center text-slate-600">
                         {isEditing ? (
@@ -318,12 +346,20 @@ export default function DailySalesPage() {
                         ) : (
                           <div className="flex items-center justify-end gap-3">
                             <span>€{h.total.toFixed(1)}</span>
-                            <button 
-                              onClick={() => { setEditingId(h.id); setEditForm(h); }}
-                              className="opacity-0 group-hover:opacity-100 text-[10px] text-slate-300 hover:text-amber-600 transition-all uppercase tracking-widest font-black"
-                            >
-                              {t.common.edit}
-                            </button>
+                            <div className="opacity-0 group-hover:opacity-100 flex gap-2 transition-all">
+                              <button 
+                                onClick={() => { setEditingId(h.id); setEditForm(h); }}
+                                className="text-[10px] text-slate-300 hover:text-amber-600 uppercase tracking-widest font-black"
+                              >
+                                {t.common.edit}
+                              </button>
+                              <button 
+                                onClick={() => handleDelete(h)}
+                                className="text-[10px] text-slate-300 hover:text-rose-500 uppercase tracking-widest font-black"
+                              >
+                                {t.sales.delete}
+                              </button>
+                            </div>
                           </div>
                         )}
                       </td>
@@ -335,6 +371,36 @@ export default function DailySalesPage() {
           </div>
         </div>
       </div>
+
+      {/* Deletion Log */}
+      {deletedLogs.length > 0 && (
+        <div className="pt-12 space-y-6">
+          <h2 className="text-xl font-black text-rose-600 px-1">{t.sales.deleteLog}</h2>
+          <div className="bg-rose-50/30 rounded-[2rem] border border-rose-100 overflow-hidden">
+            <table className="w-full text-left text-sm font-bold border-collapse">
+              <thead className="bg-rose-100/50 text-[10px] font-black uppercase text-rose-400">
+                <tr>
+                  <th className="px-6 py-4">{t.manageStock.name}</th>
+                  <th className="px-6 py-4">{t.sales.reason}</th>
+                  <th className="px-6 py-4 text-right">Time</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-rose-100/50">
+                {deletedLogs.map((log, i) => (
+                  <tr key={i} className="text-rose-700/70">
+                    <td className="px-6 py-4">
+                      <span className="line-through">{log.item.menu}</span>
+                      <p className="text-[9px] uppercase tracking-widest opacity-60">{log.item.date}</p>
+                    </td>
+                    <td className="px-6 py-4 italic font-medium">"{log.reason}"</td>
+                    <td className="px-6 py-4 text-right text-[10px] font-black">{log.timestamp}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

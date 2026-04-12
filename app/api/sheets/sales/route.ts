@@ -87,3 +87,30 @@ export async function PUT(req: NextRequest) {
     return NextResponse.json({ error: 'Failed to update sales' }, { status: 500 })
   }
 }
+
+export async function DELETE(req: NextRequest) {
+  try {
+    const session = await getServerSession(authOptions)
+    const accessToken = (session as any)?.accessToken
+    if (!accessToken) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
+    const { searchParams } = new URL(req.url)
+    const id = searchParams.get('id')
+    const reason = searchParams.get('reason') || 'No reason provided'
+    
+    if (!id) return NextResponse.json({ error: 'Missing id' }, { status: 400 })
+
+    const rows = await readRows(accessToken, 'sales')
+    const deletedRow = rows.find(r => r[0] === id)
+    const filteredRows = rows.filter(row => row[0] !== id)
+
+    const header = ['id', 'date', 'menu', 'boxes', 'price_per_box', 'subtotal', 'cash', 'card', 'total']
+    await updateTab(accessToken, 'sales', header, filteredRows)
+
+    // Log deletion (optional: append to a 'logs' tab if it existed, but we'll return it for the UI log)
+    return NextResponse.json({ ok: true, deletedItem: deletedRow, reason })
+  } catch (error: any) {
+    console.error('Sales DELETE error:', error.message)
+    return NextResponse.json({ error: 'Failed to delete sales' }, { status: 500 })
+  }
+}

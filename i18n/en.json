@@ -46,10 +46,12 @@
     "card": "Card",
     "save": "Save",
     "history": "Sale History",
-    "total": "Total"
+    "total": "Total",
+    "delete": "Delete",
+    "reason": "Reason",
+    "deleteLog": "Deletion Log"
     },
-    "bulkImport": {
-    "title": "Manage Ingredients",
+    "bulkImport": {    "title": "Manage Ingredients",
     "add": "Add Ingredient",
     "name": "Name",
     "unit": "Unit",

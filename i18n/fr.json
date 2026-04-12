@@ -46,7 +46,10 @@
     "card": "Carte",
     "save": "Enregistrer",
     "history": "Historique des ventes",
-    "total": "Total"
+    "total": "Total",
+    "delete": "Supprimer",
+    "reason": "Raison",
+    "deleteLog": "Journal des suppressions"
   },
   "manageStock": {
     "title": "Gérer les ingrédients",
