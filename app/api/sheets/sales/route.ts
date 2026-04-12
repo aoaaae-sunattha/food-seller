@@ -50,9 +50,16 @@ export async function POST(req: NextRequest) {
     } = await req.json()
 
     const total = cash + card
-    const rows = menuSales.map(s => [
+    const rows = menuSales.map((s, idx) => [
       randomUUID().slice(0, 8),
-      date, s.menu, s.boxes, s.pricePerBox, s.boxes * s.pricePerBox, cash, card, total,
+      date, 
+      s.menu, 
+      s.boxes, 
+      s.pricePerBox, 
+      s.boxes * s.pricePerBox, 
+      idx === 0 ? cash : 0, // Only first row gets the cash total
+      idx === 0 ? card : 0, // Only first row gets the card total
+      idx === 0 ? total : 0 // Only first row gets the recorded total
     ])
 
     await appendRows(accessToken, 'sales', rows)
