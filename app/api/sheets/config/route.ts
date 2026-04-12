@@ -66,7 +66,9 @@ export async function POST(req: NextRequest) {
     const body = await req.json()
 
     if (body.bulk === true) {
-      const items = body.items || []
+      const rawItems: any[] = body.items || []
+      // Server-side guard: reject items with no Thai name (client validation can be bypassed)
+      const items = rawItems.filter((item: any) => typeof item.nameTh === 'string' && item.nameTh.trim() !== '')
       const rows = await readRows(accessToken, 'config')
       
       const updatedRowsMap = new Map<string, string[]>()

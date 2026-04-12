@@ -19,6 +19,33 @@ interface Props {
   onImportComplete: (added: number, updated: number, skipped: number) => void
 }
 
+// Quote a CSV field if it contains commas or double-quotes
+function csvField(val: string | number): string {
+  const s = String(val ?? '')
+  return s.includes(',') || s.includes('"') ? `"${s.replace(/"/g, '""')}"` : s
+}
+
+// Minimal RFC-4180 CSV line parser — handles quoted fields with commas inside
+function parseCSVLine(line: string): string[] {
+  const result: string[] = []
+  let current = ''
+  let inQuotes = false
+  for (let i = 0; i < line.length; i++) {
+    const ch = line[i]
+    if (ch === '"') {
+      if (inQuotes && line[i + 1] === '"') { current += '"'; i++ }
+      else inQuotes = !inQuotes
+    } else if (ch === ',' && !inQuotes) {
+      result.push(current.trim())
+      current = ''
+    } else {
+      current += ch
+    }
+  }
+  result.push(current.trim())
+  return result
+}
+
 export default function BulkImportZone({ ingredients, onImportComplete }: Props) {
   const { t } = useLanguage()
   const [items, setItems] = useState<ParsedItem[]>([])
@@ -30,7 +57,7 @@ export default function BulkImportZone({ ingredients, onImportComplete }: Props)
     let csv = "nameTh,nameFr,unit,threshold\n"
     if (ingredients.length > 0) {
       ingredients.forEach(i => {
-        csv += `${i.nameTh},${i.nameFr},${i.unit},${i.threshold}\n`
+        csv += `${csvField(i.nameTh)},${csvField(i.nameFr)},${csvField(i.unit)},${i.threshold}\n`
       })
     } else {
       csv += "กระเทียม,Ail,kg,5\nพริกขี้หนู,Piment,kg,2\nน้ำมันพืช,,L,3\n"
@@ -49,19 +76,20 @@ export default function BulkImportZone({ ingredients, onImportComplete }: Props)
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file) return
-    
+
     const reader = new FileReader()
     reader.onload = (event) => {
-      const text = event.target?.result as string
+      // Strip UTF-8 BOM that Excel/LibreOffice may add
+      const text = (event.target?.result as string).replace(/^\uFEFF/, '')
       const lines = text.split('\n').filter(l => l.trim() !== '')
-      
+
       const parsed: ParsedItem[] = lines.slice(1).map(line => {
-        const parts = line.split(',').map(p => p.trim())
+        const parts = parseCSVLine(line)
         const nameTh = parts[0] || ''
         const nameFr = parts[1] || ''
         const unit = parts[2] || 'kg'
         const thresholdRaw = parts[3]
-        
+
         let status: ParsedItem['status'] = 'new'
         let isValid = true
 
@@ -98,7 +126,7 @@ export default function BulkImportZone({ ingredients, onImportComplete }: Props)
   const handleProcess = async () => {
     const validItems = items.filter(it => it.isValid)
     if (validItems.length === 0) return
-    
+
     setLoading(true)
     try {
       const res = await fetch('/api/sheets/config', {
@@ -108,7 +136,7 @@ export default function BulkImportZone({ ingredients, onImportComplete }: Props)
       })
       const result = await res.json()
       if (!res.ok) throw new Error(result.error || 'Import failed')
-      
+
       const skipped = items.length - validItems.length
       onImportComplete(result.added || 0, result.updated || 0, skipped)
       setItems([])
@@ -121,17 +149,18 @@ export default function BulkImportZone({ ingredients, onImportComplete }: Props)
   }
 
   const validCount = items.filter(i => i.isValid).length
+  const warningCount = items.filter(i => i.status === 'warning').length
 
   if (!show) return (
     <div className="flex flex-col items-end gap-1">
-      <button 
-        onClick={() => setShow(true)} 
+      <button
+        onClick={() => setShow(true)}
         className="px-6 py-2.5 bg-slate-800 text-white rounded-xl text-sm font-black shadow-lg shadow-slate-200 transition-all active:scale-95 hover:bg-black"
       >
         {t.bulkImport.title} 📂
       </button>
-      <button 
-        onClick={downloadTemplate} 
+      <button
+        onClick={downloadTemplate}
         className="text-[10px] font-black text-slate-400 uppercase tracking-widest hover:text-amber-600 transition-colors"
       >
         {t.bulkImport.downloadTemplate}
@@ -143,28 +172,29 @@ export default function BulkImportZone({ ingredients, onImportComplete }: Props)
     <div className="bg-white p-8 rounded-[2rem] shadow-xl border border-slate-100 space-y-6 animate-in zoom-in-95 duration-300">
       <div className="flex justify-between items-center px-1">
         <h2 className="text-xl font-black">{t.bulkImport.title}</h2>
-        <button 
-          onClick={() => { setShow(false); setItems([]); }} 
+        <button
+          onClick={() => { setShow(false); setItems([]); }}
           className="text-slate-400 hover:text-rose-500 font-black flex items-center gap-1 text-sm uppercase tracking-widest"
         >
           {t.common.cancel} ✕
         </button>
       </div>
-      
-      <div 
+
+      <div
         className="border-2 border-dashed border-slate-200 rounded-3xl p-10 text-center bg-slate-50 hover:bg-slate-100 transition-colors relative cursor-pointer"
         onClick={() => fileInputRef.current?.click()}
       >
-        <input 
+        <input
+          id="bulk-import-input"
           ref={fileInputRef}
-          type="file" 
-          accept=".csv" 
-          onChange={handleFileChange} 
-          className="hidden" 
+          type="file"
+          accept=".csv"
+          onChange={handleFileChange}
+          className="hidden"
           data-testid="bulk-file-input"
         />
         <label htmlFor="bulk-import-input" className="cursor-pointer">
-          <p className="font-black text-slate-500">{t.receipt?.upload || 'Click or drag CSV file here'}</p>
+          <p className="font-black text-slate-500">{t.bulkImport.dropzone}</p>
           <p className="text-xs font-bold text-slate-400 mt-1 uppercase tracking-widest">.CSV ONLY</p>
         </label>
       </div>
@@ -186,9 +216,9 @@ export default function BulkImportZone({ ingredients, onImportComplete }: Props)
                   <tr key={idx} className={`hover:bg-slate-50 transition-colors ${!it.isValid ? 'bg-rose-50/50' : ''}`}>
                     <td className="px-4 py-3">
                       <span className={`px-2 py-0.5 rounded text-[9px] font-black uppercase tracking-widest
-                        ${it.status === 'new' ? 'bg-emerald-100 text-emerald-700' : 
-                          it.status === 'update' ? 'bg-amber-100 text-amber-700' : 
-                          it.status === 'warning' ? 'bg-yellow-100 text-yellow-700' : 
+                        ${it.status === 'new' ? 'bg-emerald-100 text-emerald-700' :
+                          it.status === 'update' ? 'bg-amber-100 text-amber-700' :
+                          it.status === 'warning' ? 'bg-yellow-100 text-yellow-700' :
                           'bg-rose-100 text-rose-700'}`}
                       >
                         {t.bulkImport[it.status]}
@@ -205,9 +235,14 @@ export default function BulkImportZone({ ingredients, onImportComplete }: Props)
               </tbody>
             </table>
           </div>
-          <button 
-            onClick={handleProcess} 
-            disabled={loading || validCount === 0} 
+          {warningCount > 0 && (
+            <p className="text-xs text-yellow-600 font-bold px-1">
+              ⚠ {t.bulkImport.warningNote.replace('{{count}}', String(warningCount))}
+            </p>
+          )}
+          <button
+            onClick={handleProcess}
+            disabled={loading || validCount === 0}
             className="w-full bg-slate-800 text-white py-4 rounded-2xl font-black text-lg shadow-lg shadow-slate-200 hover:bg-black transition-all active:scale-[0.98] disabled:opacity-50"
           >
             {loading ? (
