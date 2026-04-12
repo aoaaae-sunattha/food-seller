@@ -89,3 +89,24 @@ test('DELETE /api/sheets/config removes row', async () => {
     ]
   )
 })
+
+test('POST /api/sheets/config bulk updates and adds ingredients', async () => {
+  const body = {
+    bulk: true,
+    items: [
+      { nameTh: 'ข้าว', nameFr: 'Riz Jasmin', unit: 'kg', threshold: 10 }, // Update
+      { nameTh: 'กระเทียม', nameFr: 'Ail', unit: 'kg', threshold: 1 }      // New
+    ]
+  }
+  const req = { json: jest.fn().mockResolvedValue(body) }
+  const res = await POST(req as any)
+  expect(res.status).toBe(200)
+  expect(updateTab).toHaveBeenCalledWith('fake-token', 'config', 
+    ['type','id','name_th','name_fr_or_price','unit_or_ingredients','threshold'],
+    expect.arrayContaining([
+      ['ingredient', 'i1', 'ข้าว', 'Riz Jasmin', 'kg', '10'], // Updated
+      ['menu', 'm1', 'ผัดไทย', '12', 'i1:0.2', ''],          // Kept
+      ['ingredient', expect.any(String), 'กระเทียม', 'Ail', 'kg', '1'], // Added
+    ])
+  )
+})

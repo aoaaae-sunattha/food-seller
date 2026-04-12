@@ -64,9 +64,63 @@ export async function POST(req: NextRequest) {
     if (!accessToken) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
     const body = await req.json()
+
+    if (body.bulk === true) {
+      const items = body.items || []
+      const rows = await readRows(accessToken, 'config')
+      
+      const updatedRowsMap = new Map<string, string[]>()
+      const menuRows: string[][] = []
+
+      rows.forEach(row => {
+        if (row[0] === 'ingredient') {
+          updatedRowsMap.set(row[2].trim().toLowerCase(), row)
+        } else if (row[0] === 'menu') {
+          menuRows.push(row)
+        }
+      })
+
+      items.forEach((item: any) => {
+        const nameLower = (item.nameTh || '').trim().toLowerCase()
+        if (updatedRowsMap.has(nameLower)) {
+          const existingRow = updatedRowsMap.get(nameLower)!
+          updatedRowsMap.set(nameLower, [
+            'ingredient', existingRow[1], item.nameTh, item.nameFr, item.unit, String(item.threshold)
+          ])
+        } else {
+          const id = randomUUID().slice(0, 8)
+          updatedRowsMap.set(nameLower, [
+            'ingredient', id, item.nameTh, item.nameFr, item.unit, String(item.threshold)
+          ])
+        }
+      })
+
+      const finalRows = [
+        ...Array.from(updatedRowsMap.values()),
+        ...menuRows.map(row => {
+          const newRow = [...row]
+          while (newRow.length < 6) newRow.push('')
+          return newRow
+        })
+      ]
+
+      const header = ['type', 'id', 'name_th', 'name_fr_or_price', 'unit_or_ingredients', 'threshold']
+      await updateTab(accessToken, 'config', header, finalRows)
+      return NextResponse.json({ success: true, count: items.length })
+    }
+
     const id = randomUUID().slice(0, 8)
 
+    // Duplicate check
+    const existingRows = await readRows(accessToken, 'config')
+    const { ingredients: existingIngredients, menus: existingMenus } = parseConfig(existingRows)
+
     if (body.type === 'ingredient') {
+      const nameLower = (body.nameTh || '').trim().toLowerCase()
+      const dup = existingIngredients.find(i => i.nameTh.trim().toLowerCase() === nameLower)
+      if (dup) {
+        return NextResponse.json({ error: 'duplicate', id: dup.id }, { status: 409 })
+      }
       console.log('Appending ingredient:', body.nameTh)
       await appendRows(accessToken, 'config', [[
         'ingredient', id, body.nameTh, body.nameFr, body.unit, String(body.threshold),
@@ -75,6 +129,11 @@ export async function POST(req: NextRequest) {
     }
 
     if (body.type === 'menu') {
+      const nameLower = (body.nameTh || '').trim().toLowerCase()
+      const dup = existingMenus.find(m => m.nameTh.trim().toLowerCase() === nameLower)
+      if (dup) {
+        return NextResponse.json({ error: 'duplicate', id: dup.id }, { status: 409 })
+      }
       console.log('Appending menu:', body.nameTh)
       const ingredientStr = (body.ingredients || [])
         .map((i: { ingredientId: string; defaultQty: number }) => `${i.ingredientId}:${i.defaultQty}`)
