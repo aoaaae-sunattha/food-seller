@@ -110,64 +110,6 @@ export default function DailySalesPage() {
       </div>
       
       <div className="space-y-4 pb-8">
-...
-        <div className={`flex justify-between items-center text-[10px] font-black uppercase tracking-widest px-1 relative z-10 ${totalRecorded !== totalSales ? 'text-amber-400' : 'text-slate-500'}`}>
-          <span>Total Recorded: €{totalRecorded.toFixed(2)}</span>
-          {totalRecorded !== totalSales && (
-            <span className="bg-amber-400/10 px-2 py-1 rounded-lg">Gap: €{(totalRecorded - totalSales).toFixed(2)}</span>
-          )}
-        </div>
-      </div>
-
-      <button 
-        id="sales-save-btn"
-        onClick={handleSave}
-        disabled={saving || totalSales === 0}
-        className="w-full bg-amber-600 text-white py-5 rounded-[2rem] font-black text-xl shadow-xl shadow-amber-600/30 hover:bg-amber-700 transition-all active:scale-[0.98] disabled:opacity-50 disabled:active:scale-100"
-      >
-        {saving ? (
-          <span className="flex items-center justify-center gap-2">
-            <span className="w-6 h-6 border-2 border-white/20 border-t-white rounded-full animate-spin" />
-            {t.common.loading}
-          </span>
-        ) : t.sales.save}
-      </button>
-
-      {/* History Table */}
-      <div className="pt-12 space-y-6">
-        <h2 className="text-xl font-black text-slate-800 px-1">{t.sales.history}</h2>
-        <div className="bg-white rounded-[2rem] shadow-sm border border-slate-100 overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-sm font-bold border-collapse">
-              <thead className="bg-slate-50 text-[10px] font-black uppercase text-slate-400 sticky top-0 z-10">
-                <tr>
-                  <th className="px-6 py-4">{t.receipt.store || 'Date'}</th>
-                  <th className="px-6 py-4">{t.manageMenus.name}</th>
-                  <th className="px-6 py-4 text-center">{t.receipt.qty}</th>
-                  <th className="px-6 py-4 text-right">{t.sales.cash}</th>
-                  <th className="px-6 py-4 text-right">{t.sales.card}</th>
-                  <th className="px-6 py-4 text-right">{t.sales.total}</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-50">
-                {history.map((h, i) => (
-                  <tr key={i} className="hover:bg-slate-50 transition-colors">
-                    <td className="px-6 py-4 text-slate-400 text-[10px] font-black uppercase tracking-tighter whitespace-nowrap">{h.date}</td>
-                    <td className="px-6 py-4 text-slate-700 font-black">{h.menu}</td>
-                    <td className="px-6 py-4 text-center text-slate-600">{h.boxes}</td>
-                    <td className="px-6 py-4 text-right text-slate-500 font-medium">€{h.cash.toFixed(1)}</td>
-                    <td className="px-6 py-4 text-right text-slate-500 font-medium">€{h.card.toFixed(1)}</td>
-                    <td className="px-6 py-4 text-right text-amber-600 font-black">€{h.total.toFixed(1)}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      </div>
-    </div>
-  )
-}
         {menuSales.map((sale, i) => (
           <div key={sale.menu} className="bg-white p-6 rounded-[2rem] shadow-sm border border-slate-100 flex items-center gap-4 group hover:shadow-md transition-all">
             <div className="flex-1 font-black text-slate-700 text-lg">{sale.menu}</div>
@@ -254,6 +196,39 @@ export default function DailySalesPage() {
           </span>
         ) : t.sales.save}
       </button>
+
+      {/* History Table */}
+      <div className="pt-12 space-y-6">
+        <h2 className="text-xl font-black text-slate-800 px-1">{t.sales.history}</h2>
+        <div className="bg-white rounded-[2rem] shadow-sm border border-slate-100 overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-sm font-bold border-collapse">
+              <thead className="bg-slate-50 text-[10px] font-black uppercase text-slate-400 sticky top-0 z-10">
+                <tr>
+                  <th className="px-6 py-4">{t.receipt.store || 'Date'}</th>
+                  <th className="px-6 py-4">{t.manageMenus.name}</th>
+                  <th className="px-6 py-4 text-center">{t.receipt.qty}</th>
+                  <th className="px-6 py-4 text-right">{t.sales.cash}</th>
+                  <th className="px-6 py-4 text-right">{t.sales.card}</th>
+                  <th className="px-6 py-4 text-right">{t.sales.total}</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-50">
+                {history.map((h, i) => (
+                  <tr key={i} className="hover:bg-slate-50 transition-colors">
+                    <td className="px-6 py-4 text-slate-400 text-[10px] font-black uppercase tracking-tighter whitespace-nowrap">{h.date}</td>
+                    <td className="px-6 py-4 text-slate-700 font-black">{h.menu}</td>
+                    <td className="px-6 py-4 text-center text-slate-600">{h.boxes}</td>
+                    <td className="px-6 py-4 text-right text-slate-500 font-medium">€{h.cash.toFixed(1)}</td>
+                    <td className="px-6 py-4 text-right text-slate-500 font-medium">€{h.card.toFixed(1)}</td>
+                    <td className="px-6 py-4 text-right text-amber-600 font-black">€{h.total.toFixed(1)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
     </div>
   )
 }
