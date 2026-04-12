@@ -71,6 +71,8 @@ export async function POST(req: NextRequest) {
       
       const updatedRowsMap = new Map<string, string[]>()
       const menuRows: string[][] = []
+      let added = 0
+      let updated = 0
 
       rows.forEach(row => {
         if (row[0] === 'ingredient') {
@@ -83,11 +85,13 @@ export async function POST(req: NextRequest) {
       items.forEach((item: any) => {
         const nameLower = (item.nameTh || '').trim().toLowerCase()
         if (updatedRowsMap.has(nameLower)) {
+          updated++
           const existingRow = updatedRowsMap.get(nameLower)!
           updatedRowsMap.set(nameLower, [
             'ingredient', existingRow[1], item.nameTh, item.nameFr, item.unit, String(item.threshold)
           ])
         } else {
+          added++
           const id = randomUUID().slice(0, 8)
           updatedRowsMap.set(nameLower, [
             'ingredient', id, item.nameTh, item.nameFr, item.unit, String(item.threshold)
@@ -106,7 +110,7 @@ export async function POST(req: NextRequest) {
 
       const header = ['type', 'id', 'name_th', 'name_fr_or_price', 'unit_or_ingredients', 'threshold']
       await updateTab(accessToken, 'config', header, finalRows)
-      return NextResponse.json({ success: true, count: items.length })
+      return NextResponse.json({ success: true, added, updated })
     }
 
     const id = randomUUID().slice(0, 8)

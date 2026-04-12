@@ -101,6 +101,9 @@ test('POST /api/sheets/config bulk updates and adds ingredients', async () => {
   const req = { json: jest.fn().mockResolvedValue(body) }
   const res = await POST(req as any)
   expect(res.status).toBe(200)
+  const data = await res.json()
+  expect(data.added).toBe(1)
+  expect(data.updated).toBe(1)
   expect(updateTab).toHaveBeenCalledWith('fake-token', 'config', 
     ['type','id','name_th','name_fr_or_price','unit_or_ingredients','threshold'],
     expect.arrayContaining([
