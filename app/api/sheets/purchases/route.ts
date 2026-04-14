@@ -11,6 +11,25 @@ export async function GET(req: NextRequest) {
     const accessToken = (session as any)?.accessToken
     if (!accessToken) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
+    const { searchParams } = new URL(req.url)
+    const id = searchParams.get('id')
+
+    if (id) {
+      // Fetch details for a specific receipt from receipt_extract
+      const rows = await readRows(accessToken, 'receipt_extract')
+      const items = rows
+        .filter(row => row[8] === id)
+        .map(row => ({
+          nameFr: row[2],
+          nameTh: row[3],
+          qty: Number(row[4]),
+          unit: row[5],
+          pricePerUnit: Number(row[6]),
+          total: Number(row[7])
+        }))
+      return NextResponse.json(items)
+    }
+
     const rows = await readRows(accessToken, 'receipt_summaries')
     // date, store, total, drive_url, id
     const summaries = rows.map(row => ({
@@ -60,7 +79,7 @@ export async function POST(req: NextRequest) {
       [date, store, total, driveUrl, receiptId]
     ])
 
-    // 3. Save Individual Items
+    // 3. Save Individual Items to Purchases
     const rows = items.map(item => [
       date, 
       store, 
@@ -69,13 +88,24 @@ export async function POST(req: NextRequest) {
       item.qty, 
       item.unit, 
       item.pricePerUnit, // Price TTC
-      item.netPrice,     // Price HT
-      item.vatRate, 
-      item.vatAmount, 
       item.total,         // Line total TTC
       receiptId           // Link to summary
     ])
     await appendRows(accessToken, 'purchases', rows)
+
+    // 4. Save to Receipt Extract (Raw extraction per user request)
+    const extractRows = items.map(item => [
+      date,
+      store,
+      item.nameFr,
+      item.nameTh,
+      item.qty,
+      item.unit,
+      item.pricePerUnit,
+      item.total,
+      receiptId
+    ])
+    await appendRows(accessToken, 'receipt_extract', extractRows)
 
     return NextResponse.json({ ok: true, driveUrl, id: receiptId })
   } catch (error: any) {
@@ -105,8 +135,13 @@ export async function DELETE(req: NextRequest) {
 
     // 3. (Optional) Filter purchases too
     const purchases = await readRows(accessToken, 'purchases')
-    const filteredPurchases = purchases.filter(row => row[11] !== id) // receiptId is at index 11
-    await updateTab(accessToken, 'purchases', ['date','store','item_fr','item_th','qty','unit','price','net_price','vat_rate','vat_amount','total','receipt_id'], filteredPurchases)
+    const filteredPurchases = purchases.filter(row => row[8] !== id) // receiptId is at index 8
+    await updateTab(accessToken, 'purchases', ['date','store','item_fr','item_th','qty','unit','price','total','receipt_id'], filteredPurchases)
+
+    // 4. Filter receipt_extract
+    const extracts = await readRows(accessToken, 'receipt_extract')
+    const filteredExtracts = extracts.filter(row => row[8] !== id) // receiptId is at index 8
+    await updateTab(accessToken, 'receipt_extract', ['date','store','name_fr','name_th','qty','unit','price_per_unit','total','receipt_id'], filteredExtracts)
 
     return NextResponse.json({ ok: true })
   } catch (error: any) {

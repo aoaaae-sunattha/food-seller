@@ -16,6 +16,12 @@ export default function ReceiptPage() {
   const [history, setHistory] = useState<any[]>([])
   const [loading, setLoading] = useState(false)
   const [done, setDone] = useState(false)
+  
+  // Modal State
+  const [showModal, setShowModal] = useState(false)
+  const [modalLoading, setModalLoading] = useState(false)
+  const [modalItems, setModalItems] = useState<any[]>([])
+  const [selectedReceipt, setSelectedReceipt] = useState<any>(null)
 
   useEffect(() => {
     fetchHistory()
@@ -30,6 +36,23 @@ export default function ReceiptPage() {
       }
     } catch (e) {
       console.error('Failed to fetch history', e)
+    }
+  }
+
+  async function fetchDetails(summary: any) {
+    setSelectedReceipt(summary)
+    setShowModal(true)
+    setModalLoading(true)
+    try {
+      const res = await fetch(`/api/sheets/purchases?id=${summary.id}`)
+      if (res.ok) {
+        const data = await res.json()
+        setModalItems(data)
+      }
+    } catch (e) {
+      console.error('Failed to fetch details', e)
+    } finally {
+      setModalLoading(false)
     }
   }
 
@@ -83,14 +106,15 @@ export default function ReceiptPage() {
 
             return {
               nameFr: item.nameFr || '',
-              nameTh: '',
+              nameTh: item.isDiscount ? 'ส่วนลด' : '',
               qty,
               unit: item.unit || 'pc',
               pricePerUnit,             // Initial TTC
               total: lineTotal,         // Initial Total
               netPrice: pricePerUnit,    // Printed base is HT
               vatRate: 0,
-              vatAmount: 0
+              vatAmount: 0,
+              isDiscount: !!item.isDiscount
             }
           })
           setItems(mappedItems)
@@ -328,26 +352,35 @@ export default function ReceiptPage() {
                 </thead>
                 <tbody className="divide-y divide-slate-50">
                   {history.map((h, i) => (
-                    <tr key={h.id || i} className="hover:bg-slate-50/50 transition-colors">
+                    <tr key={h.id || i} className="hover:bg-slate-50/50 transition-colors group">
                       <td className="py-4 px-6 font-bold text-slate-700">{h.date}</td>
-                      <td className="py-4 px-6 text-slate-600">{h.store}</td>
-                      <td className="py-4 px-6 text-right font-black text-slate-900">€{h.total.toFixed(2)}</td>
-                      <td className="py-4 px-6 text-center">
-                        {h.driveUrl ? (
-                          <a 
-                            href={h.driveUrl} 
-                            target="_blank" 
-                            rel="noopener noreferrer"
-                            className="inline-flex items-center gap-1.5 text-amber-600 font-bold hover:underline"
+                      <td className="py-4 px-6 text-slate-600 font-medium">{h.store}</td>
+                      <td className="py-4 px-6 text-right font-black text-slate-900 whitespace-nowrap">€{h.total.toFixed(2)}</td>
+                      <td className="py-4 px-6 text-center whitespace-nowrap">
+                        <div className="flex items-center justify-center gap-3">
+                          <button 
+                            onClick={() => fetchDetails(h)}
+                            className="inline-flex items-center gap-1 bg-amber-50 text-amber-700 px-3 py-1.5 rounded-full font-black text-[10px] uppercase tracking-wider hover:bg-amber-100 transition-colors shadow-sm"
                           >
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h7" />
                             </svg>
-                            View
-                          </a>
-                        ) : (
-                          <span className="text-slate-300">-</span>
-                        )}
+                            Details
+                          </button>
+                          {h.driveUrl && (
+                            <a 
+                              href={h.driveUrl} 
+                              target="_blank" 
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center gap-1.5 bg-slate-50 text-slate-600 px-3 py-1.5 rounded-full font-black text-[10px] uppercase tracking-wider hover:bg-slate-100 transition-colors shadow-sm"
+                            >
+                              <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                              </svg>
+                              Image
+                            </a>
+                          )}
+                        </div>
                       </td>
                       <td className="py-4 px-6 text-center">
                         <button 
@@ -367,6 +400,99 @@ export default function ReceiptPage() {
           )}
         </div>
       </div>
+
+      {/* Details Modal */}
+      {showModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div 
+            className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-300" 
+            onClick={() => setShowModal(false)} 
+          />
+          <div className="relative bg-white w-full max-w-2xl max-h-[90vh] rounded-[2.5rem] shadow-2xl overflow-hidden flex flex-col animate-in zoom-in-95 slide-in-from-bottom-8 duration-400">
+            {/* Modal Header */}
+            <div className="p-8 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
+              <div className="space-y-1">
+                <h3 className="text-xl font-black text-slate-800 tracking-tight">{selectedReceipt?.store}</h3>
+                <p className="text-sm font-bold text-slate-400 uppercase tracking-widest">{selectedReceipt?.date} • €{selectedReceipt?.total.toFixed(2)}</p>
+              </div>
+              <button 
+                onClick={() => setShowModal(false)}
+                className="w-12 h-12 flex items-center justify-center bg-white rounded-2xl text-slate-400 hover:text-slate-600 shadow-sm border border-slate-100 transition-all active:scale-90"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+
+            {/* Modal Content */}
+            <div className="flex-1 overflow-y-auto p-8 pt-6">
+              {modalLoading ? (
+                <div className="py-20 flex flex-col items-center gap-4">
+                  <div className="w-12 h-12 border-4 border-amber-500/20 border-t-amber-500 rounded-full animate-spin" />
+                  <p className="text-slate-400 font-bold uppercase tracking-widest text-xs animate-pulse">Loading Details...</p>
+                </div>
+              ) : (
+                <div className="space-y-6">
+                  <div className="overflow-hidden rounded-3xl border border-slate-100 bg-white">
+                    <table className="w-full text-sm">
+                      <thead>
+                        <tr className="bg-slate-50 text-slate-400 font-black uppercase text-[10px] tracking-widest border-b border-slate-100">
+                          <th className="text-left py-4 px-6">Item (🇫🇷 / 🇹🇭)</th>
+                          <th className="text-center py-4 px-4">Qty</th>
+                          <th className="text-right py-4 px-6">Price/u</th>
+                          <th className="text-right py-4 px-6">Total</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-50">
+                        {modalItems.map((item, i) => (
+                          <tr key={i} className="hover:bg-slate-50/50 transition-colors">
+                            <td className="py-4 px-6">
+                              <div className="font-bold text-slate-700">{item.nameFr}</div>
+                              <div className="text-amber-600 font-bold text-xs">{item.nameTh}</div>
+                            </td>
+                            <td className="py-4 px-4 text-center">
+                              <span className="bg-slate-100 text-slate-600 px-2 py-1 rounded-lg font-black text-[10px]">
+                                {item.qty} {item.unit}
+                              </span>
+                            </td>
+                            <td className="py-4 px-6 text-right font-bold text-slate-500">€{item.pricePerUnit.toFixed(2)}</td>
+                            <td className="py-4 px-6 text-right font-black text-slate-900">€{item.total.toFixed(2)}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+
+                  {selectedReceipt?.driveUrl && (
+                    <a 
+                      href={selectedReceipt.driveUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="w-full bg-slate-100 text-slate-600 py-5 rounded-2xl font-black flex items-center justify-center gap-2 hover:bg-slate-200 transition-all active:scale-[0.98]"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                      </svg>
+                      View Original Receipt Image
+                    </a>
+                  )}
+                </div>
+              )}
+            </div>
+            
+            {/* Modal Footer */}
+            <div className="p-8 bg-slate-50/80 backdrop-blur-md border-t border-slate-100 flex gap-4">
+              <button 
+                onClick={() => setShowModal(false)}
+                className="flex-1 bg-slate-900 text-white py-5 rounded-2xl font-black shadow-xl shadow-slate-900/20 hover:bg-slate-800 transition-all active:scale-[0.98]"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

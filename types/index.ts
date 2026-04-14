@@ -30,6 +30,7 @@ export interface ReceiptItem {
   vatRate: number      // e.g. 5.5, 10, 20
   vatAmount: number
   total: number        // TTC (Gross)
+  isDiscount?: boolean // true if this is a negative amount or discount
 }
 
 export interface PurchaseRow {
