@@ -56,14 +56,19 @@ export default function ItemReviewTable({ items, onChange }: Props) {
         </thead>
         <tbody>
           {items.map((item, i) => (
-            <tr key={i} className="group bg-slate-50/50 hover:bg-slate-50 transition-colors">
+            <tr key={i} className={`group transition-colors ${item.isDiscount ? 'bg-red-50/50 hover:bg-red-50' : 'bg-slate-50/50 hover:bg-slate-50'}`}>
               <td className="py-1 px-1 first:rounded-l-xl">
-                <input
-                  id={`receipt-item-fr-${i}`}
-                  className="bg-transparent border-0 focus:ring-2 focus:ring-amber-500/20 rounded-lg px-2 py-2 w-full font-medium text-slate-700 outline-none"
-                  value={item.nameFr}
-                  onChange={e => updateLine(i, { nameFr: e.target.value })}
-                />
+                <div className="flex items-center gap-2">
+                  {item.isDiscount && (
+                    <span className="bg-red-100 text-red-600 px-1.5 py-0.5 rounded text-[8px] font-black uppercase tracking-tighter">Discount</span>
+                  )}
+                  <input
+                    id={`receipt-item-fr-${i}`}
+                    className="bg-transparent border-0 focus:ring-2 focus:ring-amber-500/20 rounded-lg px-2 py-2 w-full font-medium text-slate-700 outline-none"
+                    value={item.nameFr}
+                    onChange={e => updateLine(i, { nameFr: e.target.value })}
+                  />
+                </div>
               </td>
               <td className="py-1 px-1">
                 <input
@@ -93,13 +98,13 @@ export default function ItemReviewTable({ items, onChange }: Props) {
               <td className="py-1 px-1">
                 <NumberInput
                   id={`receipt-item-price-${i}`}
-                  className="bg-amber-100/50 border border-amber-200 focus:bg-white focus:ring-2 focus:ring-amber-500/20 rounded-lg px-2 py-2 w-24 text-right font-black text-slate-800 outline-none transition-all"
+                  className={`${item.isDiscount ? 'bg-red-100/50 border-red-200 text-red-700' : 'bg-amber-100/50 border-amber-200 text-slate-800'} border focus:bg-white focus:ring-2 focus:ring-amber-500/20 rounded-lg px-2 py-2 w-24 text-right font-black outline-none transition-all`}
                   value={item.pricePerUnit}
                   onChange={val => updateLine(i, { pricePerUnit: val })}
                 />
               </td>
-              <td className="py-1 px-1 text-right font-black text-slate-900">
-                €{item.total.toFixed(2)}
+              <td className={`py-1 px-1 text-right font-black ${item.isDiscount ? 'text-red-600' : 'text-slate-900'}`}>
+                {item.isDiscount && item.total > 0 ? '-' : ''}€{Math.abs(item.total).toFixed(2)}
               </td>
               <td className="py-1 px-2 last:rounded-r-xl text-center">
                 <button
