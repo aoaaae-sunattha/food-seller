@@ -15,7 +15,7 @@ export function buildMonthTitle(date: Date): string {
   return `ร้านอาหาร — ${month} ${year}`
 }
 
-export type TabKey = 'purchases' | 'stock' | 'sales' | 'config' | 'summary'
+export type TabKey = 'purchases' | 'stock' | 'sales' | 'config' | 'summary' | 'receipt_summaries'
 
 const TAB_NAMES: Record<TabKey, string> = {
   purchases: 'Purchases',
@@ -23,6 +23,7 @@ const TAB_NAMES: Record<TabKey, string> = {
   sales: 'Daily Sales',
   config: 'Config',
   summary: 'Monthly Summary',
+  receipt_summaries: 'Receipt Summaries',
 }
 
 export function getSheetTitle(tab: TabKey): string {
@@ -80,6 +81,44 @@ export async function getOrCreateMonthSheet(accessToken?: string, date: Date = n
     if (search.data.files && search.data.files.length > 0) {
       const existingId = search.data.files[0].id!
       console.log('Found existing spreadsheet:', existingId)
+      
+      // Ensure all tabs exist (for backward compatibility when new tabs are added)
+      const spreadsheet = await sheets.spreadsheets.get({ spreadsheetId: existingId })
+      const existingTitles = spreadsheet.data.sheets?.map(s => s.properties?.title) || []
+      const missingTabs = (Object.values(TAB_NAMES) as string[]).filter(title => !existingTitles.includes(title))
+
+      if (missingTabs.length > 0) {
+        console.log('Missing tabs found, creating:', missingTabs)
+        await sheets.spreadsheets.batchUpdate({
+          spreadsheetId: existingId,
+          requestBody: {
+            requests: missingTabs.map(title => ({
+              addSheet: { properties: { title } }
+            }))
+          }
+        })
+        
+        // Add headers for the new tabs
+        const headerData = []
+        if (missingTabs.includes('Receipt Summaries')) {
+          headerData.push({ range: 'Receipt Summaries!A1', values: [['date','store','total','drive_url','id']] })
+        }
+        if (missingTabs.includes('Purchases')) {
+          // Update headers if they were the old format
+          headerData.push({ range: 'Purchases!A1', values: [['date','store','item_fr','item_th','qty','unit','price','net_price','vat_rate','vat_amount','total','receipt_id']] })
+        }
+
+        if (headerData.length > 0) {
+          await sheets.spreadsheets.values.batchUpdate({
+            spreadsheetId: existingId,
+            requestBody: {
+              valueInputOption: 'RAW',
+              data: headerData
+            }
+          })
+        }
+      }
+
       return existingId
     }
 
@@ -94,6 +133,7 @@ export async function getOrCreateMonthSheet(accessToken?: string, date: Date = n
           { properties: { title: 'Daily Sales' } },
           { properties: { title: 'Monthly Summary' } },
           { properties: { title: 'Config' } },
+          { properties: { title: 'Receipt Summaries' } },
         ],
       },
     })
@@ -107,11 +147,12 @@ export async function getOrCreateMonthSheet(accessToken?: string, date: Date = n
       requestBody: {
         valueInputOption: 'RAW',
         data: [
-          { range: 'Purchases!A1', values: [['date','store','item_fr','item_th','qty','unit','price','total']] },
+          { range: 'Purchases!A1', values: [['date','store','item_fr','item_th','qty','unit','price','net_price','vat_rate','vat_amount','total']] },
           { range: 'Stock!A1', values: [['date','ingredient','amount_used','unit','reason','menu']] },
           { range: 'Daily Sales!A1', values: [['date','menu','boxes','price_per_box','subtotal','cash','card','total']] },
           { range: 'Config!A1', values: [['type','id','name_th','name_fr_or_price','unit_or_ingredients','threshold']] },
           { range: 'Monthly Summary!A1', values: [['category','metric','value']] },
+          { range: 'Receipt Summaries!A1', values: [['date','store','total','drive_url','id']] },
         ],
       },
     })
@@ -200,4 +241,56 @@ export async function updateTab(accessToken: string | undefined, tab: TabKey, he
     valueInputOption: 'RAW',
     requestBody: { values: [header, ...rows] },
   })
+}
+
+/**
+ * Uploads a receipt image to Google Drive in a folder named 'Receipts'.
+ * Returns the webViewLink.
+ */
+export async function uploadReceiptImage(accessToken: string | undefined, buffer: Buffer, filename: string, mimeType: string): Promise<string> {
+  const drive = getDriveClient(accessToken)
+  
+  // 1. Find or create 'Receipts' folder
+  let folderId: string
+  const folderSearch = await drive.files.list({
+    q: "mimeType='application/vnd.google-apps.folder' and name='Receipts' and trashed=false",
+    fields: 'files(id)',
+  })
+  
+  if (folderSearch.data.files && folderSearch.data.files.length > 0) {
+    folderId = folderSearch.data.files[0].id!
+  } else {
+    const folder = await drive.files.create({
+      requestBody: {
+        name: 'Receipts',
+        mimeType: 'application/vnd.google-apps.folder',
+      },
+      fields: 'id',
+    })
+    folderId = folder.data.id!
+  }
+
+  // 2. Upload the file
+  const response = await drive.files.create({
+    requestBody: {
+      name: filename,
+      parents: [folderId],
+    },
+    media: {
+      mimeType,
+      body: require('stream').Readable.from(buffer),
+    },
+    fields: 'id, webViewLink',
+  })
+
+  // 3. Make the file readable by anyone with the link (optional but helpful for the owner)
+  await drive.permissions.create({
+    fileId: response.data.id!,
+    requestBody: {
+      role: 'reader',
+      type: 'anyone',
+    },
+  })
+
+  return response.data.webViewLink!
 }

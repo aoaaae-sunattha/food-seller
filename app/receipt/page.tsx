@@ -1,5 +1,5 @@
 'use client'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useLanguage } from '@/hooks/useLanguage'
 import UploadZone from '@/components/receipt/UploadZone'
 import ItemReviewTable from '@/components/receipt/ItemReviewTable'
@@ -8,14 +8,50 @@ import type { ReceiptItem } from '@/types'
 export default function ReceiptPage() {
   const { t } = useLanguage()
   const [preview, setPreview] = useState<string | null>(null)
+  const [file, setFile] = useState<File | null>(null)
   const [store, setStore] = useState('')
   const [date, setDate] = useState(new Date().toISOString().split('T')[0])
   const [total, setTotal] = useState<number>(0)
   const [items, setItems] = useState<ReceiptItem[]>([])
+  const [history, setHistory] = useState<any[]>([])
   const [loading, setLoading] = useState(false)
   const [done, setDone] = useState(false)
 
+  useEffect(() => {
+    fetchHistory()
+  }, [])
+
+  async function fetchHistory() {
+    try {
+      const res = await fetch('/api/sheets/purchases')
+      if (res.ok) {
+        const data = await res.json()
+        setHistory(data)
+      }
+    } catch (e) {
+      console.error('Failed to fetch history', e)
+    }
+  }
+
+  async function handleDelete(id: string) {
+    if (!confirm('Are you sure you want to delete this receipt?')) return
+    setLoading(true)
+    try {
+      const res = await fetch('/api/sheets/purchases', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id })
+      })
+      if (res.ok) fetchHistory()
+    } catch (e) {
+      alert('Failed to delete')
+    } finally {
+      setLoading(false)
+    }
+  }
+
   async function handleFile(file: File) {
+    setFile(file)
     setPreview(URL.createObjectURL(file))
     setLoading(true)
     
@@ -76,17 +112,20 @@ export default function ReceiptPage() {
   async function handleConfirm() {
     setLoading(true)
     try {
+      const formData = new FormData()
+      formData.append('date', date)
+      formData.append('store', store)
+      formData.append('total', total.toString())
+      formData.append('items', JSON.stringify(items))
+      if (file) formData.append('image', file)
+
       const res = await fetch('/api/sheets/purchases', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          date,
-          store,
-          items,
-        }),
+        body: formData,
       })
       if (res.ok) {
         setDone(true)
+        fetchHistory()
       } else {
         const err = await res.json().catch(() => ({}))
         throw new Error(`บันทึกใบเสร็จไม่สำเร็จ: ${err.details || err.error || res.status}`)
@@ -244,7 +283,7 @@ export default function ReceiptPage() {
           <div className="flex gap-4">
             <button 
               id="receipt-cancel-btn"
-              onClick={() => { setPreview(null); setItems([]); setStore(''); setTotal(0) }}
+              onClick={() => { setPreview(null); setFile(null); setItems([]); setStore(''); setTotal(0) }}
               className="flex-1 bg-white border border-slate-200 text-slate-600 py-4 rounded-2xl font-bold hover:bg-slate-50 transition-all active:scale-95"
             >
               {t.common.cancel}
@@ -255,11 +294,79 @@ export default function ReceiptPage() {
               disabled={loading || items.length === 0}
               className="flex-1 bg-amber-600 text-white py-4 rounded-2xl font-bold text-lg shadow-lg shadow-amber-600/20 hover:bg-amber-700 transition-all active:scale-95 disabled:opacity-50 disabled:active:scale-100"
             >
-              {t.receipt.confirm}
+              {loading ? t.common.loading : t.receipt.confirm}
             </button>
           </div>
         </div>
       )}
+
+      {/* History Section */}
+      <div className="mt-12 space-y-4">
+        <h2 className="text-xl font-black text-slate-800 tracking-tight flex items-center gap-2">
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-amber-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          History (ประวัติการซื้อ)
+        </h2>
+        
+        <div className="bg-white rounded-[2rem] shadow-sm border border-slate-100 overflow-hidden">
+          {history.length === 0 ? (
+            <div className="p-12 text-center text-slate-400 font-medium italic">
+              No receipt history yet.
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="bg-slate-50 text-slate-400 font-bold uppercase text-[10px] tracking-widest border-b border-slate-100">
+                    <th className="text-left py-4 px-6">Date</th>
+                    <th className="text-left py-4 px-6">Store</th>
+                    <th className="text-right py-4 px-6">Total</th>
+                    <th className="text-center py-4 px-6">Receipt</th>
+                    <th className="w-16"></th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-50">
+                  {history.map((h, i) => (
+                    <tr key={h.id || i} className="hover:bg-slate-50/50 transition-colors">
+                      <td className="py-4 px-6 font-bold text-slate-700">{h.date}</td>
+                      <td className="py-4 px-6 text-slate-600">{h.store}</td>
+                      <td className="py-4 px-6 text-right font-black text-slate-900">€{h.total.toFixed(2)}</td>
+                      <td className="py-4 px-6 text-center">
+                        {h.driveUrl ? (
+                          <a 
+                            href={h.driveUrl} 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-1.5 text-amber-600 font-bold hover:underline"
+                          >
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                            </svg>
+                            View
+                          </a>
+                        ) : (
+                          <span className="text-slate-300">-</span>
+                        )}
+                      </td>
+                      <td className="py-4 px-6 text-center">
+                        <button 
+                          onClick={() => handleDelete(h.id)}
+                          className="p-2 text-slate-300 hover:text-red-500 transition-colors rounded-lg"
+                        >
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                          </svg>
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+      </div>
     </div>
   )
 }
