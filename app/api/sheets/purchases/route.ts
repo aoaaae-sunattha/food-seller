@@ -17,9 +17,18 @@ export async function POST(req: NextRequest) {
     const { date, store, items }: { date: string; store: string; items: ReceiptItem[] } = await req.json()
 
     const rows = items.map(item => [
-      date, store, item.nameFr, item.nameTh, item.qty, item.unit, item.pricePerUnit, item.total,
+      date, 
+      store, 
+      item.nameFr, 
+      item.nameTh, 
+      item.qty, 
+      item.unit, 
+      item.pricePerUnit, // Price TTC
+      item.netPrice,     // Price HT
+      item.vatRate, 
+      item.vatAmount, 
+      item.total         // Line total TTC
     ])
-
     await appendRows(accessToken, 'purchases', rows)
     return NextResponse.json({ ok: true })
   } catch (error: any) {

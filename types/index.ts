@@ -25,8 +25,11 @@ export interface ReceiptItem {
   nameTh: string      // user fills this in during review
   qty: number
   unit: string
-  pricePerUnit: number
-  total: number
+  pricePerUnit: number // TTC (Gross)
+  netPrice: number     // HT (Net)
+  vatRate: number      // e.g. 5.5, 10, 20
+  vatAmount: number
+  total: number        // TTC (Gross)
 }
 
 export interface PurchaseRow {
@@ -36,8 +39,11 @@ export interface PurchaseRow {
   item_th: string
   qty: number
   unit: string
-  price: number
-  total: number
+  price: number       // Price per unit (TTC)
+  netPrice: number    // Price per unit (HT)
+  vatRate: number
+  vatAmount: number
+  total: number       // Line total (TTC)
 }
 
 export interface StockDeductionRow {
