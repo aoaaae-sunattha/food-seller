@@ -29,6 +29,7 @@ export interface ReceiptItem {
   netPrice: number     // HT (Net)
   vatRate: number      // e.g. 5.5, 10, 20
   vatAmount: number
+  discount: number     // € discount applied to this line
   total: number        // TTC (Gross)
   isDiscount?: boolean // true if this is a negative amount or discount
 }
