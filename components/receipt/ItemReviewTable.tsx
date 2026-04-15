@@ -49,9 +49,6 @@ export default function ItemReviewTable({ items, onChange, showAdvanced = false 
             <th className="text-left py-2 px-2">French Name</th>
             <th className="text-left py-2 px-2">Thai Name</th>
             <th className="text-right py-2 px-2">Qty</th>
-            {showAdvanced && (
-              <th className="text-right py-2 px-2">Disc</th>
-            )}
             <th className="text-right py-2 px-2">TTC/u (ชิ้นละ)</th>
             <th className="text-right py-2 px-2">Line Total</th>
             <th className="w-8"></th>
@@ -90,15 +87,6 @@ export default function ItemReviewTable({ items, onChange, showAdvanced = false 
                   onChange={val => updateLine(i, { qty: val })}
                 />
               </td>
-              {showAdvanced && (
-                <td className="py-1 px-1">
-                  <NumberInput
-                    className="bg-red-50 border-0 focus:ring-2 focus:ring-red-500/20 rounded-lg px-2 py-2 w-16 text-right font-bold text-red-600 outline-none"
-                    value={item.discount}
-                    onChange={val => updateLine(i, { discount: val })}
-                  />
-                </td>
-              )}
               <td className="py-1 px-1">
                 <NumberInput
                   id={`receipt-item-price-${i}`}

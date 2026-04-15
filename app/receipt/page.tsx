@@ -13,7 +13,6 @@ export default function ReceiptPage() {
   const [date, setDate] = useState(new Date().toISOString().split('T')[0])
   const [total, setTotal] = useState<number>(0)
   const [items, setItems] = useState<ReceiptItem[]>([])
-  const [discount, setDiscount] = useState<number>(0)
   const [history, setHistory] = useState<any[]>([])
   const [loading, setLoading] = useState(false)
   const [done, setDone] = useState(false)
@@ -110,6 +109,27 @@ export default function ReceiptPage() {
     }
   }
 
+  async function handleClearAll() {
+    if (!confirm('Are you sure you want to clear ALL receipt history? This cannot be undone.')) return
+    setLoading(true)
+    try {
+      const res = await fetch('/api/sheets/purchases', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ all: true })
+      })
+      if (res.ok) {
+        await fetchHistory()
+      } else {
+        alert('Failed to clear history')
+      }
+    } catch (e) {
+      console.error('Clear all failed', e)
+    } finally {
+      setLoading(false)
+    }
+  }
+
   async function handleFile(file: File) {
     setFile(file)
     setPreview(URL.createObjectURL(file))
@@ -123,21 +143,14 @@ export default function ReceiptPage() {
       const data = await res.json()
       if (res.ok) {
         if (data.items) {
-          // Detect discount lines: by flag, negative total, or name containing REMISE/DISCOUNT/COUPON
+          // Detect discount/non-stock lines: by flag, negative total, or name containing REMISE/DISCOUNT/COUPON
           const isDiscountLine = (item: any) =>
             item.isDiscount ||
             Number(item.total) < 0 ||
             /remise|discount|coupon|r[eé]duction/i.test(String(item.nameFr || ''))
 
-          // Extract and sum ALL discounts
-          const extractedDiscount = data.items
-            .filter(isDiscountLine)
-            .reduce((sum: number, item: any) => sum + Math.abs(Number(item.total)), 0)
-
-          setDiscount(extractedDiscount)
-
           const mappedItems: ReceiptItem[] = data.items
-            .filter((item: any) => !isDiscountLine(item)) // REMOVE ALL DISCOUNT LINES
+            .filter((item: any) => !isDiscountLine(item)) // REMOVE ALL DISCOUNT LINES FROM STOCK LIST
             .map((item: any) => {
               const qty = Number(item.qty) || 1
               const printedPrice = Number(item.pricePerUnit)
@@ -190,14 +203,13 @@ export default function ReceiptPage() {
     setLoading(true)
     try {
       const itemsGrossTotalSum = items.reduce((sum, item) => sum + item.total, 0)
-      const calculatedVat = total - (itemsGrossTotalSum - discount)
+      const discrepancy = total - itemsGrossTotalSum
 
       const formData = new FormData()
       formData.append('date', date)
       formData.append('store', store)
       formData.append('total', total.toString())
-      formData.append('vat', calculatedVat.toString())
-      formData.append('discount', discount.toString())
+      formData.append('discrepancy', discrepancy.toString())
       formData.append('items', JSON.stringify(items))
       if (file) formData.append('image', file)
 
@@ -223,33 +235,28 @@ export default function ReceiptPage() {
   function handleReconcile() {
     if (items.length === 0 || total <= 0) return
 
-    // Sum of the ORIGINAL printed subtotals (Net HT)
-    const currentHTSum = items.reduce((sum, item) => sum + (item.netPrice * item.qty), 0)
-    if (currentHTSum === 0) return
+    // Sum of the current totals of all items in the list
+    const currentItemsSum = items.reduce((sum, item) => sum + item.total, 0)
+    if (currentItemsSum === 0) return
 
-    // The ratio needed to make HT sum equal to the final paid amount
-    const ratio = total / currentHTSum
-    const calculatedVatRate = Number(((ratio - 1) * 100).toFixed(2))
+    // The ratio needed to make items sum equal to the final paid amount
+    const ratio = total / currentItemsSum
 
     const adjustedItems = items.map(item => {
-      // The netPrice (HT) stays as the raw printed price per piece
-      const htPrice = item.netPrice
       const qty = item.qty
+      const currentLineTotal = item.total
 
-      // Calculate the final TTC per piece and line total
-      const newPriceTTC = Number((htPrice * ratio).toFixed(2))
-      const newTotalTTC = Number((newPriceTTC * qty).toFixed(2))
+      // New line total proportional to the final total
+      const newTotal = Number((currentLineTotal * ratio).toFixed(2))
+      const newPricePerUnit = Number((newTotal / qty).toFixed(2))
       
-      // Calculate the "adjustment" as a discount (positive or negative)
-      const lineDiscrepancy = (htPrice * qty) - newTotalTTC
+      // The discrepancy for this specific line
+      const lineDiscrepancy = currentLineTotal - newTotal
 
       return {
         ...item,
-        pricePerUnit: newPriceTTC,    // This is the TTC/u
-        total: newTotalTTC,           // Adjusted line total
-        netPrice: htPrice,            // Always the printed price per unit
-        vatRate: calculatedVatRate,
-        vatAmount: 0,
+        pricePerUnit: newPricePerUnit,
+        total: newTotal,
         discount: Number(lineDiscrepancy.toFixed(2)),
         isDiscount: false
       }
@@ -302,9 +309,8 @@ export default function ReceiptPage() {
     </div>
   )
 
-  const itemsNetTotalSum = items.reduce((sum, item) => sum + (item.netPrice * item.qty), 0)
   const itemsGrossTotalSum = items.reduce((sum, item) => sum + item.total, 0)
-  const calculatedVat = total - (itemsGrossTotalSum - discount)
+  const discrepancy = total - itemsGrossTotalSum
 
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
@@ -412,7 +418,7 @@ export default function ReceiptPage() {
                   <ItemReviewTable 
                     items={items} 
                     onChange={setItems} 
-                    showAdvanced={Math.abs(itemsGrossTotalSum - discount - total) > 0.01}
+                    showAdvanced={Math.abs(discrepancy) > 0.01}
                   />
                   
                   {items.length > 0 && (
@@ -422,23 +428,19 @@ export default function ReceiptPage() {
                         <span>€{itemsGrossTotalSum.toFixed(2)}</span>
                       </div>
                       <div className="flex justify-between items-center text-slate-500 font-medium">
-                        <span>ส่วนลด (Discount)</span>
-                        <span className="text-red-500">-€{discount.toFixed(2)}</span>
-                      </div>
-                      <div className="flex justify-between items-center text-slate-500 font-medium">
-                        <span>ภาษี / ส่วนต่าง (VAT / Discrepancy)</span>
-                        <span className={calculatedVat < 0 ? 'text-red-500' : ''}>€{calculatedVat.toFixed(2)}</span>
+                        <span>ส่วนต่างราคา (Discrepancy)</span>
+                        <span className={discrepancy < 0 ? 'text-red-500' : ''}>€{discrepancy.toFixed(2)}</span>
                       </div>
                       <div className="flex justify-between items-center pt-4 border-t border-slate-200 font-black">
                         <span className="text-slate-800 uppercase tracking-wider">ยอดรวมสุทธิ (Final Total Paid)</span>
                         <div className="flex flex-col items-end">
                           <span className="text-2xl text-slate-900">€{total.toFixed(2)}</span>
-                          {Math.abs(itemsGrossTotalSum - discount - total) > 0.01 && (
+                          {Math.abs(discrepancy) > 0.01 && (
                             <button
                               onClick={handleReconcile}
                               className="mt-2 text-[10px] bg-amber-100 text-amber-700 px-3 py-1.5 rounded-full hover:bg-amber-200 transition-colors uppercase tracking-widest font-black"
                             >
-                              Adjust VAT (€{calculatedVat.toFixed(2)}) into items
+                              Distribute Discrepancy (€{discrepancy.toFixed(2)}) into items
                             </button>
                           )}
                         </div>
@@ -472,12 +474,25 @@ export default function ReceiptPage() {
 
       {/* History Section */}
       <div className="mt-12 space-y-4">
-        <h2 className="text-xl font-black text-slate-800 tracking-tight flex items-center gap-2">
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-amber-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-          </svg>
-          History (ประวัติการซื้อ)
-        </h2>
+        <div className="flex items-center justify-between px-2">
+          <h2 className="text-xl font-black text-slate-800 tracking-tight flex items-center gap-2">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-amber-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            History (ประวัติการซื้อ)
+          </h2>
+          {history.length > 0 && (
+            <button
+              onClick={handleClearAll}
+              className="flex items-center gap-2 text-slate-400 hover:text-red-500 transition-colors font-bold uppercase text-[10px] tracking-widest px-3 py-2 rounded-xl hover:bg-red-50"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+              </svg>
+              Clear All
+            </button>
+          )}
+        </div>
         
         <div className="bg-white rounded-[2rem] shadow-sm border border-slate-100 overflow-hidden">
           {history.length === 0 ? (
@@ -492,8 +507,7 @@ export default function ReceiptPage() {
                     <th className="text-left py-4 px-6">Date</th>
                     <th className="text-left py-4 px-6">Store</th>
                     <th className="text-right py-4 px-6">Total Paid</th>
-                    <th className="text-right py-4 px-6 text-amber-600">VAT</th>
-                    <th className="text-right py-4 px-6 text-red-500">Discount</th>
+                    <th className="text-right py-4 px-6">Discrepancy</th>
                     <th className="text-center py-4 px-6">Actions</th>
                   </tr>
                 </thead>
@@ -505,10 +519,7 @@ export default function ReceiptPage() {
                         <td className="py-4 px-6 text-slate-600 font-medium">{h.store}</td>
                         <td className="py-4 px-6 text-right font-black text-slate-900 whitespace-nowrap">€{Number(h.total || 0).toFixed(2)}</td>
                         <td className="py-4 px-6 text-right font-bold text-amber-600 whitespace-nowrap">
-                          {Number(h.vat || 0) !== 0 ? `€${Number(h.vat).toFixed(2)}` : '-'}
-                        </td>
-                        <td className="py-4 px-6 text-right font-bold text-red-500 whitespace-nowrap">
-                          {Number(h.discount || 0) !== 0 ? `-€${Math.abs(Number(h.discount)).toFixed(2)}` : '-'}
+                          {Number(h.discrepancy || 0) !== 0 ? `€${Number(h.discrepancy).toFixed(2)}` : '-'}
                         </td>
                         <td className="py-4 px-6 text-center whitespace-nowrap">
                           <div className="flex items-center justify-center gap-3">
@@ -550,7 +561,7 @@ export default function ReceiptPage() {
                       </tr>
                       {expandedId === h.id && (
                         <tr className="bg-slate-50/30">
-                          <td colSpan={6} className="p-6">
+                          <td colSpan={5} className="p-6">
                                   <div className="bg-white rounded-[1.5rem] border border-slate-100 shadow-sm overflow-hidden animate-in slide-in-from-top-2 duration-300">
                                     {modalLoading ? (
                                       <div className="p-8 flex justify-center items-center gap-3">
@@ -562,7 +573,6 @@ export default function ReceiptPage() {
                                         No details found. Try viewing the original image.
                                       </div>
                                     ) : (() => {
-                                      const hasDisc = modalItems.some(item => item.discount && item.discount !== 0);
                                       const itemsSubTotal = modalItems.reduce((sum, item) => sum + item.total, 0);
                                       return (
                                         <>
@@ -572,9 +582,6 @@ export default function ReceiptPage() {
                                                 <th className="text-left py-3 px-4">Item (FR / TH)</th>
                                                 <th className="text-center py-3 px-2">Qty</th>
                                                 <th className="text-right py-3 px-4">Price/u</th>
-                                                {hasDisc && (
-                                                  <th className="text-right py-3 px-2">Disc</th>
-                                                )}
                                                 <th className="text-right py-3 px-4">Total</th>
                                               </tr>
                                             </thead>
@@ -589,32 +596,23 @@ export default function ReceiptPage() {
                                                     {item.qty} {item.unit}
                                                   </td>
                                                   <td className="py-3 px-4 text-right text-slate-500">€{item.pricePerUnit.toFixed(2)}</td>
-                                                  {hasDisc && (
-                                                    <td className="py-3 px-2 text-right text-red-400 font-medium">{item.discount ? `-€${item.discount.toFixed(2)}` : '-'}</td>
-                                                  )}
                                                   <td className="py-3 px-4 text-right font-black text-slate-800">€{item.total.toFixed(2)}</td>
                                                 </tr>
                                               ))}
                                             </tbody>
                                               <tfoot className="bg-slate-50/50 font-bold text-slate-700">
                                                 <tr>
-                                                  <td colSpan={hasDisc ? 4 : 3} className="py-3 px-4 text-right uppercase tracking-tighter text-[9px]">Sum of Items</td>
+                                                  <td colSpan={3} className="py-3 px-4 text-right uppercase tracking-tighter text-[9px]">Sum of Items</td>
                                                   <td className="py-3 px-4 text-right">€{Number(itemsSubTotal || 0).toFixed(2)}</td>
                                                 </tr>
-                                                {Number(h.discount || 0) !== 0 && (
+                                                {Number(h.discrepancy || 0) !== 0 && (
                                                   <tr>
-                                                    <td colSpan={hasDisc ? 4 : 3} className="py-3 px-4 text-right uppercase tracking-tighter text-[9px]">Discount</td>
-                                                    <td className="py-3 px-4 text-right text-red-500">-€{Math.abs(Number(h.discount)).toFixed(2)}</td>
-                                                  </tr>
-                                                )}
-                                                {Number(h.vat || 0) !== 0 && (
-                                                  <tr>
-                                                    <td colSpan={hasDisc ? 4 : 3} className="py-3 px-4 text-right uppercase tracking-tighter text-[9px]">VAT / Adjustments</td>
-                                                    <td className="py-3 px-4 text-right text-amber-600">€{Number(h.vat).toFixed(2)}</td>
+                                                    <td colSpan={3} className="py-3 px-4 text-right uppercase tracking-tighter text-[9px]">Discrepancy</td>
+                                                    <td className="py-3 px-4 text-right text-amber-600">€{Number(h.discrepancy).toFixed(2)}</td>
                                                   </tr>
                                                 )}
                                                 <tr className="border-t border-slate-200">
-                                                  <td colSpan={hasDisc ? 4 : 3} className="py-3 px-4 text-right uppercase tracking-tighter text-[9px] font-black">Total Paid (TTC)</td>
+                                                  <td colSpan={3} className="py-3 px-4 text-right uppercase tracking-tighter text-[9px] font-black">Total Paid (TTC)</td>
                                                   <td className="py-3 px-4 text-right font-black text-slate-900">€{Number(h.total || 0).toFixed(2)}</td>
                                                 </tr>
                                               </tfoot>                                          </table>
@@ -633,6 +631,44 @@ export default function ReceiptPage() {
           )}
         </div>
       </div>
+
+      {/* Deleting Processing Modal */}
+      {loading && deleteConfirmId === null && !preview && (
+        <div className="fixed inset-0 z-[400] flex items-center justify-center p-6 backdrop-blur-xl bg-slate-900/40 animate-in fade-in duration-500">
+          <div className="bg-white p-12 rounded-[3.5rem] shadow-2xl flex flex-col items-center space-y-8 text-center max-w-sm w-full border border-white/20 relative overflow-hidden group">
+            {/* Animated Scanning Beam Effect (Red for Delete) */}
+            <div className="absolute inset-0 pointer-events-none overflow-hidden opacity-10">
+              <div className="absolute inset-x-0 h-1 bg-red-500 shadow-[0_0_15px_rgba(239,68,68,0.8)] animate-[scan_2s_ease-in-out_infinite]" />
+            </div>
+
+            <div className="relative">
+              <div className="w-24 h-24 bg-red-50 rounded-[2.5rem] flex items-center justify-center text-5xl shadow-inner relative z-10">
+                🗑️
+              </div>
+              <div className="absolute inset-0 bg-red-200 blur-2xl rounded-full opacity-20 scale-150 animate-pulse" />
+              <div className="absolute -inset-4 border-2 border-dashed border-red-200 rounded-full animate-[spin_8s_linear_infinite]" />
+            </div>
+
+            <div className="space-y-3 relative z-10">
+              <h2 className="text-2xl font-black text-slate-800 tracking-tight flex items-center justify-center gap-2">
+                Deleting
+                <span className="flex gap-1">
+                  <span className="w-1.5 h-1.5 bg-red-500 rounded-full animate-bounce [animation-delay:-0.3s]" />
+                  <span className="w-1.5 h-1.5 bg-red-500 rounded-full animate-bounce [animation-delay:-0.15s]" />
+                  <span className="w-1.5 h-1.5 bg-red-500 rounded-full animate-bounce" />
+                </span>
+              </h2>
+              <p className="text-slate-400 font-bold uppercase tracking-[0.2em] text-[10px]">
+                Removing records from Sheets
+              </p>
+            </div>
+
+            <div className="w-full bg-slate-50 h-3 rounded-full overflow-hidden border border-slate-100 p-0.5">
+              <div className="h-full bg-red-500 rounded-full shadow-[0_0_10px_rgba(239,68,68,0.4)] animate-[progress_2s_ease-in-out_infinite]" />
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Delete Confirmation Modal */}
       {deleteConfirmId && (

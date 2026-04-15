@@ -51,17 +51,16 @@ export async function GET(req: NextRequest) {
     }
 
     const rows = await readRows(accessToken, 'receipt_summaries')
-    // date, store, total, vat, discount, drive_url, id
+    // date, store, total, discrepancy, drive_url, id
     const summaries = rows.map(row => {
-      const hasSeparated = row.length >= 7
+      const hasNewFormat = row.length >= 6
       return {
         date: row[0],
         store: row[1],
         total: Number(row[2] || 0),
-        vat: hasSeparated ? Number(row[3] || 0) : 0,
-        discount: hasSeparated ? Number(row[4] || 0) : Number(row[3] || 0), // fallback old discrepancy to discount?
-        driveUrl: hasSeparated ? row[5] : row[4],
-        id: hasSeparated ? row[6] : row[5]
+        discrepancy: hasNewFormat ? Number(row[3] || 0) : 0,
+        driveUrl: hasNewFormat ? row[4] : row[3],
+        id: hasNewFormat ? row[5] : row[4]
       }
     })
 
@@ -81,8 +80,7 @@ export async function POST(req: NextRequest) {
     const date = formData.get('date') as string
     const store = formData.get('store') as string
     const total = Number(formData.get('total'))
-    const vat = Number(formData.get('vat') || 0)
-    const discount = Number(formData.get('discount') || 0)
+    const discrepancy = Number(formData.get('discrepancy') || 0)
     const itemsJson = formData.get('items') as string
     const imageFile = formData.get('image') as File | null
     const items: ReceiptItem[] = JSON.parse(itemsJson)
@@ -101,9 +99,9 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    // 2. Save Receipt Summary
+    // 2. Save Receipt Summary (date, store, total, discrepancy, drive_url, id)
     await appendRows(accessToken, 'receipt_summaries', [
-      [date, store, total, vat, discount, driveUrl, receiptId]
+      [date, store, total, discrepancy, driveUrl, receiptId]
     ])
 
     // 3. Save Individual Items to Purchases
@@ -141,26 +139,29 @@ export async function DELETE(req: NextRequest) {
     const accessToken = (session as any)?.accessToken
     if (!accessToken) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-    const { id } = await req.json()
+    const { id, all } = await req.json()
+    
+    if (all) {
+      // Clear all receipt related data
+      await updateTab(accessToken, 'receipt_summaries', ['date','store','total','discrepancy','drive_url','id'], [])
+      await updateTab(accessToken, 'purchases', ['date','store','name_fr','name_th','qty','unit','price','vat_rate','discount','total','receipt_id'], [])
+      await updateTab(accessToken, 'receipt_extract', ['date','store','name_fr','name_th','qty','unit','price','vat_rate','discount','total','receipt_id'], [])
+      return NextResponse.json({ ok: true })
+    }
+
     if (!id) return NextResponse.json({ error: 'ID required' }, { status: 400 })
 
     // 1. Get current summaries
     const summaries = await readRows(accessToken, 'receipt_summaries')
-    console.log('[DELETE] id to delete:', id)
-    console.log('[DELETE] summaries count:', summaries.length)
-    summaries.forEach((row, i) => console.log(`[DELETE] row[${i}] len=${row.length}:`, JSON.stringify(row)))
-
-    // Handle both old format (6 cols: date,store,total,discrepancy,drive_url,id)
-    // and new format (7 cols: date,store,total,vat,discount,drive_url,id)
+    
+    // Handle both old format (6 cols) and older format (5 cols)
     const filteredSummaries = summaries.filter(row => {
-      const rowId = row.length >= 7 ? row[6] : row[5]
-      console.log('[DELETE] rowId:', rowId, '| matches:', rowId === id)
+      const rowId = row.length >= 6 ? row[5] : row[4]
       return rowId !== id
     })
-    console.log('[DELETE] filtered count:', filteredSummaries.length)
 
     // 2. Update summary tab
-    await updateTab(accessToken, 'receipt_summaries', ['date','store','total','vat','discount','drive_url','id'], filteredSummaries)
+    await updateTab(accessToken, 'receipt_summaries', ['date','store','total','discrepancy','drive_url','id'], filteredSummaries)
 
     // 3. (Optional) Filter purchases too
     const purchases = await readRows(accessToken, 'purchases')
