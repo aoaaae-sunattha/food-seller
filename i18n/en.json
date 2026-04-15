@@ -50,14 +50,15 @@
     "delete": "Delete",
     "reason": "Reason",
     "deleteLog": "Deletion Log"
-    },
-    "bulkImport": {    "title": "Manage Ingredients",
+  },
+  "manageStock": {
+    "title": "Manage Ingredients",
     "add": "Add Ingredient",
     "name": "Name",
     "unit": "Unit",
     "threshold": "Alert when ≤",
     "delete": "Delete",
-    "confirm delete?": "Confirm delete?"
+    "confirmDelete": "Confirm delete?"
   },
   "manageMenus": {
     "title": "Manage Menus",

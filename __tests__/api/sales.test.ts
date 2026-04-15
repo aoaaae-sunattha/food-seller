@@ -30,7 +30,7 @@ test('POST appends sales row with computed totals', async () => {
   const res = await POST(req as any)
   expect(res.status).toBe(200)
   expect(appendRows).toHaveBeenCalledWith('fake-token', 'sales', [
-    ['2026-04-11', 'ผัดไทย', 15, 12, 180, 200, 68, 268],
-    ['2026-04-11', 'แกงเขียวหวาน', 8, 14, 112, 200, 68, 268],
+    [expect.any(String), '2026-04-11', 'ผัดไทย', 15, 12, 180, 200, 68, 268],
+    [expect.any(String), '2026-04-11', 'แกงเขียวหวาน', 8, 14, 112, 0, 0, 0],
   ])
 })

@@ -34,7 +34,9 @@ export default function ReceiptPage() {
       const res = await fetch('/api/sheets/purchases')
       if (res.ok) {
         const data = await res.json()
-        setHistory(data)
+        // Sort descending by date
+        const sorted = data.sort((a: any, b: any) => new Date(b.date).getTime() - new Date(a.date).getTime())
+        setHistory(sorted)
       }
     } catch (e) {
       console.error('Failed to fetch history', e)
@@ -171,7 +173,8 @@ export default function ReceiptPage() {
 
               return {
                 nameFr: item.nameFr || '',
-                nameTh: '',
+                nameTh: item.nameTh || '', // Pre-fill with AI translation
+                suggestedTh: item.nameTh || '', // Store the AI translation here
                 qty,
                 unit: item.unit || 'pc',
                 pricePerUnit,             // Initial TTC
@@ -481,17 +484,6 @@ export default function ReceiptPage() {
             </svg>
             History (ประวัติการซื้อ)
           </h2>
-          {history.length > 0 && (
-            <button
-              onClick={handleClearAll}
-              className="flex items-center gap-2 text-slate-400 hover:text-red-500 transition-colors font-bold uppercase text-[10px] tracking-widest px-3 py-2 rounded-xl hover:bg-red-50"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-              </svg>
-              Clear All
-            </button>
-          )}
         </div>
         
         <div className="bg-white rounded-[2rem] shadow-sm border border-slate-100 overflow-hidden">
@@ -600,22 +592,23 @@ export default function ReceiptPage() {
                                                 </tr>
                                               ))}
                                             </tbody>
-                                              <tfoot className="bg-slate-50/50 font-bold text-slate-700">
+                                            <tfoot className="bg-slate-50/50 font-bold text-slate-700">
+                                              <tr>
+                                                <td colSpan={3} className="py-3 px-4 text-right uppercase tracking-tighter text-[9px]">Sum of Items</td>
+                                                <td className="py-3 px-4 text-right">€{Number(itemsSubTotal || 0).toFixed(2)}</td>
+                                              </tr>
+                                              {Number(h.discrepancy || 0) !== 0 && (
                                                 <tr>
-                                                  <td colSpan={3} className="py-3 px-4 text-right uppercase tracking-tighter text-[9px]">Sum of Items</td>
-                                                  <td className="py-3 px-4 text-right">€{Number(itemsSubTotal || 0).toFixed(2)}</td>
+                                                  <td colSpan={3} className="py-3 px-4 text-right uppercase tracking-tighter text-[9px]">Discrepancy</td>
+                                                  <td className="py-3 px-4 text-right text-amber-600">€{Number(h.discrepancy).toFixed(2)}</td>
                                                 </tr>
-                                                {Number(h.discrepancy || 0) !== 0 && (
-                                                  <tr>
-                                                    <td colSpan={3} className="py-3 px-4 text-right uppercase tracking-tighter text-[9px]">Discrepancy</td>
-                                                    <td className="py-3 px-4 text-right text-amber-600">€{Number(h.discrepancy).toFixed(2)}</td>
-                                                  </tr>
-                                                )}
-                                                <tr className="border-t border-slate-200">
-                                                  <td colSpan={3} className="py-3 px-4 text-right uppercase tracking-tighter text-[9px] font-black">Total Paid (TTC)</td>
-                                                  <td className="py-3 px-4 text-right font-black text-slate-900">€{Number(h.total || 0).toFixed(2)}</td>
-                                                </tr>
-                                              </tfoot>                                          </table>
+                                              )}
+                                              <tr className="border-t border-slate-200">
+                                                <td colSpan={3} className="py-3 px-4 text-right uppercase tracking-tighter text-[9px] font-black">Total Paid (TTC)</td>
+                                                <td className="py-3 px-4 text-right font-black text-slate-900">€{Number(h.total || 0).toFixed(2)}</td>
+                                              </tr>
+                                            </tfoot>
+                                          </table>
                                         </>
                                       );
                                     })()}
