@@ -27,6 +27,7 @@ export async function extractReceiptItems(imageBuffer: Buffer, mimeType: string)
   Example 1: "POMMES BRAEBURN 1 * 2.49" -> Name: POMMES BRAEBURN, Qty: 1, PricePerUnit: 2.49, Total: 2.49
   Example 2: "LAIT DEMI-ÉCRÉMÉ 2 * 1.15" -> Name: LAIT DEMI-ÉCRÉMÉ, Qty: 2, PricePerUnit: 1.15, Total: 2.30
   Example 3: "REMISE IMMEDIATE -0.50" -> Name: REMISE IMMEDIATE, Qty: 1, PricePerUnit: -0.50, Total: -0.50, isDiscount: true
+  Example 4: A receipt with 3 discount lines: "REMISE IMMEDIATE -0.50", "REMISE IMMEDIATE -0.80", "REMISE IMMEDIATE -1.30" -> Extract as 3 SEPARATE items, each with isDiscount: true and NEGATIVE totals: -0.50, -0.80, -1.30
 
   Return a JSON object with these fields:
   - store: name of the store
@@ -40,9 +41,15 @@ export async function extractReceiptItems(imageBuffer: Buffer, mimeType: string)
     - total: the line subtotal as printed
     - isDiscount: true if it's a discount, rebate, or coupon
 
-  IMPORTANT: Return ONLY strictly valid JSON. 
-  Ensure all property names are double-quoted. 
-  No comments, no trailing commas, no markdown code blocks. 
+  CRITICAL DISCOUNT RULES:
+  - Any line containing "REMISE", "DISCOUNT", "COUPON", or "REDUCTION" is ALWAYS a discount
+  - For discount lines: set isDiscount: true, pricePerUnit as NEGATIVE, total as NEGATIVE (e.g. -1.30 not 1.30)
+  - Extract EVERY discount line individually — do NOT merge multiple REMISE IMMEDIATE lines into one
+  - A receipt may have several REMISE IMMEDIATE lines; include all of them
+
+  IMPORTANT: Return ONLY strictly valid JSON.
+  Ensure all property names are double-quoted.
+  No comments, no trailing commas, no markdown code blocks.
   Just the JSON object itself starting with '{' and ending with '}'.`
 
   const result = await model.generateContent([
