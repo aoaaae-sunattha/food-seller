@@ -56,10 +56,10 @@ export async function POST(req: NextRequest) {
       const imgRes = await fetch(`https://api.telegram.org/file/bot${TELEGRAM_BOT_TOKEN}/${filePath}`)
       const buffer = Buffer.from(await imgRes.arrayBuffer())
 
-      const items = await extractReceiptItems(buffer, 'image/jpeg')
-      const summary = items.map(i => `${i.nameFr} x${i.qty} = €${i.total}`).join('\n')
+      const ocr = await extractReceiptItems(buffer, 'image/jpeg')
+      const summary = ocr.items.map(i => `${i.nameFr} x${i.qty} = €${i.total}`).join('\n')
       
-      await sendTelegramMessage(chatId, `🧾 พบ ${items.length} รายการ:\n${summary}\n\nกรุณายืนยันความถูกต้องในแอป`)
+      await sendTelegramMessage(chatId, `🧾 พบ ${ocr.items.length} รายการ:\n${summary}\n\nกรุณายืนยันความถูกต้องในแอป`)
     }
 
     return NextResponse.json({ ok: true })

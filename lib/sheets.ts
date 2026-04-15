@@ -101,14 +101,11 @@ export async function getOrCreateMonthSheet(accessToken?: string, date: Date = n
         
         // Add headers for the new tabs
         const headerData = []
-        if (missingTabs.includes('Receipt Summaries')) {
-          headerData.push({ range: 'Receipt Summaries!A1', values: [['date','store','total','drive_url','id']] })
-        }
         if (missingTabs.includes('Receipt Extract')) {
-          headerData.push({ range: 'Receipt Extract!A1', values: [['date','store','name_fr','name_th','qty','unit','price_per_unit','total','receipt_id']] })
+          headerData.push({ range: 'Receipt Extract!A1', values: [['date','store','name_fr','name_th','qty','unit','price','vat_rate','discount','total','receipt_id']] })
         }
         if (missingTabs.includes('Purchases')) {
-          headerData.push({ range: 'Purchases!A1', values: [['date','store','item_fr','item_th','qty','unit','price','total','receipt_id']] })
+          headerData.push({ range: 'Purchases!A1', values: [['date','store','item_fr','item_th','qty','unit','price','vat_rate','discount','total','receipt_id']] })
         }
 
         if (headerData.length > 0) {
@@ -151,13 +148,13 @@ export async function getOrCreateMonthSheet(accessToken?: string, date: Date = n
       requestBody: {
         valueInputOption: 'RAW',
         data: [
-          { range: 'Purchases!A1', values: [['date','store','item_fr','item_th','qty','unit','price','total','receipt_id']] },
+          { range: 'Purchases!A1', values: [['date','store','name_fr','name_th','qty','unit','price','vat_rate','discount','total','receipt_id']] },
           { range: 'Stock!A1', values: [['date','ingredient','amount_used','unit','reason','menu']] },
           { range: 'Daily Sales!A1', values: [['date','menu','boxes','price_per_box','subtotal','cash','card','total']] },
           { range: 'Config!A1', values: [['type','id','name_th','name_fr_or_price','unit_or_ingredients','threshold']] },
           { range: 'Monthly Summary!A1', values: [['category','metric','value']] },
-          { range: 'Receipt Summaries!A1', values: [['date','store','total','drive_url','id']] },
-          { range: 'Receipt Extract!A1', values: [['date','store','name_fr','name_th','qty','unit','price_per_unit','total','receipt_id']] },
+          { range: 'Receipt Summaries!A1', values: [['date','store','total','vat','discount','drive_url','id']] },
+          { range: 'Receipt Extract!A1', values: [['date','store','name_fr','name_th','qty','unit','price','vat_rate','discount','total','receipt_id']] },
         ],
       },
     })

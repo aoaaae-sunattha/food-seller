@@ -38,12 +38,12 @@ export async function extractReceiptItems(imageBuffer: Buffer, mimeType: string)
     - unit: unit (kg, g, L, piece, etc.)
     - pricePerUnit: the price for 1 unit as printed
     - total: the line subtotal as printed
-    - isDiscount: true if it's a discount, rebate, or coupon`
+    - isDiscount: true if it's a discount, rebate, or coupon
 
-IMPORTANT: Return ONLY strictly valid JSON. 
-Ensure all property names are double-quoted. 
-No comments, no trailing commas, no markdown code blocks. 
-Just the JSON object itself starting with '{' and ending with '}'.`
+  IMPORTANT: Return ONLY strictly valid JSON. 
+  Ensure all property names are double-quoted. 
+  No comments, no trailing commas, no markdown code blocks. 
+  Just the JSON object itself starting with '{' and ending with '}'.`
 
   const result = await model.generateContent([
     prompt,
