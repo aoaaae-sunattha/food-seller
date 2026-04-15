@@ -24,6 +24,7 @@ export default function ReceiptPage() {
   const [modalItems, setModalItems] = useState<any[]>([])
   const [selectedReceipt, setSelectedReceipt] = useState<any>(null)
   const [expandedId, setExpandedId] = useState<string | null>(null)
+  const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null)
 
   useEffect(() => {
     fetchHistory()
@@ -81,8 +82,14 @@ export default function ReceiptPage() {
     }
   }
 
-  async function handleDelete(id: string) {
-    if (!confirm('Are you sure you want to delete this receipt?')) return
+  function handleDelete(id: string) {
+    setDeleteConfirmId(id)
+  }
+
+  async function confirmDelete() {
+    if (!deleteConfirmId) return
+    const id = deleteConfirmId
+    setDeleteConfirmId(null)
     setLoading(true)
     try {
       const res = await fetch('/api/sheets/purchases', {
@@ -90,9 +97,14 @@ export default function ReceiptPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ id })
       })
-      if (res.ok) fetchHistory()
+      if (res.ok) {
+        await fetchHistory()
+      } else {
+        const err = await res.json().catch(() => ({}))
+        alert(err.error || 'Failed to delete receipt')
+      }
     } catch (e) {
-      alert('Failed to delete')
+      alert('Failed to delete receipt')
     } finally {
       setLoading(false)
     }
@@ -111,15 +123,21 @@ export default function ReceiptPage() {
       const data = await res.json()
       if (res.ok) {
         if (data.items) {
-          // Extract and sum discounts
+          // Detect discount lines: by flag, negative total, or name containing REMISE/DISCOUNT/COUPON
+          const isDiscountLine = (item: any) =>
+            item.isDiscount ||
+            Number(item.total) < 0 ||
+            /remise|discount|coupon|r[eé]duction/i.test(String(item.nameFr || ''))
+
+          // Extract and sum ALL discounts
           const extractedDiscount = data.items
-            .filter((item: any) => item.isDiscount || (Number(item.total) < 0))
+            .filter(isDiscountLine)
             .reduce((sum: number, item: any) => sum + Math.abs(Number(item.total)), 0)
-          
+
           setDiscount(extractedDiscount)
 
           const mappedItems: ReceiptItem[] = data.items
-            .filter((item: any) => !item.isDiscount && (Number(item.total) >= 0)) // REMOVE DISCOUNTS FROM LIST
+            .filter((item: any) => !isDiscountLine(item)) // REMOVE ALL DISCOUNT LINES
             .map((item: any) => {
               const qty = Number(item.qty) || 1
               const printedPrice = Number(item.pricePerUnit)
@@ -394,7 +412,7 @@ export default function ReceiptPage() {
                   <ItemReviewTable 
                     items={items} 
                     onChange={setItems} 
-                    showAdvanced={Math.abs(itemsGrossTotalSum - total) > 0.01}
+                    showAdvanced={Math.abs(itemsGrossTotalSum - discount - total) > 0.01}
                   />
                   
                   {items.length > 0 && (
@@ -615,6 +633,39 @@ export default function ReceiptPage() {
           )}
         </div>
       </div>
+
+      {/* Delete Confirmation Modal */}
+      {deleteConfirmId && (
+        <div className="fixed inset-0 z-[300] flex items-center justify-center p-6 backdrop-blur-sm bg-slate-900/50 animate-in fade-in duration-200">
+          <div className="bg-white rounded-[2rem] shadow-2xl p-8 max-w-sm w-full space-y-6 animate-in zoom-in-95 duration-200">
+            <div className="flex flex-col items-center gap-4 text-center">
+              <div className="w-16 h-16 bg-red-50 rounded-[1.5rem] flex items-center justify-center">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                </svg>
+              </div>
+              <div>
+                <h3 className="text-xl font-black text-slate-800">Delete Receipt?</h3>
+                <p className="text-slate-500 text-sm mt-2 leading-relaxed">This will permanently remove the receipt and all its items. This cannot be undone.</p>
+              </div>
+            </div>
+            <div className="flex gap-3 pt-2">
+              <button
+                onClick={() => setDeleteConfirmId(null)}
+                className="flex-1 bg-slate-100 text-slate-700 py-4 rounded-2xl font-bold hover:bg-slate-200 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmDelete}
+                className="flex-1 bg-red-500 text-white py-4 rounded-2xl font-bold hover:bg-red-600 transition-colors shadow-lg shadow-red-500/20 active:scale-[0.98]"
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Details Modal */}
       {showModal && (

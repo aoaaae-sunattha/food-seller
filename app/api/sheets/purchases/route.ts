@@ -146,7 +146,18 @@ export async function DELETE(req: NextRequest) {
 
     // 1. Get current summaries
     const summaries = await readRows(accessToken, 'receipt_summaries')
-    const filteredSummaries = summaries.filter(row => row[6] !== id)
+    console.log('[DELETE] id to delete:', id)
+    console.log('[DELETE] summaries count:', summaries.length)
+    summaries.forEach((row, i) => console.log(`[DELETE] row[${i}] len=${row.length}:`, JSON.stringify(row)))
+
+    // Handle both old format (6 cols: date,store,total,discrepancy,drive_url,id)
+    // and new format (7 cols: date,store,total,vat,discount,drive_url,id)
+    const filteredSummaries = summaries.filter(row => {
+      const rowId = row.length >= 7 ? row[6] : row[5]
+      console.log('[DELETE] rowId:', rowId, '| matches:', rowId === id)
+      return rowId !== id
+    })
+    console.log('[DELETE] filtered count:', filteredSummaries.length)
 
     // 2. Update summary tab
     await updateTab(accessToken, 'receipt_summaries', ['date','store','total','vat','discount','drive_url','id'], filteredSummaries)

@@ -12,6 +12,7 @@ export async function POST(req: NextRequest) {
 
     const buffer = Buffer.from(await file.arrayBuffer())
     const result = await extractReceiptItems(buffer, file.type || 'image/jpeg')
+    console.log('[OCR] Gemini raw items:', JSON.stringify(result.items, null, 2))
     return NextResponse.json(result)  } catch (error: any) {
     console.error('OCR error:', error.message)
     return NextResponse.json({ 
