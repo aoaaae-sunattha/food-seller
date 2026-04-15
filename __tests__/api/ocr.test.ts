@@ -1,9 +1,14 @@
 import { POST } from '../../app/api/ocr/route'
 
 jest.mock('../../lib/gemini', () => ({
-  extractReceiptItems: jest.fn().mockResolvedValue([
-    { nameFr: 'Riz jasmin', nameTh: '', qty: 5, unit: 'kg', pricePerUnit: 2.5, total: 12.5 },
-  ]),
+  extractReceiptItems: jest.fn().mockResolvedValue({
+    items: [
+      { nameFr: 'Riz jasmin', nameTh: 'ข้าว', qty: 5, unit: 'kg', pricePerUnit: 2.5, total: 12.5 },
+    ],
+    store: 'Carrefour',
+    date: '2026-04-11',
+    total: 12.5
+  }),
 }))
 
 test('POST /api/ocr returns extracted items', async () => {

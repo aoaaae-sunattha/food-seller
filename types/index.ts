@@ -22,7 +22,8 @@ export interface MenuIngredient {
 
 export interface ReceiptItem {
   nameFr: string
-  nameTh: string      // user fills this in during review
+  nameTh: string      // User mapping to config
+  suggestedTh?: string // AI Translation guide
   qty: number
   unit: string
   pricePerUnit: number // TTC (Gross)

@@ -9,6 +9,7 @@ export interface ReceiptOCRResponse {
   total: number // Final total amount paid
   items: Array<{
     nameFr: string
+    nameTh: string
     qty: number
     unit: string
     pricePerUnit: number // Raw printed price per 1 unit
@@ -33,8 +34,9 @@ export async function extractReceiptItems(imageBuffer: Buffer, mimeType: string)
   - store: name of the store
   - date: purchase date (YYYY-MM-DD)
   - total: the final total paid amount (bottom of receipt)
-  - items: array of items, each with:
-    - nameFr: product name
+  - items: array of objects, each containing:
+    - nameFr: product name exactly as printed in French
+    - nameTh: THE MOST IMPORTANT: Translate the French name into a natural, common Thai ingredient name (e.g. "POULET" -> "ไก่", "LAIT" -> "นม", "OIGNONS" -> "หอมหัวใหญ่")
     - qty: quantity (default to 1 if not clear)
     - unit: unit (kg, g, L, piece, etc.)
     - pricePerUnit: the price for 1 unit as printed
@@ -43,7 +45,7 @@ export async function extractReceiptItems(imageBuffer: Buffer, mimeType: string)
 
   CRITICAL DISCOUNT RULES:
   - Any line containing "REMISE", "DISCOUNT", "COUPON", or "REDUCTION" is ALWAYS a discount
-  - For discount lines: set isDiscount: true, pricePerUnit as NEGATIVE, total as NEGATIVE (e.g. -1.30 not 1.30)
+  - For discount lines: set isDiscount: true, pricePerUnit as NEGATIVE, total as NEGATIVE (e.g. -1.30 not 1.30), and set nameTh to "ส่วนลด"
   - Extract EVERY discount line individually — do NOT merge multiple REMISE IMMEDIATE lines into one
   - A receipt may have several REMISE IMMEDIATE lines; include all of them
 

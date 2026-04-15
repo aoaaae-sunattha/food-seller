@@ -1,5 +1,6 @@
 'use client'
 import { NumberInput } from '@/components/NumberInput';
+import { useLanguage } from '@/hooks/useLanguage';
 import type { ReceiptItem } from '@/types'
 
 interface Props {
@@ -13,6 +14,8 @@ function update(items: ReceiptItem[], index: number, patch: Partial<ReceiptItem>
 }
 
 export default function ItemReviewTable({ items, onChange, showAdvanced = false }: Props) {
+  const { t } = useLanguage()
+
   function updateLine(index: number, patch: Partial<ReceiptItem>) {
     const item = items[index]
     const newItem = { ...item, ...patch }
@@ -46,11 +49,11 @@ export default function ItemReviewTable({ items, onChange, showAdvanced = false 
       <table className="w-full text-sm border-separate border-spacing-y-2 px-4">
         <thead>
           <tr className="text-slate-400 font-bold uppercase text-[10px] tracking-widest">
-            <th className="text-left py-2 px-2">French Name</th>
-            <th className="text-left py-2 px-2">Thai Name</th>
-            <th className="text-right py-2 px-2">Qty</th>
-            <th className="text-right py-2 px-2">TTC/u (ชิ้นละ)</th>
-            <th className="text-right py-2 px-2">Line Total</th>
+            <th className="text-left py-2 px-2">{t.receipt.itemFr}</th>
+            <th className="text-left py-2 px-2">{t.receipt.itemTh}</th>
+            <th className="text-right py-2 px-2">{t.receipt.qty}</th>
+            <th className="text-right py-2 px-2">{t.receipt.price} (ชิ้นละ)</th>
+            <th className="text-right py-2 px-2">{t.receipt.total}</th>
             <th className="w-8"></th>
           </tr>
         </thead>
