@@ -7,9 +7,9 @@ import { useLanguage } from '@/hooks/useLanguage'
 const NAV_ITEMS = [
   { href: '/',                icon: '🏠', key: 'dashboard'     },
   { href: '/receipt',         icon: '🧾', key: 'receipt'       },
+  { href: '/manage-stock',    icon: '🗂️', key: 'manageStock'   },
   { href: '/stock-deduction', icon: '📦', key: 'stockDeduction'},
   { href: '/daily-sales',     icon: '💰', key: 'dailySales'    },
-  { href: '/manage-stock',    icon: '🗂️', key: 'manageStock'   },
   { href: '/manage-menus',    icon: '🍜', key: 'manageMenus'   },
 ] as const
 
