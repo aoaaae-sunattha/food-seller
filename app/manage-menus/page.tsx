@@ -4,7 +4,7 @@ import { NumberInput } from '@/components/NumberInput'
 import QuickAddIngredient from '@/components/stock/QuickAddIngredient'
 import { useLanguage } from '@/hooks/useLanguage'
 import type { MenuTemplate, Ingredient, MenuIngredient } from '@/types'
-import { ExternalLink, X, Plus, Trash2, Edit2, ChevronDown } from 'lucide-react'
+import { ExternalLink, X, Trash2, Edit2 } from 'lucide-react'
 
 // Minimal RFC-4180 CSV line parser — handles quoted fields with commas inside
 function parseCSVLine(line: string): string[] {
@@ -31,6 +31,7 @@ export default function ManageMenusPage() {
   const { t } = useLanguage()
   const [menus, setMenus] = useState<MenuTemplate[]>([])
   const [ingredients, setIngredients] = useState<Ingredient[]>([])
+  const [quantities, setQuantities] = useState<Record<string, number>>({})
   const [loading, setLoading] = useState(true)
   const [dbUrl, setDbUrl] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
@@ -42,13 +43,15 @@ export default function ManageMenusPage() {
 
   useEffect(() => {
     fetch('/api/sheets/url').then(r => r.json()).then(d => setDbUrl(d.url)).catch(() => {})
-    fetch('/api/sheets/config')
-      .then(r => r.json())
-      .then(data => {
-        setMenus(data.menus ?? [])
-        setIngredients(data.ingredients ?? [])
-        setLoading(false)
-      })
+    Promise.all([
+      fetch('/api/sheets/config').then(r => r.json()),
+      fetch('/api/sheets/stock').then(r => r.json()),
+    ]).then(([config, stock]) => {
+      setMenus(config.menus ?? [])
+      setIngredients(config.ingredients ?? [])
+      setQuantities(stock.quantities ?? {})
+      setLoading(false)
+    })
   }, [])
 
   async function handleAdd() {
@@ -332,7 +335,7 @@ export default function ManageMenusPage() {
                 const foundIng = ingredients.find(ing => ing.id === mi.ingredientId || ing.nameTh === mi.ingredientId)
                 return (
                 <div key={i} className="flex gap-2 bg-slate-50 p-2 rounded-xl border border-slate-100 items-center">
-                  <div className="flex-1 flex flex-col">
+                  <div className="flex-1 flex flex-col min-w-0">
                     <input 
                       list="menu-ing-list"
                       className="w-full bg-transparent px-2 py-1 text-sm font-bold text-slate-700 outline-none border-b border-transparent focus:border-amber-500/20"
@@ -348,14 +351,14 @@ export default function ManageMenusPage() {
                       }}
                     />
                     {foundIng && (
-                      <span className="px-2 text-[14px] font-bold text-slate-400 uppercase tracking-wide leading-none mt-1">
+                      <span className="px-2 text-[14px] font-bold text-slate-400 uppercase tracking-wide leading-none mt-1 truncate">
                         {foundIng.nameFr}
                       </span>
                     )}
                   </div>
                   
                   <select
-                    className="w-20 bg-amber-50 border border-amber-200 rounded px-1 py-0.5 text-[14px] font-black text-amber-600 outline-none cursor-pointer"
+                    className="w-20 bg-amber-50 border border-amber-200 rounded-lg px-1 py-1 text-[14px] font-black text-amber-600 outline-none cursor-pointer"
                     value={(mi as any).tempUnit || foundIng?.unit || 'kg'}
                     onChange={e => updateIngredient(i, { tempUnit: e.target.value } as any)}
                   >
@@ -447,20 +450,23 @@ export default function ManageMenusPage() {
         </div>
       )}
 
-      <div className="card-base p-0 overflow-hidden divide-y divide-subtle-border">
-        {menus.map(menu => (
-          <div key={menu.id} id={`menu-item-${menu.id}`} className="p-8 flex justify-between items-center hover:bg-mist-gray/30 transition-colors group">
-            <div className="flex items-center gap-6">
-              <div className="w-14 h-14 bg-amber-50 rounded-2xl flex items-center justify-center text-3xl shadow-sm border border-amber-100">
+      <div className="space-y-3">
+        {menus.map(menu => {
+          const qty = quantities[menu.nameTh] ?? 0
+
+          return (
+          <div key={menu.id} id={`menu-item-${menu.id}`} className="flex gap-4 bg-slate-50 p-4 rounded-xl border border-slate-100 items-center hover:bg-slate-100 transition-colors group">
+            <div className="flex items-center gap-4 flex-1">
+              <div className="w-12 h-12 bg-amber-50 rounded-xl flex items-center justify-center text-2xl shadow-sm border border-amber-100 shrink-0">
                 🍜
               </div>
-              <div>
-                <p className="font-bold text-slate-deep text-xl">{menu.nameTh}</p>
+              <div className="flex-1 min-w-0">
+                <p className="font-bold text-slate-deep text-lg truncate">{menu.nameTh}</p>
                 {menu.nameFr && (
-                  <p className="text-sm font-bold text-slate-400 uppercase tracking-wide leading-none mb-1">{menu.nameFr}</p>
+                  <p className="text-sm font-bold text-slate-400 uppercase tracking-wide leading-none truncate">{menu.nameFr}</p>
                 )}
                 <div className="flex items-center gap-2 mt-1">
-                  <span className="badge-base bg-slate-100 text-slate-500 py-0.5 px-2 text-[14px] uppercase font-bold tracking-wider">
+                  <span className="badge-base bg-white text-slate-500 py-0.5 px-2 text-[14px] uppercase font-bold tracking-wider border border-slate-100">
                     {menu.ingredients.length} {t.manageMenus.ingredients}
                   </span>
                   <span className="text-sm font-bold text-amber-600">€{menu.pricePerBox}</span>
@@ -468,26 +474,34 @@ export default function ManageMenusPage() {
               </div>
             </div>
             
-            <div className="flex items-center gap-3 opacity-0 group-hover:opacity-100 transition-opacity">
-              <button
-                id={`menu-edit-${menu.id}`}
-                onClick={() => handleEdit(menu)}
-                className="w-11 h-11 bg-mist-gray text-slate-400 hover:text-amber-600 hover:bg-amber-50 rounded-xl flex items-center justify-center transition-all"
-                title="Edit"
-              >
-                <Edit2 size={20} />
-              </button>
-              <button
-                id={`menu-delete-${menu.id}`}
-                onClick={() => handleDelete(menu.id)}
-                className="w-11 h-11 bg-mist-gray text-slate-300 hover:text-red-500 hover:bg-red-50 rounded-xl flex items-center justify-center transition-all"
-                title="Delete"
-              >
-                <Trash2 size={20} />
-              </button>
+            <div className="flex items-center gap-8 shrink-0">
+              <div className="text-right hidden sm:block">
+                 <div className="font-bold text-xl text-emerald">
+                   {qty} boxes
+                 </div>
+              </div>
+
+              <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                <button
+                  id={`menu-edit-${menu.id}`}
+                  onClick={() => handleEdit(menu)}
+                  className="w-10 h-10 bg-white text-slate-400 hover:text-amber-600 border border-slate-200 rounded-lg flex items-center justify-center transition-all"
+                  title="Edit"
+                >
+                  <Edit2 size={18} />
+                </button>
+                <button
+                  id={`menu-delete-${menu.id}`}
+                  onClick={() => handleDelete(menu.id)}
+                  className="w-10 h-10 bg-white text-slate-300 hover:text-red-500 border border-slate-200 rounded-lg flex items-center justify-center transition-all"
+                  title="Delete"
+                >
+                  <Trash2 size={18} />
+                </button>
+              </div>
             </div>
           </div>
-        ))}
+        )})}
       </div>
     </div>
   )
