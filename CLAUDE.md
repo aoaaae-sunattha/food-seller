@@ -24,7 +24,7 @@ Required in `.env.local`:
 
 ## Architecture
 
-Tablet-optimized restaurant manager for a Thai restaurant in France. The "database" is Google Sheets — every calendar month gets its own spreadsheet named `ร้านอาหาร — <Thai month> <Buddhist year>`. There is no SQL database; all persistence goes through `lib/sheets.ts`.
+Tablet-optimized restaurant manager for 'Lawan Thai Traiteur' in France. The "database" is Google Sheets — every calendar month gets its own spreadsheet named `ร้านอาหาร — <Thai month> <Buddhist year>`. There is no SQL database; all persistence goes through `lib/sheets.ts`.
 
 ### Data layer (`lib/sheets.ts`)
 

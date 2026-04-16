@@ -65,11 +65,14 @@
     "title": "Gérer les menus",
     "add": "Ajouter un menu",
     "name": "Nom du menu",
+    "nameTh": "Nom (Thaï)",
+    "nameFr": "Nom (Français)",
     "price": "Prix/boîte (€)",
     "ingredients": "Ingrédients",
     "defaultQty": "Qté par lot",
     "loadCsv": "Charger depuis CSV",
-    "loadCsvTemplate": "Télécharger le modèle"
+    "loadCsvTemplate": "Télécharger le modèle",
+    "nameRequired": "Veuillez entrer un nom de menu"
   },
   "bulkImport": {
     "title": "Importation en masse",

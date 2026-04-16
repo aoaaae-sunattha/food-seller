@@ -43,7 +43,7 @@ export default function QuickAddIngredient({ onAdded, onCancel }: Props) {
     <div className="bg-amber-50/50 p-4 rounded-2xl border border-amber-200 space-y-4 animate-in zoom-in-95 duration-200 mt-2">
       <div className="grid grid-cols-2 gap-3">
         <div className="space-y-1">
-          <label className="text-[9px] font-black text-amber-800 uppercase tracking-tighter px-1">{t.manageStock.name} (TH)</label>
+          <label className="text-[14px] font-black text-amber-800 uppercase tracking-tighter px-1">{t.manageStock.name} (TH)</label>
           <input 
             className="w-full border border-amber-200 rounded-lg px-3 py-2 text-sm font-bold text-slate-800 bg-white focus:ring-2 focus:ring-amber-500/20 outline-none"
             value={newIng.nameTh}
@@ -52,7 +52,7 @@ export default function QuickAddIngredient({ onAdded, onCancel }: Props) {
           />
         </div>
         <div className="space-y-1">
-          <label className="text-[9px] font-black text-amber-800 uppercase tracking-tighter px-1">{t.manageStock.name} (FR)</label>
+          <label className="text-[14px] font-black text-amber-800 uppercase tracking-tighter px-1">{t.manageStock.name} (FR)</label>
           <input 
             className="w-full border border-amber-200 rounded-lg px-3 py-2 text-sm font-bold text-slate-800 bg-white focus:ring-2 focus:ring-amber-500/20 outline-none"
             value={newIng.nameFr}
@@ -63,7 +63,7 @@ export default function QuickAddIngredient({ onAdded, onCancel }: Props) {
       </div>
       <div className="grid grid-cols-2 gap-3">
         <div className="space-y-1">
-          <label className="text-[9px] font-black text-amber-800 uppercase tracking-tighter px-1">{t.manageStock.unit}</label>
+          <label className="text-[14px] font-black text-amber-800 uppercase tracking-tighter px-1">{t.manageStock.unit}</label>
           <select
             className="w-full border border-amber-200 rounded-lg px-3 py-2 text-sm font-bold text-slate-800 bg-white focus:ring-2 focus:ring-amber-500/20 outline-none cursor-pointer"
             value={newIng.unit}
@@ -87,7 +87,7 @@ export default function QuickAddIngredient({ onAdded, onCancel }: Props) {
           </select>
         </div>
         <div className="space-y-1">
-          <label className="text-[9px] font-black text-amber-800 uppercase tracking-tighter px-1">{t.manageStock.threshold}</label>
+          <label className="text-[14px] font-black text-amber-800 uppercase tracking-tighter px-1">{t.manageStock.threshold}</label>
           <NumberInput 
             className="w-full border border-amber-200 rounded-lg px-3 py-2 text-sm font-bold text-slate-800 bg-white focus:ring-2 focus:ring-amber-500/20 outline-none"
             value={newIng.threshold ?? 0}
@@ -98,14 +98,14 @@ export default function QuickAddIngredient({ onAdded, onCancel }: Props) {
       <div className="flex gap-2">
         <button 
           onClick={onCancel}
-          className="flex-1 bg-white text-slate-500 py-2 rounded-xl font-bold text-xs border border-slate-200 hover:bg-slate-50 transition-all"
+          className="flex-1 bg-white text-slate-500 py-2 rounded-xl font-bold text-sm border border-slate-200 hover:bg-slate-50 transition-all"
         >
           {t.common.cancel}
         </button>
         <button 
           onClick={handleAdd}
           disabled={saving || !newIng.nameTh}
-          className="flex-[2] bg-amber-600 text-white py-2 rounded-xl font-bold text-xs shadow-md shadow-amber-600/10 hover:bg-amber-700 transition-all disabled:opacity-50"
+          className="flex-[2] bg-amber-600 text-white py-2 rounded-xl font-bold text-sm shadow-md shadow-amber-600/10 hover:bg-amber-700 transition-all disabled:opacity-50"
         >
           {saving ? t.common.loading : t.common.save}
         </button>

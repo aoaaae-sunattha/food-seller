@@ -1,4 +1,4 @@
-# Restaurant Manager — Design Spec
+# Lawan Thai Traiteur — Design Spec
 **Date:** 2026-04-11  
 **Project:** Small Thai restaurant management system (based in France)  
 **Client:** Single owner, Thai operator, restaurant in France

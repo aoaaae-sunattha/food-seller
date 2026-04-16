@@ -21,7 +21,7 @@ export async function GET(_req: NextRequest) {
 
     const quantities: Record<string, number> = {}
 
-    // Add purchases (column 3 = item_th, column 4 = qty)
+    // Add purchases (column 3 = name_th, column 4 = qty)
     for (const row of purchaseRows) {
       const name = row[3]
       const qty = Number(row[4])

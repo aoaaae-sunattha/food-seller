@@ -65,11 +65,14 @@
     "title": "Manage Menus",
     "add": "Add Menu",
     "name": "Menu Name",
+    "nameTh": "Name (Thai)",
+    "nameFr": "Name (French)",
     "price": "Price/box (€)",
     "ingredients": "Ingredients",
     "defaultQty": "Qty per batch",
     "loadCsv": "Load from CSV",
-    "loadCsvTemplate": "Download template"
+    "loadCsvTemplate": "Download template",
+    "nameRequired": "Please enter a Menu Name"
   },
   "bulkImport": {
     "title": "Bulk Import",

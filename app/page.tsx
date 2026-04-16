@@ -176,7 +176,7 @@ export default function DashboardPage() {
                     )} 
                     style={{ height: `${val}%` }} 
                    />
-                   <span className="text-xs font-bold text-slate-400 uppercase tracking-tighter">
+                   <span className="text-sm font-bold text-slate-400 uppercase tracking-tighter">
                      {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][i]}
                    </span>
                  </div>
@@ -186,7 +186,7 @@ export default function DashboardPage() {
 
           <div className="flex flex-col gap-8">
              <div className="card-base bg-periwinkle border-none flex-1">
-                <div className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-2">Business Performance</div>
+                <div className="text-sm font-bold text-slate-500 uppercase tracking-widest mb-2">Business Performance</div>
                 <div className="text-3xl font-bold text-slate-deep mt-6">Growth Index</div>
                 <div className="flex items-center gap-2 mt-3">
                    <TrendingUp size={20} className="text-emerald" />
@@ -197,7 +197,7 @@ export default function DashboardPage() {
                 </div>
              </div>
              <div className="card-base bg-champagne border-none flex-1">
-                <div className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-2">Stock Efficiency</div>
+                <div className="text-sm font-bold text-slate-500 uppercase tracking-widest mb-2">Stock Efficiency</div>
                 <div className="text-3xl font-bold text-slate-deep mt-6">Utilization</div>
                 <div className="flex items-center gap-2 mt-3">
                    <Zap size={20} className="text-amber" />
@@ -215,7 +215,7 @@ export default function DashboardPage() {
               {t.dashboard.lowStock}
             </h3>
             {lowStockCount > 0 && (
-              <span className="badge-base badge-danger py-1.5 text-xs">ACTION REQUIRED</span>
+              <span className="badge-base badge-danger py-1.5 text-sm">ACTION REQUIRED</span>
             )}
           </div>
           
@@ -234,11 +234,11 @@ export default function DashboardPage() {
                   </div>
                   <div className="flex-1 min-width-0">
                     <div className="font-bold text-slate-deep">{ingredient.nameTh}</div>
-                    <div className="text-xs text-slate-500 font-medium">{ingredient.nameFr}</div>
+                    <div className="text-sm text-slate-500 font-medium">{ingredient.nameFr}</div>
                   </div>
                   <div className="text-right shrink-0">
                     <div className="font-bold text-slate-deep text-lg">{currentQty} {ingredient.unit}</div>
-                    <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Remaining</div>
+                    <div className="text-[14px] font-bold text-slate-400 uppercase tracking-wider">Remaining</div>
                   </div>
                 </div>
               ))}

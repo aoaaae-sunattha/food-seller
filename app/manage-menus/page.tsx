@@ -4,6 +4,7 @@ import { NumberInput } from '@/components/NumberInput'
 import QuickAddIngredient from '@/components/stock/QuickAddIngredient'
 import { useLanguage } from '@/hooks/useLanguage'
 import type { MenuTemplate, Ingredient, MenuIngredient } from '@/types'
+import { ExternalLink, X, Trash2, Edit2 } from 'lucide-react'
 
 // Minimal RFC-4180 CSV line parser — handles quoted fields with commas inside
 function parseCSVLine(line: string): string[] {
@@ -30,25 +31,34 @@ export default function ManageMenusPage() {
   const { t } = useLanguage()
   const [menus, setMenus] = useState<MenuTemplate[]>([])
   const [ingredients, setIngredients] = useState<Ingredient[]>([])
+  const [quantities, setQuantities] = useState<Record<string, number>>({})
   const [loading, setLoading] = useState(true)
+  const [dbUrl, setDbUrl] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
   const [showAdd, setShowAdd] = useState(false)
   const [showQuickAdd, setShowQuickAdd] = useState(false)
   const [editingId, setEditingId] = useState<string | null>(null)
-  const [newMenu, setNewMenu] = useState<Partial<MenuTemplate>>({ nameTh: '', pricePerBox: 0, ingredients: [] })
+  const [newMenu, setNewMenu] = useState<Partial<MenuTemplate>>({ nameTh: '', nameFr: '', pricePerBox: 0, ingredients: [] })
   const csvInputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
-    fetch('/api/sheets/config')
-      .then(r => r.json())
-      .then(data => {
-        setMenus(data.menus ?? [])
-        setIngredients(data.ingredients ?? [])
-        setLoading(false)
-      })
+    fetch('/api/sheets/url').then(r => r.json()).then(d => setDbUrl(d.url)).catch(() => {})
+    Promise.all([
+      fetch('/api/sheets/config').then(r => r.json()),
+      fetch('/api/sheets/stock').then(r => r.json()),
+    ]).then(([config, stock]) => {
+      setMenus(config.menus ?? [])
+      setIngredients(config.ingredients ?? [])
+      setQuantities(stock.quantities ?? {})
+      setLoading(false)
+    })
   }, [])
 
   async function handleAdd() {
+    if (!newMenu.nameTh) {
+      alert((t.manageMenus as any).nameRequired || "Name Required")
+      return
+    }
     setSaving(true)
     try {
       // 1. Resolve manually typed ingredient names to real IDs
@@ -58,27 +68,29 @@ export default function ManageMenusPage() {
         
         // Check if ingredient already exists by nameTh or ID
         const existing = ingredients.find(ing => ing.id === mi.ingredientId || ing.nameTh === mi.ingredientId)
-        const unit = (mi as any).tempUnit
+        const unit = (mi as any).tempUnit || existing?.unit || 'kg'
+        const nameFr = (mi as any).tempNameFr || existing?.nameFr || mi.ingredientId
+        const threshold = (mi as any).tempThreshold !== undefined ? (mi as any).tempThreshold : (existing?.threshold ?? 0)
         
         if (existing) {
-          // If the unit was changed in the form, update the master ingredient
-          if (unit && unit !== existing.unit) {
-            console.log('Updating existing ingredient unit:', existing.nameTh, 'to', unit)
+          // If any core field was changed in the form, update the master ingredient
+          if (unit !== existing.unit || nameFr !== existing.nameFr || threshold !== existing.threshold) {
+            console.log('Updating existing ingredient:', existing.nameTh, 'unit:', unit, 'fr:', nameFr, 'threshold:', threshold)
             await fetch('/api/sheets/config', {
               method: 'PUT',
               headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ ...existing, unit, type: 'ingredient' })
+              body: JSON.stringify({ ...existing, nameFr, unit, threshold, type: 'ingredient' })
             })
           }
           finalIngredients.push({ ingredientId: existing.id, defaultQty: mi.defaultQty })
         } else {
           // It's a brand new typed name - create it first!
           const newUnit = unit || 'kg'
-          console.log('Creating brand new ingredient:', mi.ingredientId, 'with unit', newUnit)
+          console.log('Creating brand new ingredient:', mi.ingredientId, 'with unit', newUnit, 'and nameFr', nameFr)
           const res = await fetch('/api/sheets/config', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ nameTh: mi.ingredientId, nameFr: mi.ingredientId, unit: newUnit, threshold: 1, type: 'ingredient' })
+            body: JSON.stringify({ nameTh: mi.ingredientId, nameFr: nameFr, unit: newUnit, threshold: threshold, type: 'ingredient' })
           })
           const data = await res.json().catch(() => ({}))
           if (res.ok) {
@@ -111,7 +123,7 @@ export default function ManageMenusPage() {
         }
         setShowAdd(false)
         setEditingId(null)
-        setNewMenu({ nameTh: '', pricePerBox: 0, ingredients: [] })
+        setNewMenu({ nameTh: '', nameFr: '', pricePerBox: 0, ingredients: [] })
         // Refresh ingredients list for next time
         fetch('/api/sheets/config').then(r => r.json()).then(data => setIngredients(data.ingredients ?? []))
       } else {
@@ -132,6 +144,7 @@ export default function ManageMenusPage() {
     setEditingId(menu.id)
     setNewMenu({
       nameTh: menu.nameTh,
+      nameFr: menu.nameFr || '',
       pricePerBox: menu.pricePerBox,
       ingredients: [...menu.ingredients]
     })
@@ -158,7 +171,7 @@ export default function ManageMenusPage() {
   const addIngredientRow = () => {
     setNewMenu({
       ...newMenu,
-      ingredients: [...(newMenu.ingredients || []), { ingredientId: '', defaultQty: 0, tempUnit: 'kg' } as any]
+      ingredients: [...(newMenu.ingredients || []), { ingredientId: '', defaultQty: 0, tempUnit: 'kg', tempNameFr: '', tempThreshold: 1 } as any]
     })
   }
 
@@ -170,16 +183,18 @@ export default function ManageMenusPage() {
 
   const downloadIngredientTemplate = () => {
     const current = newMenu.ingredients || []
-    let csv = 'ingredientTh,unit,qty\n'
+    let csv = 'nameTh,nameFr,unit,qty,threshold\n'
     if (current.length > 0) {
       current.forEach(mi => {
-        const ing = ingredients.find(i => i.id === mi.ingredientId)
-        const name = ing?.nameTh || mi.ingredientId
+        const ing = ingredients.find(i => i.id === mi.ingredientId || i.nameTh === mi.ingredientId)
+        const nameTh = ing?.nameTh || mi.ingredientId
+        const nameFr = (mi as any).tempNameFr || ing?.nameFr || ''
         const unit = (mi as any).tempUnit || ing?.unit || 'kg'
-        csv += `${name},${unit},${mi.defaultQty}\n`
+        const threshold = (mi as any).tempThreshold !== undefined ? (mi as any).tempThreshold : (ing?.threshold ?? 0)
+        csv += `${nameTh},${nameFr},${unit},${mi.defaultQty},${threshold}\n`
       })
     } else {
-      csv += 'กระเทียม,tbsp,5\nพริกขี้หนู,pcs,3\nน้ำมันพืช,ml,15\n'
+      csv += 'กระเทียม,Ail,tbsp,5,1\nพริกขี้หนู,Piment,pcs,3,1\nน้ำมันพืช,Huile,ml,15,0.5\n'
     }
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' })
     const url = URL.createObjectURL(blob)
@@ -199,18 +214,24 @@ export default function ManageMenusPage() {
     reader.onload = (event) => {
       const text = (event.target?.result as string).replace(/^\uFEFF/, '')
       const lines = text.split('\n').filter(l => l.trim() !== '').slice(1)
-      const parsed: Array<MenuIngredient & { tempUnit: string }> = []
+      const parsed: Array<MenuIngredient & { tempUnit: string; tempNameFr: string; tempThreshold: number }> = []
       for (const line of lines) {
         const parts = parseCSVLine(line)
         const nameTh = parts[0]?.trim()
-        const unit = parts[1]?.trim() || 'kg'
-        const qty = Number(parts[2]) || 0
+        const nameFr = parts[1]?.trim() || ''
+        const unit = parts[2]?.trim() || 'kg'
+        const qty = Number(parts[3]) || 0
+        const tStr = parts[4]?.trim()
+        const threshold = (tStr === '' || tStr === undefined) ? 0 : (Number(tStr) || 0)
+        
         if (!nameTh) continue
         const existing = ingredients.find(i => i.nameTh.trim().toLowerCase() === nameTh.toLowerCase())
         parsed.push({
           ingredientId: existing?.id || nameTh,
           defaultQty: qty,
           tempUnit: unit,
+          tempNameFr: nameFr || existing?.nameFr || '',
+          tempThreshold: threshold
         } as any)
       }
       if (parsed.length > 0) setNewMenu(m => ({ ...m, ingredients: parsed }))
@@ -223,7 +244,7 @@ export default function ManageMenusPage() {
   const toggleAdd = () => {
     if (showAdd) {
       setEditingId(null)
-      setNewMenu({ nameTh: '', pricePerBox: 0, ingredients: [] })
+      setNewMenu({ nameTh: '', nameFr: '', pricePerBox: 0, ingredients: [] })
     }
     setShowAdd(!showAdd)
   }
@@ -234,31 +255,59 @@ export default function ManageMenusPage() {
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700 pb-40 text-slate-800">
       <div className="flex justify-between items-center px-1">
         <h1 className="text-2xl font-black tracking-tight">{t.manageMenus.title}</h1>
-        <button 
-          id="manage-menus-add-toggle"
-          onClick={toggleAdd}
-          className={`px-6 py-2.5 rounded-xl text-sm font-black transition-all active:scale-95 shadow-sm ${
-            showAdd ? 'bg-white border border-slate-200 text-slate-500' : 'bg-amber-600 text-white shadow-amber-600/20'
-          }`}
-        >
-          {showAdd ? t.common.cancel : `+ ${t.manageMenus.add}`}
-        </button>
+        <div className="flex items-center gap-3">
+          {dbUrl && (
+            <a
+              href={dbUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-black text-slate-500 bg-white border border-slate-200 hover:border-amber-300 hover:text-amber-600 transition-all shadow-sm"
+            >
+              <ExternalLink size={14} />
+              <span className="hidden sm:inline">Database</span>
+            </a>
+          )}
+          <button
+            id="manage-menus-add-toggle"
+            onClick={toggleAdd}
+            className={`px-6 py-2.5 rounded-xl text-sm font-black transition-all active:scale-95 shadow-sm ${
+              showAdd ? 'bg-white border border-slate-200 text-slate-500' : 'bg-amber-600 text-white shadow-amber-600/20'
+            }`}
+          >
+            {showAdd ? t.common.cancel : `+ ${t.manageMenus.add}`}
+          </button>
+        </div>
       </div>
 
       {showAdd && (
         <div className="bg-white p-8 rounded-[2rem] shadow-xl shadow-slate-200/50 border border-amber-100 space-y-6 animate-in zoom-in-95 duration-300">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-1">
-              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">{t.manageMenus.name}</label>
+              <label htmlFor="new-menu-name" className="text-[14px] font-black text-slate-400 uppercase tracking-widest px-1">
+                {t.manageMenus.nameTh}
+                {!newMenu.nameTh && <span className="text-red-500 ml-1">*</span>}
+              </label>
               <input 
                 id="new-menu-name"
-                className="w-full border border-slate-200 rounded-xl px-4 py-3 font-bold text-slate-800 bg-slate-50 focus:bg-white focus:ring-4 focus:ring-amber-500/10 focus:border-amber-500 outline-none transition-all"
+                data-testid="new-menu-name"
+                className={`w-full border rounded-xl px-4 py-3 font-bold text-slate-800 focus:ring-4 focus:ring-amber-500/10 focus:border-amber-500 outline-none transition-all ${
+                  !newMenu.nameTh ? 'border-amber-200 bg-amber-50/30' : 'border-slate-200 bg-slate-50 focus:bg-white'
+                }`}
                 value={newMenu.nameTh}
                 onChange={e => setNewMenu({ ...newMenu, nameTh: e.target.value })}
               />
             </div>
             <div className="space-y-1">
-              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">{t.manageMenus.price}</label>
+              <label htmlFor="new-menu-name-fr" className="text-[14px] font-black text-slate-400 uppercase tracking-widest px-1">{t.manageMenus.nameFr}</label>
+              <input 
+                id="new-menu-name-fr"
+                className="w-full border border-slate-200 rounded-xl px-4 py-3 font-bold text-slate-800 bg-slate-50 focus:bg-white focus:ring-4 focus:ring-amber-500/10 focus:border-amber-500 outline-none transition-all"
+                value={newMenu.nameFr}
+                onChange={e => setNewMenu({ ...newMenu, nameFr: e.target.value })}
+              />
+            </div>
+            <div className="space-y-1">
+              <label htmlFor="new-menu-price" className="text-[14px] font-black text-slate-400 uppercase tracking-widest px-1">{t.manageMenus.price}</label>
               <NumberInput 
                 id="new-menu-price"
                 className="w-full border border-slate-200 rounded-xl px-4 py-3 font-bold text-slate-800 bg-slate-50 focus:bg-white focus:ring-4 focus:ring-amber-500/10 focus:border-amber-500 outline-none transition-all"
@@ -271,19 +320,19 @@ export default function ManageMenusPage() {
           
           <div className="space-y-3">
             <div className="flex items-center justify-between px-1">
-              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{t.manageMenus.ingredients}</label>
+              <label className="text-[14px] font-black text-slate-400 uppercase tracking-widest">{t.manageMenus.ingredients}</label>
               <div className="flex items-center gap-3">
                 <button
                   type="button"
                   onClick={downloadIngredientTemplate}
-                  className="text-[10px] font-black text-slate-400 uppercase tracking-widest hover:text-amber-600 transition-colors"
+                  className="text-[14px] font-black text-slate-400 uppercase tracking-widest hover:text-amber-600 transition-colors"
                 >
                   {t.manageMenus.loadCsvTemplate}
                 </button>
                 <button
                   type="button"
                   onClick={() => csvInputRef.current?.click()}
-                  className="text-[10px] font-black text-amber-600 uppercase tracking-widest hover:text-amber-700 transition-colors"
+                  className="text-[14px] font-black text-amber-600 uppercase tracking-widest hover:text-amber-700 transition-colors"
                 >
                   📂 {t.manageMenus.loadCsv}
                 </button>
@@ -298,26 +347,40 @@ export default function ManageMenusPage() {
               </div>
             </div>
             <div className="space-y-2">
-              {newMenu.ingredients?.map((mi, i) => (
-                <div key={i} className="flex gap-2 bg-slate-50 p-2 rounded-xl border border-slate-100">
-                  <input 
-                    list="menu-ing-list"
-                    className="flex-1 bg-transparent px-2 py-1 text-sm font-bold text-slate-700 outline-none border-b border-transparent focus:border-amber-500/20"
-                    placeholder="Search or Type Ingredient..."
-                    value={ingredients.find(ing => ing.id === mi.ingredientId)?.nameTh || mi.ingredientId}
-                    onChange={e => {
-                      const val = e.target.value
-                      const existing = ingredients.find(ing => ing.nameTh === val)
-                      updateIngredient(i, { 
-                        ingredientId: val, 
-                        tempUnit: existing?.unit || (mi as any).tempUnit || 'kg' 
-                      } as any)
-                    }}
-                  />
+              {newMenu.ingredients?.map((mi, i) => {
+                const foundIng = ingredients.find(ing => ing.id === mi.ingredientId || ing.nameTh === mi.ingredientId)
+                return (
+                <div key={i} className="flex gap-2 bg-slate-50 p-2 rounded-xl border border-slate-100 items-center">
+                  <div className="flex-[2] min-w-0">
+                    <input 
+                      list="menu-ing-list"
+                      className="w-full bg-transparent px-2 py-1 text-sm font-bold text-slate-700 outline-none border-b border-transparent focus:border-amber-500/20"
+                      placeholder="TH Name..."
+                      value={foundIng?.nameTh || mi.ingredientId}
+                      onChange={e => {
+                        const val = e.target.value
+                        const existing = ingredients.find(ing => ing.nameTh === val)
+                        updateIngredient(i, { 
+                          ingredientId: val, 
+                          tempUnit: existing?.unit || (mi as any).tempUnit || 'kg',
+                          tempNameFr: existing?.nameFr || (mi as any).tempNameFr || '',
+                          tempThreshold: existing?.threshold ?? (mi as any).tempThreshold ?? 0
+                        } as any)
+                      }}
+                    />
+                  </div>
+                  <div className="flex-[2] min-w-0">
+                    <input 
+                      className="w-full bg-transparent px-2 py-1 text-sm font-bold text-slate-500 outline-none border-b border-transparent focus:border-amber-500/20"
+                      placeholder="FR Name..."
+                      value={(mi as any).tempNameFr || foundIng?.nameFr || ''}
+                      onChange={e => updateIngredient(i, { tempNameFr: e.target.value } as any)}
+                    />
+                  </div>
                   
                   <select
-                    className="w-20 bg-amber-50 border border-amber-200 rounded px-1 py-0.5 text-[10px] font-black text-amber-600 outline-none cursor-pointer"
-                    value={(mi as any).tempUnit || ingredients.find(ing => ing.nameTh === mi.ingredientId || ing.id === mi.ingredientId)?.unit || 'kg'}
+                    className="w-16 bg-amber-50 border border-amber-200 rounded-lg px-1 py-1 text-[12px] font-black text-amber-600 outline-none cursor-pointer"
+                    value={(mi as any).tempUnit || foundIng?.unit || 'kg'}
                     onChange={e => updateIngredient(i, { tempUnit: e.target.value } as any)}
                   >
                     <option value="kg">kg</option>
@@ -337,14 +400,38 @@ export default function ManageMenusPage() {
                     <option value="tsp">tsp</option>
                   </select>
 
-                  <NumberInput 
-                    
-                    className="w-24 bg-white border border-slate-200 rounded-lg px-3 py-1 text-sm text-right font-black text-amber-600 outline-none focus:border-amber-500 shadow-sm"
-                    value={mi.defaultQty}
-                    onChange={val => updateIngredient(i, { defaultQty: val })}
-                  />
+                  <div className="flex flex-col items-center">
+                    <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1">Qty</span>
+                    <NumberInput 
+                      className="w-16 bg-white border border-slate-200 rounded-lg px-2 py-1 text-sm text-right font-black text-amber-600 outline-none focus:border-amber-500 shadow-sm"
+                      value={mi.defaultQty}
+                      onChange={val => updateIngredient(i, { defaultQty: val })}
+                    />
+                  </div>
+
+                  <div className="flex flex-col items-center">
+                    <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1">Alert ≤</span>
+                    <NumberInput 
+                      className="w-16 bg-white border border-slate-200 rounded-lg px-2 py-1 text-sm text-right font-black text-amber-600 outline-none focus:border-amber-500 shadow-sm"
+                      value={(mi as any).tempThreshold !== undefined ? (mi as any).tempThreshold : (foundIng?.threshold || 0)}
+                      onChange={val => updateIngredient(i, { tempThreshold: val } as any)}
+                    />
+                  </div>
+                  
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const next = [...(newMenu.ingredients || [])]
+                      next.splice(i, 1)
+                      setNewMenu({ ...newMenu, ingredients: next })
+                    }}
+                    className="w-9 h-9 flex items-center justify-center text-slate-300 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors shrink-0"
+                    title="Remove Ingredient"
+                  >
+                    <X size={16} />
+                  </button>
                 </div>
-              ))}
+              )})}
             </div>
 
             <datalist id="menu-ing-list">
@@ -356,14 +443,14 @@ export default function ManageMenusPage() {
               <button 
                 id="new-menu-add-ing-row"
                 onClick={addIngredientRow}
-                className="text-amber-600 text-xs font-black uppercase tracking-widest flex items-center gap-1 hover:text-amber-700 transition-colors"
+                className="text-amber-600 text-sm font-black uppercase tracking-widest flex items-center gap-1 hover:text-amber-700 transition-colors"
               >
                 {t.stock.addIngredient}
               </button>
               
               <button 
                 onClick={() => setShowQuickAdd(!showQuickAdd)}
-                className="text-slate-400 text-[10px] font-black uppercase tracking-widest flex items-center gap-1 hover:text-slate-600 transition-colors"
+                className="text-slate-400 text-[14px] font-black uppercase tracking-widest flex items-center gap-1 hover:text-slate-600 transition-colors"
               >
                 {showQuickAdd ? t.common.cancel : `✨ ${t.manageStock.add} (Quick)`}
               </button>
@@ -383,49 +470,72 @@ export default function ManageMenusPage() {
           <button 
             id="new-menu-save-btn"
             onClick={handleAdd}
-            disabled={saving || !newMenu.nameTh}
-            className="w-full bg-amber-600 text-white py-4 rounded-2xl font-black text-lg shadow-lg shadow-amber-600/20 hover:bg-amber-700 transition-all active:scale-[0.98] disabled:opacity-50"
+            disabled={saving}
+            className={`w-full py-4 rounded-2xl font-black text-lg shadow-lg transition-all active:scale-[0.98] disabled:opacity-50 ${
+              !newMenu.nameTh 
+                ? 'bg-slate-200 text-slate-400 cursor-not-allowed shadow-none' 
+                : 'bg-amber-600 text-white shadow-amber-600/20 hover:bg-amber-700'
+            }`}
           >
             {saving ? (
               <span className="flex items-center justify-center gap-2">
                 <span className="w-5 h-5 border-2 border-white/20 border-t-white rounded-full animate-spin" />
                 {t.common.loading}
               </span>
-            ) : t.common.save}
+            ) : !newMenu.nameTh ? ((t.manageMenus as any).nameRequired || "Name Required") : t.common.save}
           </button>
         </div>
       )}
 
-      <div className="bg-white rounded-[2rem] shadow-sm border border-slate-100 overflow-hidden divide-y divide-slate-50">
-        {menus.map(menu => (
-          <div key={menu.id} id={`menu-item-${menu.id}`} className="p-6 flex justify-between items-center hover:bg-slate-50 transition-colors">
-            <div className="flex-1">
-              <p className="font-black text-slate-700 text-lg">{menu.nameTh}</p>
-              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
-                {menu.ingredients.length} ingredients · €{menu.pricePerBox}/box
-              </p>
+      <div className="space-y-3">
+        {menus.map(menu => {
+          const qty = quantities[menu.nameTh] ?? 0
+
+          return (
+          <div key={menu.id} id={`menu-item-${menu.id}`} className="flex gap-4 bg-slate-50 p-4 rounded-xl border border-slate-100 items-center hover:bg-slate-100 transition-colors group">
+            <div className="flex items-center gap-4 flex-1">
+              <div className="w-12 h-12 bg-amber-50 rounded-xl flex items-center justify-center text-2xl shadow-sm border border-amber-100 shrink-0">
+                🍜
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="font-bold text-slate-deep text-lg truncate">{menu.nameTh}</p>
+                {menu.nameFr && (
+                  <p className="text-sm font-bold text-slate-400 uppercase tracking-wide leading-none truncate">{menu.nameFr}</p>
+                )}
+              </div>
             </div>
-            <div className="flex items-center gap-3">
-              <div className="flex flex-col gap-1">
+            
+            <div className="flex items-center gap-8 shrink-0">
+              <div className="text-right hidden sm:flex flex-col items-end">
+                <div className="font-black text-xl text-amber-600">
+                  €{menu.pricePerBox}
+                </div>
+                <div className="text-[11px] font-black text-slate-400 uppercase tracking-widest bg-white px-2 py-0.5 rounded-lg border border-slate-100">
+                  {menu.ingredients.length} {t.manageMenus.ingredients}
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                 <button
                   id={`menu-edit-${menu.id}`}
                   onClick={() => handleEdit(menu)}
-                  className="px-3 py-1.5 text-[10px] font-black uppercase tracking-widest text-amber-600 hover:bg-amber-50 rounded-lg transition-colors"
+                  className="w-10 h-10 bg-white text-slate-400 hover:text-amber-600 border border-slate-200 rounded-lg flex items-center justify-center transition-all"
+                  title="Edit"
                 >
-                  Edit
+                  <Edit2 size={18} />
                 </button>
                 <button
                   id={`menu-delete-${menu.id}`}
                   onClick={() => handleDelete(menu.id)}
-                  className="px-3 py-1.5 text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                  className="w-10 h-10 bg-white text-slate-300 hover:text-red-500 border border-slate-200 rounded-lg flex items-center justify-center transition-all"
+                  title="Delete"
                 >
-                  Delete
+                  <Trash2 size={18} />
                 </button>
               </div>
-              <div className="w-12 h-12 bg-amber-50 rounded-2xl flex items-center justify-center text-2xl">🍜</div>
             </div>
           </div>
-        ))}
+        )})}
       </div>
     </div>
   )

@@ -43,7 +43,7 @@ export default function ItemReviewTable({ items, onChange, showAdvanced = false 
     <div className="overflow-x-auto rounded-xl border border-subtle-border">
       <table className="w-full text-sm">
         <thead>
-          <tr className="bg-mist-gray text-[10px] font-bold text-slate-400 uppercase tracking-widest border-bottom border-subtle-border">
+          <tr className="bg-mist-gray text-[14px] font-bold text-slate-400 uppercase tracking-widest border-bottom border-subtle-border">
             <th className="text-left py-4 px-4">{t.receipt.itemFr}</th>
             <th className="text-left py-4 px-4">{t.receipt.itemTh}</th>
             <th className="text-center py-4 px-2">{t.receipt.qty}</th>
