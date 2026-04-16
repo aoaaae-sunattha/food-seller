@@ -2,6 +2,8 @@
 import { useState, useRef } from 'react'
 import { useLanguage } from '@/hooks/useLanguage'
 import type { Ingredient } from '@/types'
+import { FileUp, Download, X, AlertTriangle, Check, Loader2 } from 'lucide-react'
+import { cn } from '@/lib/utils'
 
 const UNITS = ['kg','g','mg','l','ml','pcs','box','bottle','can','pack','bag','bunch','tray','tbsp','tsp']
 
@@ -19,13 +21,11 @@ interface Props {
   onImportComplete: (added: number, updated: number, skipped: number) => void
 }
 
-// Quote a CSV field if it contains commas or double-quotes
 function csvField(val: string | number): string {
   const s = String(val ?? '')
   return s.includes(',') || s.includes('"') ? `"${s.replace(/"/g, '""')}"` : s
 }
 
-// Minimal RFC-4180 CSV line parser — handles quoted fields with commas inside
 function parseCSVLine(line: string): string[] {
   const result: string[] = []
   let current = ''
@@ -79,7 +79,6 @@ export default function BulkImportZone({ ingredients, onImportComplete }: Props)
 
     const reader = new FileReader()
     reader.onload = (event) => {
-      // Strip UTF-8 BOM that Excel/LibreOffice may add
       const text = (event.target?.result as string).replace(/^\uFEFF/, '')
       const lines = text.split('\n').filter(l => l.trim() !== '')
 
@@ -93,7 +92,6 @@ export default function BulkImportZone({ ingredients, onImportComplete }: Props)
         let status: ParsedItem['status'] = 'new'
         let isValid = true
 
-        // Only the Thai name is required — threshold and unit are lenient
         if (!nameTh) {
           status = 'error'
           isValid = false
@@ -149,36 +147,39 @@ export default function BulkImportZone({ ingredients, onImportComplete }: Props)
   const warningCount = items.filter(i => i.status === 'warning').length
 
   if (!show) return (
-    <div className="flex flex-col items-end gap-1">
+    <div className="flex flex-col items-end gap-2">
       <button
         onClick={() => setShow(true)}
-        className="px-6 py-2.5 bg-slate-800 text-white rounded-xl text-sm font-black shadow-lg shadow-slate-200 transition-all active:scale-95 hover:bg-black"
+        className="btn-secondary h-10 px-4 text-xs"
       >
-        {t.bulkImport.title} 📂
+        <FileUp size={16} /> {t.bulkImport.title}
       </button>
       <button
         onClick={downloadTemplate}
-        className="text-[10px] font-black text-slate-400 uppercase tracking-widest hover:text-amber-600 transition-colors"
+        className="flex items-center gap-1.5 text-[10px] font-bold text-slate-400 uppercase tracking-widest hover:text-cinnabar transition-colors"
       >
-        {t.bulkImport.downloadTemplate}
+        <Download size={10} /> {t.bulkImport.downloadTemplate}
       </button>
     </div>
   )
 
   return (
-    <div className="bg-white p-8 rounded-[2rem] shadow-xl border border-slate-100 space-y-6 animate-in zoom-in-95 duration-300">
-      <div className="flex justify-between items-center px-1">
-        <h2 className="text-xl font-black">{t.bulkImport.title}</h2>
+    <div className="card-base border-cinnabar/20 shadow-xl shadow-cinnabar/5 space-y-6 animate-in zoom-in-95 duration-300">
+      <div className="flex justify-between items-center">
+        <h2 className="text-xl font-bold text-slate-deep flex items-center gap-2">
+           <FileUp className="text-cinnabar" size={22} />
+           {t.bulkImport.title}
+        </h2>
         <button
           onClick={() => { setShow(false); setItems([]); }}
-          className="text-slate-400 hover:text-rose-500 font-black flex items-center gap-1 text-sm uppercase tracking-widest"
+          className="w-10 h-10 bg-mist-gray text-slate-400 hover:text-error-red rounded-full flex items-center justify-center transition-all active:scale-90"
         >
-          {t.common.cancel} ✕
+          <X size={20} />
         </button>
       </div>
 
       <div
-        className="border-2 border-dashed border-slate-200 rounded-3xl p-10 text-center bg-slate-50 hover:bg-slate-100 transition-colors relative cursor-pointer"
+        className="border-2 border-dashed border-subtle-border rounded-2xl p-12 text-center bg-mist-gray/30 hover:border-cinnabar hover:bg-cinnabar/5 transition-all cursor-pointer group"
         onClick={() => fileInputRef.current?.click()}
       >
         <input
@@ -188,67 +189,71 @@ export default function BulkImportZone({ ingredients, onImportComplete }: Props)
           accept=".csv"
           onChange={handleFileChange}
           className="hidden"
-          data-testid="bulk-file-input"
         />
-        <label htmlFor="bulk-import-input" className="cursor-pointer">
-          <p className="font-black text-slate-500">{t.bulkImport.dropzone}</p>
-          <p className="text-xs font-bold text-slate-400 mt-1 uppercase tracking-widest">.CSV ONLY</p>
-        </label>
+        <div className="w-16 h-16 bg-white rounded-2xl flex items-center justify-center mx-auto mb-4 text-slate-300 group-hover:text-cinnabar group-hover:scale-110 transition-all shadow-sm">
+           <FileUp size={28} />
+        </div>
+        <p className="font-bold text-slate-600">{t.bulkImport.dropzone}</p>
+        <p className="text-[10px] font-bold text-slate-400 mt-1 uppercase tracking-widest">CSV Format Only</p>
       </div>
 
       {items.length > 0 && (
-        <div className="space-y-4">
-          <div className="max-h-60 overflow-auto rounded-2xl border border-slate-100 shadow-inner">
-            <table className="w-full text-left text-sm font-bold border-collapse">
-              <thead className="bg-slate-50 text-[10px] font-black uppercase text-slate-400 sticky top-0 z-10">
+        <div className="space-y-6 animate-in fade-in duration-300">
+          <div className="max-h-80 overflow-auto rounded-xl border border-subtle-border">
+            <table className="w-full text-sm">
+              <thead className="bg-mist-gray text-[10px] font-bold text-slate-400 uppercase tracking-widest sticky top-0 z-10 border-bottom border-subtle-border">
                 <tr>
-                  <th className="px-4 py-3">{t.bulkImport.status}</th>
-                  <th className="px-4 py-3">{t.manageStock.name} (TH)</th>
-                  <th className="px-4 py-3">{t.manageStock.unit}</th>
-                  <th className="px-4 py-3">{t.manageStock.threshold}</th>
+                  <th className="px-4 py-3 text-left">Status</th>
+                  <th className="px-4 py-3 text-left">Ingredient</th>
+                  <th className="px-4 py-3 text-center">Unit</th>
+                  <th className="px-4 py-3 text-right">Limit</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-50">
+              <tbody className="divide-y divide-subtle-border">
                 {items.map((it, idx) => (
-                  <tr key={idx} className={`hover:bg-slate-50 transition-colors ${!it.isValid ? 'bg-rose-50/50' : ''}`}>
+                  <tr key={idx} className={cn("hover:bg-mist-gray/30 transition-colors", !it.isValid && "bg-error-red/5")}>
                     <td className="px-4 py-3">
-                      <span className={`px-2 py-0.5 rounded text-[9px] font-black uppercase tracking-widest
-                        ${it.status === 'new' ? 'bg-emerald-100 text-emerald-700' :
-                          it.status === 'update' ? 'bg-amber-100 text-amber-700' :
-                          it.status === 'warning' ? 'bg-yellow-100 text-yellow-700' :
-                          'bg-rose-100 text-rose-700'}`}
-                      >
+                      <span className={cn(
+                        "badge-base scale-90 origin-left",
+                        it.status === 'new' ? "badge-success" :
+                        it.status === 'update' ? "bg-cinnabar/10 text-cinnabar" :
+                        it.status === 'warning' ? "badge-warning" :
+                        "badge-danger"
+                      )}>
                         {t.bulkImport[it.status]}
                       </span>
                     </td>
                     <td className="px-4 py-3">
-                      <p className="text-slate-700">{it.nameTh}</p>
-                      {it.nameFr && <p className="text-[10px] text-slate-400">{it.nameFr}</p>}
+                      <div className="font-bold text-slate-deep">{it.nameTh}</div>
+                      <div className="text-[10px] text-slate-400 font-medium">{it.nameFr}</div>
                     </td>
-                    <td className="px-4 py-3 text-slate-600">{it.unit}</td>
-                    <td className="px-4 py-3 text-slate-600">{it.threshold}</td>
+                    <td className="px-4 py-3 text-center font-bold text-slate-500">{it.unit}</td>
+                    <td className="px-4 py-3 text-right font-bold text-slate-600">{it.threshold}</td>
                   </tr>
                 ))}
               </tbody>
             </table>
           </div>
-          {warningCount > 0 && (
-            <p className="text-xs text-yellow-600 font-bold px-1">
-              ⚠ {t.bulkImport.warningNote.replace('{{count}}', String(warningCount))}
-            </p>
-          )}
-          <button
-            onClick={handleProcess}
-            disabled={loading || validCount === 0}
-            className="w-full bg-slate-800 text-white py-4 rounded-2xl font-black text-lg shadow-lg shadow-slate-200 hover:bg-black transition-all active:scale-[0.98] disabled:opacity-50"
-          >
-            {loading ? (
-              <span className="flex items-center justify-center gap-2">
-                <span className="w-5 h-5 border-2 border-white/20 border-t-white rounded-full animate-spin" />
-                {t.common.loading}
-              </span>
-            ) : t.bulkImport.importCount.replace('{{count}}', String(validCount))}
-          </button>
+          
+          <div className="flex flex-col gap-4">
+             {warningCount > 0 && (
+              <div className="flex items-center gap-2 text-xs font-bold text-amber bg-amber/5 p-3 rounded-lg border border-amber/10">
+                <AlertTriangle size={16} />
+                {t.bulkImport.warningNote.replace('{{count}}', String(warningCount))}
+              </div>
+            )}
+            <button
+              onClick={handleProcess}
+              disabled={loading || validCount === 0}
+              className="btn-primary w-full h-14 text-base"
+            >
+              {loading ? <Loader2 className="animate-spin" /> : (
+                <span className="flex items-center gap-2">
+                   <Check size={20} /> {t.bulkImport.importCount.replace('{{count}}', String(validCount))}
+                </span>
+              )}
+            </button>
+          </div>
         </div>
       )}
     </div>

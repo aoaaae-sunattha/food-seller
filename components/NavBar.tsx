@@ -1,62 +1,91 @@
 'use client'
-import { useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useLanguage } from '@/hooks/useLanguage'
+import { 
+  LayoutDashboard, 
+  ScanLine, 
+  Package, 
+  TrendingUp, 
+  Settings, 
+  Zap,
+  Boxes,
+  ChefHat
+} from 'lucide-react'
+import { cn } from '@/lib/utils'
+import LanguageSelector from './LanguageSelector'
 
 const NAV_ITEMS = [
-  { href: '/',                icon: '🏠', key: 'dashboard'     },
-  { href: '/receipt',         icon: '🧾', key: 'receipt'       },
-  { href: '/manage-stock',    icon: '🗂️', key: 'manageStock'   },
-  { href: '/stock-deduction', icon: '📦', key: 'stockDeduction'},
-  { href: '/daily-sales',     icon: '💰', key: 'dailySales'    },
-  { href: '/manage-menus',    icon: '🍜', key: 'manageMenus'   },
+  { href: '/',                icon: LayoutDashboard, key: 'dashboard'     },
+  { href: '/receipt',         icon: ScanLine,        key: 'receipt'       },
+  { href: '/manage-stock',    icon: Boxes,           key: 'manageStock'   },
+  { href: '/stock-deduction', icon: Package,         key: 'stockDeduction'},
+  { href: '/daily-sales',     icon: TrendingUp,      key: 'dailySales'    },
+  { href: '/manage-menus',    icon: ChefHat,         key: 'manageMenus'   },
 ] as const
 
 export default function NavBar() {
   const pathname = usePathname()
   const { t } = useLanguage()
-  const [isExpanded, setIsExpanded] = useState(false)
 
   return (
-    <nav className={`fixed left-6 top-1/2 -translate-y-1/2 bg-white/90 backdrop-blur-xl border border-slate-200/50 shadow-2xl shadow-slate-200/50 rounded-[2.5rem] flex flex-col items-start py-8 px-4 z-[100] transition-all duration-500 overflow-hidden ${
-      isExpanded ? 'w-48' : 'w-20'
-    }`}>
-      <button 
-        onClick={() => setIsExpanded(!isExpanded)}
-        className="mb-8 self-center w-10 h-10 bg-slate-50 hover:bg-slate-100 rounded-full flex items-center justify-center text-slate-400 hover:text-slate-600 transition-all active:scale-90"
-      >
-        <svg xmlns="http://www.w3.org/2000/svg" className={`h-5 w-5 transition-transform duration-500 ${isExpanded ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M13 5l7 7-7 7M5 5l7 7-7 7" />
-        </svg>
-      </button>
+    <nav className="fixed left-0 top-0 h-screen bg-surface-white border-r border-subtle-border flex flex-col py-8 z-50 transition-all duration-300 w-[80px] lg:w-[240px]">
+      {/* Logo Section */}
+      <div className="px-6 mb-12 flex items-center gap-4">
+        <div className="w-12 h-12 bg-cinnabar rounded-2xl flex items-center justify-center text-white shrink-0 shadow-lg shadow-cinnabar/20">
+          <Zap size={28} fill="currentColor" />
+        </div>
+        <span className="font-bold text-2xl text-slate-deep tracking-tight hidden lg:block">Siam Manager</span>
+      </div>
 
-      <div className="flex flex-col gap-6 w-full">
-        {NAV_ITEMS.map(item => {
+      <div className="px-6 mb-6 text-xs font-bold text-slate-400 uppercase tracking-widest hidden lg:block">
+        {t.nav.menu || 'Menu'}
+      </div>
+
+      {/* Navigation Items */}
+      <div className="flex-1 flex flex-col gap-2 px-3">
+        {NAV_ITEMS.map((item) => {
           const isActive = pathname === item.href
+          const Icon = item.icon
           return (
             <Link
               key={item.href}
               href={item.href}
-              id={`nav-bar-${item.key.replace(/[A-Z]/g, letter => `-${letter.toLowerCase()}`)}`}
-              className={`flex items-center gap-4 transition-all duration-300 w-full rounded-2xl p-2 ${
-                isActive ? 'text-amber-600 bg-amber-50' : 'text-slate-400 hover:text-slate-600 hover:bg-slate-50'
-              }`}
+              className={cn(
+                "flex items-center gap-4 px-4 py-4 rounded-2xl transition-all duration-200 group",
+                isActive 
+                  ? "bg-cinnabar text-white shadow-xl shadow-cinnabar/20" 
+                  : "text-slate-500 hover:text-slate-deep hover:bg-mist-gray"
+              )}
             >
-              <span className={`text-2xl min-w-[2rem] flex justify-center transition-transform ${isActive ? 'drop-shadow-sm scale-110' : ''}`}>
-                {item.icon}
-              </span>
-              <span className={`text-xs font-black uppercase tracking-wider whitespace-nowrap transition-all duration-300 ${
-                isExpanded ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-4'
-              }`}>
+              <Icon size={24} className={cn("shrink-0", isActive ? "text-white" : "group-hover:text-cinnabar")} />
+              <span className={cn(
+                "font-bold text-base whitespace-nowrap transition-opacity hidden lg:block",
+                isActive ? "text-white" : "text-slate-500"
+              )}>
                 {t.nav[item.key]}
               </span>
-              {isActive && (
-                <span className="absolute left-0 w-1 h-8 bg-amber-600 rounded-r-full" />
-              )}
             </Link>
           )
         })}
+      </div>
+
+      {/* Footer Section */}
+      <div className="px-3 flex flex-col gap-2">
+        <div className="px-3 py-6 lg:px-0 flex justify-center lg:justify-start lg:px-6">
+           <LanguageSelector />
+        </div>
+        
+        <Link
+          href="/settings"
+          className={cn(
+            "flex items-center gap-4 px-4 py-4 rounded-2xl text-slate-500 hover:text-slate-deep hover:bg-mist-gray transition-all",
+            pathname === '/settings' && "bg-mist-gray text-slate-deep"
+          )}
+        >
+          <Settings size={24} className="shrink-0 group-hover:text-cinnabar" />
+          <span className="font-bold text-base hidden lg:block">Settings</span>
+        </Link>
       </div>
     </nav>
   )

@@ -3,6 +3,23 @@ import {  useState, useEffect  } from 'react'
 import { NumberInput } from '@/components/NumberInput'
 import { useLanguage } from '@/hooks/useLanguage'
 import type { MenuTemplate } from '@/types'
+import { 
+  TrendingUp, 
+  Banknote, 
+  CreditCard, 
+  History, 
+  Trash2, 
+  Edit2, 
+  Save, 
+  X, 
+  Check, 
+  ArrowRight,
+  PieChart,
+  ShoppingBag,
+  Zap,
+  AlertCircle
+} from 'lucide-react'
+import { cn } from '@/lib/utils'
 
 interface MenuSale {
   menu: string
@@ -79,27 +96,20 @@ export default function DailySalesPage() {
       const res = await fetch('/api/sheets/sales', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          date,
-          menuSales: menuSales.filter(s => s.boxes > 0),
-          cash,
-          card,
-        })
+        body: JSON.stringify({ date, menuSales: menuSales.filter(s => s.boxes > 0), cash, card })
       })
       if (res.ok) {
-        showSuccess()
+        setDone(true)
+        setTimeout(() => setDone(false), 3000)
         setCash(0)
         setCard(0)
         setMenuSales(menus.map(m => ({ menu: m.nameTh, boxes: 0, pricePerBox: m.pricePerBox })))
         const hRes = await fetch('/api/sheets/sales')
         const hData = await hRes.json()
         setHistory(hData.history ?? [])
-      } else {
-        const err = await res.json().catch(() => ({}))
-        throw new Error(`Error: ${err.details || err.error || res.status}`)
       }
     } catch (err: any) {
-      console.error(err); alert(err.message || t.common.error)
+      console.error(err)
     } finally {
       setSaving(false)
     }
@@ -119,12 +129,9 @@ export default function DailySalesPage() {
         const hRes = await fetch('/api/sheets/sales')
         const hData = await hRes.json()
         setHistory(hData.history ?? [])
-        showSuccess()
-      } else {
-        throw new Error('Update failed')
       }
     } catch (err: any) {
-      alert(err.message)
+      console.error(err)
     } finally {
       setSaving(false)
     }
@@ -143,175 +150,188 @@ export default function DailySalesPage() {
         const hRes = await fetch('/api/sheets/sales')
         const hData = await hRes.json()
         setHistory(hData.history ?? [])
-        showSuccess()
-      } else {
-        throw new Error('Delete failed')
       }
     } catch (err: any) {
-      alert(err.message)
+      console.error(err)
     } finally {
       setSaving(false)
     }
   }
 
-  function showSuccess() {
-    setDone(true)
-    setTimeout(() => setDone(false), 3000)
-  }
+  if (loading) return (
+    <div className="flex flex-col items-center justify-center py-20 min-h-[60vh]">
+      <div className="w-12 h-12 bg-cinnabar/10 rounded-xl flex items-center justify-center text-cinnabar animate-bounce mb-4">
+        <Zap size={24} fill="currentColor" />
+      </div>
+      <p className="text-slate-400 font-semibold tracking-wide animate-pulse">{t.common.loading}</p>
+    </div>
+  )
 
-  if (loading) return <p className="text-center py-8">{t.common.loading}</p>
-
-  // Filter history: payments only rows (totalRecorded > 0)
   const paymentHistory = history.filter(h => h.totalRecorded > 0)
 
   return (
-    <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700 pb-32">
-      <div className="flex justify-between items-center px-1">
-        <h1 className="text-2xl font-black text-slate-800 tracking-tight">{t.sales.title}</h1>
+    <div className="animate-in fade-in slide-in-from-bottom-4 duration-700 space-y-10 pb-32">
+      <div className="flex justify-between items-center">
+        <div>
+           <h1 className="text-4xl font-bold text-slate-deep tracking-tight">{t.sales.title}</h1>
+           <p className="text-slate-500 text-base mt-2">Record daily menu sales and payments.</p>
+        </div>
         {done && (
-          <span className="text-[10px] font-black text-emerald-600 bg-emerald-50 px-3 py-1.5 rounded-lg uppercase tracking-widest animate-in fade-in zoom-in duration-300">
-            ✅ {t.common.save} Success
+          <span className="badge-base badge-success py-2.5 px-4 text-sm animate-in slide-in-from-right-4">
+             {t.common.save} Success!
           </span>
         )}
       </div>
       
       {/* Menu Input Form */}
-      <div className="space-y-4 pb-8">
+      <div className="grid grid-cols-1 gap-5">
         {menuSales.map((sale, i) => (
-          <div key={sale.menu} className="bg-white p-6 rounded-[2rem] shadow-sm border border-slate-100 flex items-center gap-4 group hover:shadow-md transition-all">
-            <div className="flex-1 font-black text-slate-700 text-lg">{sale.menu}</div>
-            <div className="w-20">
-              <div className="relative">
-                <NumberInput 
-                  id={`sales-qty-${sale.menu}`}
-                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-2 py-2 text-center font-black text-slate-800 focus:bg-white focus:ring-2 focus:ring-amber-500/20 outline-none transition-all"
-                  value={sale.boxes}
-                  onChange={val => handleBoxChange(i, val)}
-                />
-                <span className="absolute -top-4 left-0 w-full text-[9px] font-black text-slate-300 uppercase tracking-tighter text-center">{t.sales.boxes}</span>
-              </div>
+          <div key={sale.menu} className="card-base flex items-center gap-6 group hover:border-cinnabar/30 transition-all p-8">
+            <div className="w-14 h-14 bg-mist-gray rounded-2xl flex items-center justify-center text-slate-400 group-hover:bg-cinnabar/10 group-hover:text-cinnabar transition-colors shrink-0">
+               <ShoppingBag size={28} />
             </div>
-            <div className="w-24">
-              <div className="relative">
-                <NumberInput 
-                  id={`sales-price-${sale.menu}`}
-                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-2 py-2 text-right font-black text-slate-600 focus:bg-white focus:ring-2 focus:ring-amber-500/20 outline-none transition-all"
-                  value={sale.pricePerBox}
-                  onChange={val => handlePriceChange(i, val)}
-                />
-                <span className="absolute -top-4 left-0 w-full text-[9px] font-black text-slate-300 uppercase tracking-tighter text-right pr-1">€/box</span>
-              </div>
-            </div>
-            <div className="w-20 text-right font-black text-amber-600 text-lg">
-              €{(sale.boxes * sale.pricePerBox).toFixed(1)}
+            <div className="flex-1 font-bold text-slate-deep text-xl">{sale.menu}</div>
+            <div className="flex items-center gap-8">
+               <div className="w-24 text-center">
+                  <label className="block text-[10px] font-bold text-slate-400 uppercase mb-2 tracking-widest">Boxes</label>
+                  <NumberInput 
+                    className="w-full h-12 bg-mist-gray border-none rounded-xl text-center font-bold text-slate-deep focus:ring-2 focus:ring-cinnabar/20 outline-none text-lg"
+                    value={sale.boxes}
+                    onChange={val => handleBoxChange(i, val)}
+                  />
+               </div>
+               <div className="w-28 text-right">
+                  <label className="block text-[10px] font-bold text-slate-400 uppercase mb-2 tracking-widest">€/Box</label>
+                  <NumberInput 
+                    className="w-full h-12 bg-mist-gray border-none rounded-xl text-right px-4 font-bold text-slate-deep focus:ring-2 focus:ring-cinnabar/20 outline-none text-lg"
+                    value={sale.pricePerBox}
+                    onChange={val => handlePriceChange(i, val)}
+                  />
+               </div>
+               <div className="w-24 text-right font-bold text-cinnabar text-2xl">
+                 €{(sale.boxes * sale.pricePerBox).toFixed(1)}
+               </div>
             </div>
           </div>
         ))}
       </div>
 
-      {/* Global Payment Input Card */}
-      <div className="bg-slate-900 text-white p-8 rounded-[2.5rem] space-y-6 shadow-2xl shadow-slate-900/20 border border-white/5 relative overflow-hidden">
-        <div className="absolute top-0 right-0 p-8 opacity-10 rotate-12">
-          <span className="text-8xl">💰</span>
+      {/* Payment Summary Card */}
+      <div className="card-base bg-slate-deep text-white border-none shadow-xl shadow-slate-900/20 space-y-10 p-10 relative overflow-hidden">
+        <div className="absolute top-0 right-0 p-10 opacity-5">
+           <Banknote size={200} />
         </div>
+        
         <div className="flex justify-between items-end relative z-10">
           <div>
-            <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-1">Estimated Revenue</p>
-            <span className="text-4xl font-black text-white leading-none">€{totalSales.toFixed(2)}</span>
+            <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Estimated Revenue</p>
+            <div className="text-5xl font-bold text-white tracking-tight">€{totalSales.toFixed(2)}</div>
+          </div>
+          <div className={cn(
+            "badge-base py-2 px-4 text-sm",
+            totalRecorded === totalSales ? "bg-emerald/20 text-emerald" : "bg-amber/20 text-amber"
+          )}>
+            {totalRecorded === totalSales ? "BALANCED" : "GAP: €" + (totalRecorded - totalSales).toFixed(2)}
           </div>
         </div>
-        <div className="grid grid-cols-2 gap-4 relative z-10">
-          <div className="space-y-2">
-            <label className="text-[10px] font-black text-slate-400 uppercase tracking-wider px-1">{t.sales.cash}</label>
-            <NumberInput 
-              id="sales-cash-amount"
-              className="w-full bg-white/10 border border-white/10 rounded-2xl px-4 py-4 text-right font-black text-2xl text-white focus:bg-white/20 focus:ring-4 focus:ring-amber-500/20 outline-none transition-all"
-              value={cash}
-              onChange={val => setCash(val)}
-            />
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 relative z-10">
+          <div className="space-y-3">
+            <label className="flex items-center gap-3 text-xs font-bold text-slate-400 uppercase tracking-widest ml-1">
+               <Banknote size={18} className="text-cinnabar" /> {t.sales.cash}
+            </label>
+            <div className="relative">
+               <span className="absolute left-5 top-1/2 -translate-y-1/2 font-bold text-slate-500 text-xl">€</span>
+               <NumberInput 
+                className="w-full h-16 bg-white/5 border border-white/10 rounded-xl pl-12 pr-5 text-3xl font-bold text-white focus:bg-white/10 focus:ring-2 focus:ring-cinnabar/50 outline-none transition-all"
+                value={cash}
+                onChange={val => setCash(val)}
+              />
+            </div>
           </div>
-          <div className="space-y-2">
-            <label className="text-[10px] font-black text-slate-400 uppercase tracking-wider px-1">{t.sales.card}</label>
-            <NumberInput 
-              id="sales-card-amount"
-              className="w-full bg-white/10 border border-white/10 rounded-2xl px-4 py-4 text-right font-black text-2xl text-white focus:bg-white/20 focus:ring-4 focus:ring-amber-500/20 outline-none transition-all"
-              value={card}
-              onChange={val => setCard(val)}
-            />
+          <div className="space-y-3">
+            <label className="flex items-center gap-3 text-xs font-bold text-slate-400 uppercase tracking-widest ml-1">
+               <CreditCard size={18} className="text-cinnabar" /> {t.sales.card}
+            </label>
+            <div className="relative">
+               <span className="absolute left-5 top-1/2 -translate-y-1/2 font-bold text-slate-500 text-xl">€</span>
+               <NumberInput 
+                className="w-full h-16 bg-white/5 border border-white/10 rounded-xl pl-12 pr-5 text-3xl font-bold text-white focus:bg-white/10 focus:ring-2 focus:ring-cinnabar/50 outline-none transition-all"
+                value={card}
+                onChange={val => setCard(val)}
+              />
+            </div>
           </div>
-        </div>
-        <div className={`flex justify-between items-center text-[10px] font-black uppercase tracking-widest px-1 relative z-10 ${totalRecorded !== totalSales ? 'text-amber-400' : 'text-slate-500'}`}>
-          <span>Total Recorded: €{totalRecorded.toFixed(2)}</span>
-          {totalRecorded !== totalSales && (
-            <span className="bg-amber-400/10 px-2 py-1 rounded-lg">Gap: €{(totalRecorded - totalSales).toFixed(2)}</span>
-          )}
         </div>
       </div>
 
       <button 
-        id="sales-save-btn"
         onClick={handleSave}
         disabled={saving || totalSales === 0}
-        className="w-full bg-amber-600 text-white py-5 rounded-[2rem] font-black text-xl shadow-xl shadow-amber-600/30 hover:bg-amber-700 transition-all active:scale-[0.98] disabled:opacity-50 disabled:active:scale-100"
+        className="btn-primary w-full h-20 text-xl shadow-2xl shadow-cinnabar/20"
       >
-        {saving ? t.common.loading : t.sales.save}
+        {saving ? "Saving..." : t.sales.save} <ArrowRight size={24} />
       </button>
 
-      {/* History Split: Menu Sales & Daily Payments */}
-      <div className="pt-12 space-y-12">
-        {/* Table 1: Items Sold */}
-        <section className="space-y-6">
-          <h2 className="text-xl font-black text-slate-800 px-1">🍱 {t.sales.history} (Items)</h2>
-          <div className="bg-white rounded-[2rem] shadow-sm border border-slate-100 overflow-hidden">
-            <table className="w-full text-left text-sm font-bold border-collapse">
-              <thead className="bg-slate-50 text-[10px] font-black uppercase text-slate-400">
-                <tr>
-                  <th className="px-6 py-4">{t.manageMenus.name}</th>
-                  <th className="px-6 py-4 text-center">{t.sales.boxes}</th>
-                  <th className="px-6 py-4 text-right">{t.sales.pricePerBox}</th>
-                  <th className="px-6 py-4 text-right">{t.sales.total}</th>
+      {/* History Tables */}
+      <div className="pt-16 space-y-16">
+        {/* Items History */}
+        <section className="space-y-8">
+          <h2 className="text-2xl font-bold text-slate-deep flex items-center gap-3 ml-1">
+             <ShoppingBag size={24} className="text-cinnabar" />
+             Menu Sales History
+          </h2>
+          <div className="card-base p-0 overflow-hidden">
+            <table className="w-full">
+              <thead>
+                <tr className="bg-mist-gray text-xs font-bold text-slate-400 uppercase tracking-widest border-bottom border-subtle-border">
+                  <th className="text-left py-5 px-8">{t.manageMenus.name}</th>
+                  <th className="text-center py-5 px-8">Qty</th>
+                  <th className="text-right py-5 px-8">Rate</th>
+                  <th className="text-right py-5 px-8">Total</th>
+                  <th className="text-right py-5 px-8">Action</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-50">
-                {history.map((h, i) => {
+              <tbody className="divide-y divide-subtle-border">
+                {history.map((h) => {
                   const isEditing = editingId === h.id
                   return (
-                    <tr key={i} className="hover:bg-slate-50 transition-colors group">
-                      <td className="px-6 py-4 text-slate-700 font-black">
+                    <tr key={h.id} className="hover:bg-mist-gray/30 transition-colors group">
+                      <td className="py-5 px-8">
                         {isEditing ? (
-                          <input className="bg-slate-100 border-0 rounded px-2 py-1 w-full" value={editForm.menu} onChange={e => setEditForm({...editForm, menu: e.target.value})} />
+                          <input className="w-full h-11 bg-white border border-cinnabar/30 rounded-xl px-4 text-base font-bold" value={editForm.menu} onChange={e => setEditForm({...editForm, menu: e.target.value})} />
                         ) : (
-                          <div className="flex flex-col">
-                            <span>{h.menu}</span>
-                            <span className="text-[9px] text-slate-400 uppercase tracking-widest">{h.date}</span>
+                          <div>
+                            <div className="font-bold text-slate-deep text-base">{h.menu}</div>
+                            <div className="text-[11px] font-bold text-slate-400 uppercase tracking-widest mt-1">{h.date}</div>
                           </div>
                         )}
                       </td>
-                      <td className="px-6 py-4 text-center text-slate-600">
+                      <td className="py-5 px-8 text-center font-bold text-slate-500 text-base">
                         {isEditing ? (
-                          <NumberInput className="w-16 bg-slate-100 border-0 rounded px-2 py-1 text-center" value={editForm.boxes ?? 0} onChange={val => setEditForm({...editForm, boxes: val})} />
+                          <NumberInput className="w-20 h-11 bg-white border border-cinnabar/30 rounded-xl text-center font-bold" value={editForm.boxes ?? 0} onChange={val => setEditForm({...editForm, boxes: val})} />
                         ) : h.boxes}
                       </td>
-                      <td className="px-6 py-4 text-right text-slate-400 font-bold">
+                      <td className="py-5 px-8 text-right font-medium text-slate-400 text-base">
                         {isEditing ? (
-                          <NumberInput className="w-16 bg-slate-100 border-0 rounded px-2 py-1 text-right" value={editForm.pricePerBox ?? 0} onChange={val => setEditForm({...editForm, pricePerBox: val})} />
+                          <NumberInput className="w-20 h-11 bg-white border border-cinnabar/30 rounded-xl text-right pr-3 font-bold" value={editForm.pricePerBox ?? 0} onChange={val => setEditForm({...editForm, pricePerBox: val})} />
                         ) : `€${h.pricePerBox.toFixed(1)}`}
                       </td>
-                      <td className="px-6 py-4 text-right text-amber-600 font-black">
-                        {isEditing ? (
-                          <div className="flex gap-2 justify-end">
-                            <button onClick={handleUpdate} className="text-emerald-600">✓</button>
-                            <button onClick={() => setEditingId(null)} className="text-rose-400">✕</button>
-                          </div>
-                        ) : (
-                          <div className="flex items-center justify-end gap-3">
-                            <span>€{h.total.toFixed(1)}</span>
-                            <div className="opacity-0 group-hover:opacity-100 flex gap-2">
-                              <button onClick={() => { setEditingId(h.id); setEditForm(h); }} className="text-[10px] text-slate-300 hover:text-amber-600 font-black">EDIT</button>
-                              <button onClick={() => handleDelete(h)} className="text-[10px] text-slate-300 hover:text-rose-500 font-black">DEL</button>
-                            </div>
-                          </div>
-                        )}
+                      <td className="py-5 px-8 text-right font-bold text-cinnabar text-lg">€{h.total.toFixed(1)}</td>
+                      <td className="py-5 px-8 text-right">
+                         <div className="flex justify-end gap-3">
+                           {isEditing ? (
+                             <>
+                               <button onClick={handleUpdate} className="w-10 h-10 bg-emerald/10 text-emerald rounded-xl flex items-center justify-center active:scale-90"><Check size={20} /></button>
+                               <button onClick={() => setEditingId(null)} className="w-10 h-10 bg-mist-gray text-slate-400 rounded-xl flex items-center justify-center active:scale-90"><X size={20} /></button>
+                             </>
+                           ) : (
+                             <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                               <button onClick={() => { setEditingId(h.id); setEditForm(h); }} className="w-10 h-10 bg-mist-gray text-slate-400 hover:text-cinnabar rounded-xl flex items-center justify-center"><Edit2 size={18} /></button>
+                               <button onClick={() => handleDelete(h)} className="w-10 h-10 bg-mist-gray text-slate-300 hover:text-error-red rounded-xl flex items-center justify-center"><Trash2 size={18} /></button>
+                             </div>
+                           )}
+                         </div>
                       </td>
                     </tr>
                   )
@@ -321,26 +341,29 @@ export default function DailySalesPage() {
           </div>
         </section>
 
-        {/* Table 2: Daily Closing Totals */}
-        <section className="space-y-6">
-          <h2 className="text-xl font-black text-slate-800 px-1">💳 {t.sales.history} (Payments)</h2>
-          <div className="bg-white rounded-[2rem] shadow-sm border border-slate-100 overflow-hidden">
-            <table className="w-full text-left text-sm font-bold border-collapse">
-              <thead className="bg-slate-900 text-[10px] font-black uppercase text-slate-400">
-                <tr>
-                  <th className="px-6 py-4">Date</th>
-                  <th className="px-6 py-4 text-right">{t.sales.cash}</th>
-                  <th className="px-6 py-4 text-right">{t.sales.card}</th>
-                  <th className="px-6 py-4 text-right">{t.sales.total} (Actual)</th>
+        {/* Payments History */}
+        <section className="space-y-8">
+          <h2 className="text-2xl font-bold text-slate-deep flex items-center gap-3 ml-1">
+             <CreditCard size={24} className="text-cinnabar" />
+             Payment Settlement History
+          </h2>
+          <div className="card-base p-0 overflow-hidden">
+            <table className="w-full">
+              <thead>
+                <tr className="bg-slate-deep text-xs font-bold text-slate-400 uppercase tracking-widest">
+                  <th className="text-left py-5 px-8">Date</th>
+                  <th className="text-right py-5 px-8">Cash</th>
+                  <th className="text-right py-5 px-8">Card</th>
+                  <th className="text-right py-5 px-8">Total Settlement</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-50">
-                {paymentHistory.map((h, i) => (
-                  <tr key={i} className="hover:bg-slate-50 transition-colors group">
-                    <td className="px-6 py-4 text-slate-400 text-[10px] font-black uppercase tracking-widest">{h.date}</td>
-                    <td className="px-6 py-4 text-right text-slate-600 font-bold">€{h.cash.toFixed(1)}</td>
-                    <td className="px-6 py-4 text-right text-slate-600 font-bold">€{h.card.toFixed(1)}</td>
-                    <td className="px-6 py-4 text-right text-emerald-600 font-black text-lg">€{h.totalRecorded.toFixed(1)}</td>
+              <tbody className="divide-y divide-subtle-border">
+                {paymentHistory.map((h) => (
+                  <tr key={h.id} className="hover:bg-mist-gray/30 transition-colors">
+                    <td className="py-5 px-8 text-xs font-bold text-slate-400 uppercase tracking-widest">{h.date}</td>
+                    <td className="py-5 px-8 text-right font-medium text-slate-600 text-base">€{h.cash.toFixed(1)}</td>
+                    <td className="py-5 px-8 text-right font-medium text-slate-600 text-base">€{h.card.toFixed(1)}</td>
+                    <td className="py-5 px-8 text-right font-bold text-emerald text-xl">€{h.totalRecorded.toFixed(1)}</td>
                   </tr>
                 ))}
               </tbody>
@@ -352,25 +375,28 @@ export default function DailySalesPage() {
       {/* Deletion Log */}
       {deletedLogs.length > 0 && (
         <div className="pt-12 space-y-6">
-          <h2 className="text-xl font-black text-rose-600 px-1">{t.sales.deleteLog}</h2>
-          <div className="bg-rose-50/30 rounded-[2rem] border border-rose-100 overflow-hidden">
+          <h2 className="text-xl font-bold text-error-red flex items-center gap-2 ml-1">
+             <AlertCircle size={20} />
+             System Deletion Audit
+          </h2>
+          <div className="card-base bg-error-red/5 border-error-red/10 p-0 overflow-hidden">
             <table className="w-full text-left text-sm font-bold border-collapse">
-              <thead className="bg-rose-100/50 text-[10px] font-black uppercase text-rose-400">
-                <tr>
-                  <th className="px-6 py-4">{t.manageStock.name}</th>
-                  <th className="px-6 py-4">{t.sales.reason}</th>
-                  <th className="px-6 py-4 text-right">Time</th>
+              <thead>
+                <tr className="bg-error-red/10 text-[10px] font-black uppercase text-error-red/70 tracking-widest">
+                  <th className="px-6 py-4">Original Entry</th>
+                  <th className="px-6 py-4">Deletion Reason</th>
+                  <th className="px-6 py-4 text-right">Audit Time</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-rose-100/50">
+              <tbody className="divide-y divide-error-red/10">
                 {deletedLogs.map((log, i) => (
-                  <tr key={i} className="text-rose-700/70">
+                  <tr key={i} className="text-error-red/80">
                     <td className="px-6 py-4">
                       <span className="line-through">{log.item.menu}</span>
-                      <p className="text-[9px] uppercase tracking-widest opacity-60">{log.item.date}</p>
+                      <p className="text-[9px] uppercase tracking-widest opacity-60 font-bold">{log.item.date}</p>
                     </td>
                     <td className="px-6 py-4 italic font-medium">"{log.reason}"</td>
-                    <td className="px-6 py-4 text-right text-[10px] font-black">{log.timestamp}</td>
+                    <td className="px-6 py-4 text-right text-[10px] font-bold opacity-60 uppercase">{log.timestamp}</td>
                   </tr>
                 ))}
               </tbody>

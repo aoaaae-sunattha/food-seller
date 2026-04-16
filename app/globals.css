@@ -1,28 +1,61 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #F3F4F6; /* Mist Gray */
+  --foreground: #111827; /* Slate Deep */
+  
+  --cinnabar: #E66741;
+  --slate-deep: #111827;
+  --emerald: #74B83E;
+  --amber: #FBBF24;
+  --periwinkle: #EBEBFF;
+  --champagne: #FFF4E5;
+  --error-red: #DC2626;
+  --subtle-border: #E5E7EB;
+  --surface-white: #FFFFFF;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --color-mist-gray: var(--background);
+  --color-cinnabar: var(--cinnabar);
+  --color-slate-deep: var(--slate-deep);
+  --color-emerald: var(--emerald);
+  --color-amber: var(--amber);
+  --color-periwinkle: var(--periwinkle);
+  --color-champagne: var(--champagne);
+  --color-error-red: var(--error-red);
+  --color-subtle-border: var(--subtle-border);
+  --color-surface-white: var(--surface-white);
+  
+  --font-sans: "Inter", "Noto Sans Thai", ui-sans-serif, system-ui, sans-serif;
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-size: 20px; /* Enhanced iPad base font size (+3pt) */
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Commercial Grade Components */
+@layer components {
+  .card-base {
+    @apply bg-surface-white rounded-[20px] p-6 shadow-sm border border-subtle-border;
+  }
+  
+  .badge-base {
+    @apply inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold;
+  }
+  
+  .btn-primary {
+    @apply h-11 px-5 bg-cinnabar text-white rounded-lg font-semibold flex items-center justify-center gap-2 active:scale-95 transition-transform;
+  }
+  
+  .btn-secondary {
+    @apply h-11 px-5 bg-mist-gray text-slate-deep border border-subtle-border rounded-lg font-semibold flex items-center justify-center gap-2 active:scale-95 transition-transform;
+  }
 }
 
 @keyframes scan {

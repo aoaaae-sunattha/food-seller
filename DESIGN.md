@@ -28,15 +28,15 @@ This document serves as the **Visual Source of Truth** for the Restaurant Manage
 
 ---
 
-### 3. Typography (Next-Gen Readability)
+### 3. Typography (Enhanced Readability)
 - **Primary Font:** Inter / System UI Sans (Clean, high-readability for operational data).
 - **Thai Font:** Noto Sans Thai (Weights: 400, 500, 600).
-- **Scale (Responsive):**
-  - `Data Value`: 36px / 2.25rem (Bold, Siam Deep) - Used for primary metric numbers.
-  - `Header 1`: 32px / 2rem (Desktop), 28px / 1.75rem (Tablet) - Page titles.
-  - `Header 2`: 20px / 1.25rem (Semi-bold) - Section/Card titles.
-  - `Body`: 16px / 1rem (Global standard).
-  - `Caption`: 14px / 0.875rem (Metadata, low emphasis, timestamps).
+- **Scale (Responsive - Optimized for Visibility):**
+  - `Data Value`: 40px / 2.5rem (Bold, Slate Deep) - Primary metric numbers.
+  - `Header 1`: 36px / 2.25rem (Desktop), 32px / 2rem (Tablet) - Page titles.
+  - `Header 2`: 24px / 1.5rem (Semi-bold) - Section/Card titles.
+  - `Body`: 20px / 1.25rem (New iPad Standard) - Main operational text.
+  - `Caption`: 16px / 1rem (Metadata, low emphasis, timestamps).
 
 ---
 

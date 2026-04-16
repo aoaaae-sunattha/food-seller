@@ -1,12 +1,14 @@
 {
   "nav": {
-    "dashboard": "หน้าหลัก",
+    "dashboard": "ภาพรวม",
     "receipt": "สแกนใบเสร็จ",
     "stockDeduction": "ตัดสต็อก",
-    "dailySales": "รายได้",
+    "dailySales": "ยอดขายรายวัน",
     "manageStock": "จัดการสต็อก",
-    "manageMenus": "จัดการเมนู"
+    "manageMenus": "จัดการเมนู",
+    "menu": "เมนูหลัก"
   },
+
   "dashboard": {
     "weeklyIncome": "รายได้สัปดาห์นี้",
     "weeklyExpenses": "ค่าใช้จ่ายสัปดาห์นี้",
