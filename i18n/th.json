@@ -72,7 +72,8 @@
     "ingredients": "วัตถุดิบ",
     "defaultQty": "ปริมาณต่อหม้อ",
     "loadCsv": "โหลดจาก CSV",
-    "loadCsvTemplate": "ดาวน์โหลดตัวอย่าง"
+    "loadCsvTemplate": "ดาวน์โหลดตัวอย่าง",
+    "nameRequired": "กรุณาใส่ชื่อเมนู"
   },
   "bulkImport": {
     "title": "นำเข้าข้อมูลจำนวนมาก",

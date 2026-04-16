@@ -55,6 +55,10 @@ export default function ManageMenusPage() {
   }, [])
 
   async function handleAdd() {
+    if (!newMenu.nameTh) {
+      alert((t.manageMenus as any).nameRequired || "Name Required")
+      return
+    }
     setSaving(true)
     try {
       // 1. Resolve manually typed ingredient names to real IDs
@@ -64,17 +68,18 @@ export default function ManageMenusPage() {
         
         // Check if ingredient already exists by nameTh or ID
         const existing = ingredients.find(ing => ing.id === mi.ingredientId || ing.nameTh === mi.ingredientId)
-        const unit = (mi as any).tempUnit
-        const nameFr = (mi as any).tempNameFr || mi.ingredientId
+        const unit = (mi as any).tempUnit || existing?.unit || 'kg'
+        const nameFr = (mi as any).tempNameFr || existing?.nameFr || mi.ingredientId
+        const threshold = (mi as any).tempThreshold !== undefined ? (mi as any).tempThreshold : (existing?.threshold ?? 0)
         
         if (existing) {
-          // If the unit was changed in the form, update the master ingredient
-          if (unit && unit !== existing.unit) {
-            console.log('Updating existing ingredient unit:', existing.nameTh, 'to', unit)
+          // If any core field was changed in the form, update the master ingredient
+          if (unit !== existing.unit || nameFr !== existing.nameFr || threshold !== existing.threshold) {
+            console.log('Updating existing ingredient:', existing.nameTh, 'unit:', unit, 'fr:', nameFr, 'threshold:', threshold)
             await fetch('/api/sheets/config', {
               method: 'PUT',
               headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ ...existing, unit, type: 'ingredient' })
+              body: JSON.stringify({ ...existing, nameFr, unit, threshold, type: 'ingredient' })
             })
           }
           finalIngredients.push({ ingredientId: existing.id, defaultQty: mi.defaultQty })
@@ -85,7 +90,7 @@ export default function ManageMenusPage() {
           const res = await fetch('/api/sheets/config', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ nameTh: mi.ingredientId, nameFr: nameFr, unit: newUnit, threshold: 1, type: 'ingredient' })
+            body: JSON.stringify({ nameTh: mi.ingredientId, nameFr: nameFr, unit: newUnit, threshold: threshold, type: 'ingredient' })
           })
           const data = await res.json().catch(() => ({}))
           if (res.ok) {
@@ -166,7 +171,7 @@ export default function ManageMenusPage() {
   const addIngredientRow = () => {
     setNewMenu({
       ...newMenu,
-      ingredients: [...(newMenu.ingredients || []), { ingredientId: '', defaultQty: 0, tempUnit: 'kg', tempNameFr: '' } as any]
+      ingredients: [...(newMenu.ingredients || []), { ingredientId: '', defaultQty: 0, tempUnit: 'kg', tempNameFr: '', tempThreshold: 1 } as any]
     })
   }
 
@@ -178,17 +183,18 @@ export default function ManageMenusPage() {
 
   const downloadIngredientTemplate = () => {
     const current = newMenu.ingredients || []
-    let csv = 'nameTh,nameFr,unit,qty\n'
+    let csv = 'nameTh,nameFr,unit,qty,threshold\n'
     if (current.length > 0) {
       current.forEach(mi => {
         const ing = ingredients.find(i => i.id === mi.ingredientId || i.nameTh === mi.ingredientId)
         const nameTh = ing?.nameTh || mi.ingredientId
         const nameFr = (mi as any).tempNameFr || ing?.nameFr || ''
         const unit = (mi as any).tempUnit || ing?.unit || 'kg'
-        csv += `${nameTh},${nameFr},${unit},${mi.defaultQty}\n`
+        const threshold = (mi as any).tempThreshold !== undefined ? (mi as any).tempThreshold : (ing?.threshold ?? 0)
+        csv += `${nameTh},${nameFr},${unit},${mi.defaultQty},${threshold}\n`
       })
     } else {
-      csv += 'กระเทียม,Ail,tbsp,5\nพริกขี้หนู,Piment,pcs,3\nน้ำมันพืช,Huile,ml,15\n'
+      csv += 'กระเทียม,Ail,tbsp,5,1\nพริกขี้หนู,Piment,pcs,3,1\nน้ำมันพืช,Huile,ml,15,0.5\n'
     }
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' })
     const url = URL.createObjectURL(blob)
@@ -208,20 +214,24 @@ export default function ManageMenusPage() {
     reader.onload = (event) => {
       const text = (event.target?.result as string).replace(/^\uFEFF/, '')
       const lines = text.split('\n').filter(l => l.trim() !== '').slice(1)
-      const parsed: Array<MenuIngredient & { tempUnit: string; tempNameFr: string }> = []
+      const parsed: Array<MenuIngredient & { tempUnit: string; tempNameFr: string; tempThreshold: number }> = []
       for (const line of lines) {
         const parts = parseCSVLine(line)
         const nameTh = parts[0]?.trim()
         const nameFr = parts[1]?.trim() || ''
         const unit = parts[2]?.trim() || 'kg'
         const qty = Number(parts[3]) || 0
+        const tStr = parts[4]?.trim()
+        const threshold = (tStr === '' || tStr === undefined) ? 0 : (Number(tStr) || 0)
+        
         if (!nameTh) continue
         const existing = ingredients.find(i => i.nameTh.trim().toLowerCase() === nameTh.toLowerCase())
         parsed.push({
           ingredientId: existing?.id || nameTh,
           defaultQty: qty,
           tempUnit: unit,
-          tempNameFr: nameFr || existing?.nameFr || ''
+          tempNameFr: nameFr || existing?.nameFr || '',
+          tempThreshold: threshold
         } as any)
       }
       if (parsed.length > 0) setNewMenu(m => ({ ...m, ingredients: parsed }))
@@ -273,16 +283,22 @@ export default function ManageMenusPage() {
         <div className="bg-white p-8 rounded-[2rem] shadow-xl shadow-slate-200/50 border border-amber-100 space-y-6 animate-in zoom-in-95 duration-300">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-1">
-              <label className="text-[14px] font-black text-slate-400 uppercase tracking-widest px-1">{t.manageMenus.nameTh}</label>
+              <label htmlFor="new-menu-name" className="text-[14px] font-black text-slate-400 uppercase tracking-widest px-1">
+                {t.manageMenus.nameTh}
+                {!newMenu.nameTh && <span className="text-red-500 ml-1">*</span>}
+              </label>
               <input 
                 id="new-menu-name"
-                className="w-full border border-slate-200 rounded-xl px-4 py-3 font-bold text-slate-800 bg-slate-50 focus:bg-white focus:ring-4 focus:ring-amber-500/10 focus:border-amber-500 outline-none transition-all"
+                data-testid="new-menu-name"
+                className={`w-full border rounded-xl px-4 py-3 font-bold text-slate-800 focus:ring-4 focus:ring-amber-500/10 focus:border-amber-500 outline-none transition-all ${
+                  !newMenu.nameTh ? 'border-amber-200 bg-amber-50/30' : 'border-slate-200 bg-slate-50 focus:bg-white'
+                }`}
                 value={newMenu.nameTh}
                 onChange={e => setNewMenu({ ...newMenu, nameTh: e.target.value })}
               />
             </div>
             <div className="space-y-1">
-              <label className="text-[14px] font-black text-slate-400 uppercase tracking-widest px-1">{t.manageMenus.nameFr}</label>
+              <label htmlFor="new-menu-name-fr" className="text-[14px] font-black text-slate-400 uppercase tracking-widest px-1">{t.manageMenus.nameFr}</label>
               <input 
                 id="new-menu-name-fr"
                 className="w-full border border-slate-200 rounded-xl px-4 py-3 font-bold text-slate-800 bg-slate-50 focus:bg-white focus:ring-4 focus:ring-amber-500/10 focus:border-amber-500 outline-none transition-all"
@@ -291,7 +307,7 @@ export default function ManageMenusPage() {
               />
             </div>
             <div className="space-y-1">
-              <label className="text-[14px] font-black text-slate-400 uppercase tracking-widest px-1">{t.manageMenus.price}</label>
+              <label htmlFor="new-menu-price" className="text-[14px] font-black text-slate-400 uppercase tracking-widest px-1">{t.manageMenus.price}</label>
               <NumberInput 
                 id="new-menu-price"
                 className="w-full border border-slate-200 rounded-xl px-4 py-3 font-bold text-slate-800 bg-slate-50 focus:bg-white focus:ring-4 focus:ring-amber-500/10 focus:border-amber-500 outline-none transition-all"
@@ -335,30 +351,35 @@ export default function ManageMenusPage() {
                 const foundIng = ingredients.find(ing => ing.id === mi.ingredientId || ing.nameTh === mi.ingredientId)
                 return (
                 <div key={i} className="flex gap-2 bg-slate-50 p-2 rounded-xl border border-slate-100 items-center">
-                  <div className="flex-1 flex flex-col min-w-0">
+                  <div className="flex-[2] min-w-0">
                     <input 
                       list="menu-ing-list"
                       className="w-full bg-transparent px-2 py-1 text-sm font-bold text-slate-700 outline-none border-b border-transparent focus:border-amber-500/20"
-                      placeholder="Search or Type Ingredient..."
+                      placeholder="TH Name..."
                       value={foundIng?.nameTh || mi.ingredientId}
                       onChange={e => {
                         const val = e.target.value
                         const existing = ingredients.find(ing => ing.nameTh === val)
                         updateIngredient(i, { 
                           ingredientId: val, 
-                          tempUnit: existing?.unit || (mi as any).tempUnit || 'kg' 
+                          tempUnit: existing?.unit || (mi as any).tempUnit || 'kg',
+                          tempNameFr: existing?.nameFr || (mi as any).tempNameFr || '',
+                          tempThreshold: existing?.threshold ?? (mi as any).tempThreshold ?? 0
                         } as any)
                       }}
                     />
-                    {foundIng && (
-                      <span className="px-2 text-[14px] font-bold text-slate-400 uppercase tracking-wide leading-none mt-1 truncate">
-                        {foundIng.nameFr}
-                      </span>
-                    )}
+                  </div>
+                  <div className="flex-[2] min-w-0">
+                    <input 
+                      className="w-full bg-transparent px-2 py-1 text-sm font-bold text-slate-500 outline-none border-b border-transparent focus:border-amber-500/20"
+                      placeholder="FR Name..."
+                      value={(mi as any).tempNameFr || foundIng?.nameFr || ''}
+                      onChange={e => updateIngredient(i, { tempNameFr: e.target.value } as any)}
+                    />
                   </div>
                   
                   <select
-                    className="w-20 bg-amber-50 border border-amber-200 rounded-lg px-1 py-1 text-[14px] font-black text-amber-600 outline-none cursor-pointer"
+                    className="w-16 bg-amber-50 border border-amber-200 rounded-lg px-1 py-1 text-[12px] font-black text-amber-600 outline-none cursor-pointer"
                     value={(mi as any).tempUnit || foundIng?.unit || 'kg'}
                     onChange={e => updateIngredient(i, { tempUnit: e.target.value } as any)}
                   >
@@ -379,11 +400,23 @@ export default function ManageMenusPage() {
                     <option value="tsp">tsp</option>
                   </select>
 
-                  <NumberInput 
-                    className="w-24 bg-white border border-slate-200 rounded-lg px-3 py-1 text-sm text-right font-black text-amber-600 outline-none focus:border-amber-500 shadow-sm"
-                    value={mi.defaultQty}
-                    onChange={val => updateIngredient(i, { defaultQty: val })}
-                  />
+                  <div className="flex flex-col items-center">
+                    <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1">Qty</span>
+                    <NumberInput 
+                      className="w-16 bg-white border border-slate-200 rounded-lg px-2 py-1 text-sm text-right font-black text-amber-600 outline-none focus:border-amber-500 shadow-sm"
+                      value={mi.defaultQty}
+                      onChange={val => updateIngredient(i, { defaultQty: val })}
+                    />
+                  </div>
+
+                  <div className="flex flex-col items-center">
+                    <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1">Alert ≤</span>
+                    <NumberInput 
+                      className="w-16 bg-white border border-slate-200 rounded-lg px-2 py-1 text-sm text-right font-black text-amber-600 outline-none focus:border-amber-500 shadow-sm"
+                      value={(mi as any).tempThreshold !== undefined ? (mi as any).tempThreshold : (foundIng?.threshold || 0)}
+                      onChange={val => updateIngredient(i, { tempThreshold: val } as any)}
+                    />
+                  </div>
                   
                   <button
                     type="button"
@@ -437,15 +470,19 @@ export default function ManageMenusPage() {
           <button 
             id="new-menu-save-btn"
             onClick={handleAdd}
-            disabled={saving || !newMenu.nameTh}
-            className="w-full bg-amber-600 text-white py-4 rounded-2xl font-black text-lg shadow-lg shadow-amber-600/20 hover:bg-amber-700 transition-all active:scale-[0.98] disabled:opacity-50"
+            disabled={saving}
+            className={`w-full py-4 rounded-2xl font-black text-lg shadow-lg transition-all active:scale-[0.98] disabled:opacity-50 ${
+              !newMenu.nameTh 
+                ? 'bg-slate-200 text-slate-400 cursor-not-allowed shadow-none' 
+                : 'bg-amber-600 text-white shadow-amber-600/20 hover:bg-amber-700'
+            }`}
           >
             {saving ? (
               <span className="flex items-center justify-center gap-2">
                 <span className="w-5 h-5 border-2 border-white/20 border-t-white rounded-full animate-spin" />
                 {t.common.loading}
               </span>
-            ) : t.common.save}
+            ) : !newMenu.nameTh ? ((t.manageMenus as any).nameRequired || "Name Required") : t.common.save}
           </button>
         </div>
       )}
@@ -465,20 +502,17 @@ export default function ManageMenusPage() {
                 {menu.nameFr && (
                   <p className="text-sm font-bold text-slate-400 uppercase tracking-wide leading-none truncate">{menu.nameFr}</p>
                 )}
-                <div className="flex items-center gap-2 mt-1">
-                  <span className="badge-base bg-white text-slate-500 py-0.5 px-2 text-[14px] uppercase font-bold tracking-wider border border-slate-100">
-                    {menu.ingredients.length} {t.manageMenus.ingredients}
-                  </span>
-                  <span className="text-sm font-bold text-amber-600">€{menu.pricePerBox}</span>
-                </div>
               </div>
             </div>
             
             <div className="flex items-center gap-8 shrink-0">
-              <div className="text-right hidden sm:block">
-                 <div className="font-bold text-xl text-emerald">
-                   {qty} boxes
-                 </div>
+              <div className="text-right hidden sm:flex flex-col items-end">
+                <div className="font-black text-xl text-amber-600">
+                  €{menu.pricePerBox}
+                </div>
+                <div className="text-[11px] font-black text-slate-400 uppercase tracking-widest bg-white px-2 py-0.5 rounded-lg border border-slate-100">
+                  {menu.ingredients.length} {t.manageMenus.ingredients}
+                </div>
               </div>
 
               <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">

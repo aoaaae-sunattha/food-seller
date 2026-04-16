@@ -19,10 +19,7 @@ function parseConfig(rows: string[][]): { ingredients: Ingredient[]; menus: Menu
         threshold: Number(row[5]),
       })
     } else if (row[0] === 'menu') {
-      // Logic for new schema: menu, id, nameTh, nameFr, price, ingredients
-      // If row[5] exists, it's likely the new schema. 
-      // If row[5] is empty but row[4] has ':', it might be the old schema.
-      
+      // Schema: menu, id, nameTh, nameFr, price, ingredients
       let nameFr = ''
       let price = 0
       let ingredientStr = ''
@@ -49,7 +46,7 @@ function parseConfig(rows: string[][]): { ingredients: Ingredient[]; menus: Menu
         nameTh: row[2],
         nameFr,
         pricePerBox: price,
-        ingredients: ingredientPairs,
+        ingredients: ingredientPairs
       })
     }
   }
@@ -158,7 +155,7 @@ export async function POST(req: NextRequest) {
       }
       console.log('Appending ingredient:', body.nameTh)
       await appendRows(accessToken, 'config', [[
-        'ingredient', id, body.nameTh, body.nameFr, body.unit, String(body.threshold),
+        'ingredient', id, body.nameTh, body.nameFr, body.unit, String(body.threshold)
       ]])
       return NextResponse.json({ id })
     }
@@ -174,7 +171,7 @@ export async function POST(req: NextRequest) {
         .map((i: { ingredientId: string; defaultQty: number }) => `${i.ingredientId}:${i.defaultQty}`)
         .join(',')
       await appendRows(accessToken, 'config', [[
-        'menu', id, body.nameTh, body.nameFr || '', String(body.pricePerBox), ingredientStr,
+        'menu', id, body.nameTh, body.nameFr || '', String(body.pricePerBox), ingredientStr
       ]])
       return NextResponse.json({ id })
     }
