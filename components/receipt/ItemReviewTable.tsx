@@ -2,15 +2,13 @@
 import { NumberInput } from '@/components/NumberInput';
 import { useLanguage } from '@/hooks/useLanguage';
 import type { ReceiptItem } from '@/types'
+import { Trash2, Plus, Info } from 'lucide-react'
+import { cn } from '@/lib/utils'
 
 interface Props {
   items: ReceiptItem[]
   onChange: (items: ReceiptItem[]) => void
   showAdvanced?: boolean
-}
-
-function update(items: ReceiptItem[], index: number, patch: Partial<ReceiptItem>): ReceiptItem[] {
-  return items.map((item, i) => i === index ? { ...item, ...patch } : item)
 }
 
 export default function ItemReviewTable({ items, onChange, showAdvanced = false }: Props) {
@@ -20,18 +18,15 @@ export default function ItemReviewTable({ items, onChange, showAdvanced = false 
     const item = items[index]
     const newItem = { ...item, ...patch }
     
-    // Auto-recalculate fields if base values change
     if (patch.qty !== undefined || patch.pricePerUnit !== undefined) {
       newItem.total = Number((newItem.qty * newItem.pricePerUnit).toFixed(2))
     }
     
     if (patch.netPrice !== undefined || patch.vatRate !== undefined) {
-      // TTC = HT * (1 + Rate/100)
       newItem.pricePerUnit = Number((newItem.netPrice * (1 + (newItem.vatRate / 100))).toFixed(2))
       newItem.total = Number((newItem.qty * newItem.pricePerUnit).toFixed(2))
       newItem.vatAmount = Number((newItem.total - (newItem.netPrice * newItem.qty)).toFixed(2))
     } else if (patch.pricePerUnit !== undefined && !showAdvanced) {
-      // If user edits TTC directly and NOT in advanced mode, recalculate VAT rate keeping HT fixed
       const rate = ((newItem.pricePerUnit / newItem.netPrice) - 1) * 100
       newItem.vatRate = Number(rate.toFixed(2))
       newItem.vatAmount = Number((newItem.total - (newItem.netPrice * newItem.qty)).toFixed(2))
@@ -45,71 +40,73 @@ export default function ItemReviewTable({ items, onChange, showAdvanced = false 
   }
 
   return (
-    <div className="-mx-4 overflow-x-auto">
-      <table className="w-full text-sm border-separate border-spacing-y-2 px-4">
+    <div className="overflow-x-auto rounded-xl border border-subtle-border">
+      <table className="w-full text-sm">
         <thead>
-          <tr className="text-slate-400 font-bold uppercase text-[10px] tracking-widest">
-            <th className="text-left py-2 px-2">{t.receipt.itemFr}</th>
-            <th className="text-left py-2 px-2">{t.receipt.itemTh}</th>
-            <th className="text-right py-2 px-2">{t.receipt.qty}</th>
-            <th className="text-right py-2 px-2">{t.receipt.price} (ชิ้นละ)</th>
-            <th className="text-right py-2 px-2">{t.receipt.total}</th>
-            <th className="w-8"></th>
+          <tr className="bg-mist-gray text-[10px] font-bold text-slate-400 uppercase tracking-widest border-bottom border-subtle-border">
+            <th className="text-left py-4 px-4">{t.receipt.itemFr}</th>
+            <th className="text-left py-4 px-4">{t.receipt.itemTh}</th>
+            <th className="text-center py-4 px-2">{t.receipt.qty}</th>
+            <th className="text-right py-4 px-4">Rate</th>
+            <th className="text-right py-4 px-4">Total</th>
+            <th className="w-10"></th>
           </tr>
         </thead>
-        <tbody>
+        <tbody className="divide-y divide-subtle-border">
           {items.map((item, i) => (
-            <tr key={i} className={`group transition-colors ${item.isDiscount ? 'bg-red-50/50 hover:bg-red-50' : 'bg-slate-50/50 hover:bg-slate-50'}`}>
-              <td className="py-1 px-1 first:rounded-l-xl">
+            <tr key={i} className={cn(
+              "group transition-colors hover:bg-mist-gray/30",
+              item.isDiscount && "bg-error-red/5"
+            )}>
+              <td className="py-3 px-4">
                 <div className="flex items-center gap-2">
                   {item.isDiscount && (
-                    <span className="bg-red-100 text-red-600 px-1.5 py-0.5 rounded text-[8px] font-black uppercase tracking-tighter">Discount</span>
+                    <span className="badge-base badge-danger scale-75 origin-left">DISC</span>
                   )}
                   <input
-                    id={`receipt-item-fr-${i}`}
-                    className="bg-transparent border-0 focus:ring-2 focus:ring-amber-500/20 rounded-lg px-2 py-2 w-full font-medium text-slate-700 outline-none"
+                    className="bg-transparent border-none focus:ring-0 rounded-lg py-1 w-full font-medium text-slate-500 outline-none"
                     value={item.nameFr}
                     onChange={e => updateLine(i, { nameFr: e.target.value })}
                   />
                 </div>
               </td>
-              <td className="py-1 px-1">
+              <td className="py-3 px-4">
                 <input
-                  id={`receipt-item-th-${i}`}
-                  className="bg-white border border-slate-200 focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 rounded-lg px-2 py-2 w-full font-bold text-slate-800 outline-none transition-all shadow-sm"
+                  className="bg-mist-gray/50 border border-transparent focus:border-cinnabar focus:bg-white rounded-lg px-3 py-1.5 w-full font-bold text-slate-deep outline-none transition-all"
                   value={item.nameTh}
                   placeholder="Thai name..."
                   onChange={e => updateLine(i, { nameTh: e.target.value })}
                 />
               </td>
-              <td className="py-1 px-1">
+              <td className="py-3 px-2">
                 <NumberInput
-                  id={`receipt-item-qty-${i}`}
-                  className="bg-transparent border-0 focus:ring-2 focus:ring-amber-500/20 rounded-lg px-2 py-2 w-16 text-right font-medium text-slate-600 outline-none"
+                  className="bg-transparent border-none text-center font-bold text-slate-600 outline-none w-full"
                   value={item.qty}
                   onChange={val => updateLine(i, { qty: val })}
                 />
               </td>
-              <td className="py-1 px-1">
-                <NumberInput
-                  id={`receipt-item-price-${i}`}
-                  className={`${item.isDiscount ? 'bg-red-100/50 border-red-200 text-red-700' : 'bg-amber-100/50 border-amber-200 text-slate-800'} border focus:bg-white focus:ring-2 focus:ring-amber-500/20 rounded-lg px-2 py-2 w-24 text-right font-black outline-none transition-all`}
-                  value={item.pricePerUnit}
-                  onChange={val => updateLine(i, { pricePerUnit: val })}
-                />
+              <td className="py-3 px-4">
+                <div className="flex items-center justify-end gap-1">
+                   <span className="text-slate-300 font-bold">€</span>
+                   <NumberInput
+                    className="bg-mist-gray/50 border border-transparent focus:border-cinnabar focus:bg-white rounded-lg px-2 py-1.5 w-20 text-right font-bold text-slate-deep outline-none"
+                    value={item.pricePerUnit}
+                    onChange={val => updateLine(i, { pricePerUnit: val })}
+                  />
+                </div>
               </td>
-              <td className={`py-1 px-1 text-right font-black ${item.isDiscount ? 'text-red-600' : 'text-slate-900'}`}>
-                {item.isDiscount && item.total > 0 ? '-' : ''}€{Math.abs(item.total).toFixed(2)}
+              <td className={cn(
+                "py-3 px-4 text-right font-bold text-base",
+                item.isDiscount ? "text-error-red" : "text-slate-deep"
+              )}>
+                €{Math.abs(item.total).toFixed(2)}
               </td>
-              <td className="py-1 px-2 last:rounded-r-xl text-center">
+              <td className="py-3 px-2 text-center">
                 <button
                   onClick={() => deleteLine(i)}
-                  className="p-2 text-slate-300 hover:text-red-500 transition-colors rounded-lg hover:bg-red-50"
-                  aria-label="Delete row"
+                  className="w-8 h-8 rounded-lg text-slate-300 hover:text-error-red hover:bg-error-red/10 flex items-center justify-center transition-all opacity-0 group-hover:opacity-100"
                 >
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                  </svg>
+                  <Trash2 size={16} />
                 </button>
               </td>
             </tr>
@@ -119,4 +116,3 @@ export default function ItemReviewTable({ items, onChange, showAdvanced = false 
     </div>
   )
 }
-

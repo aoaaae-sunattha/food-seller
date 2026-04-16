@@ -3,9 +3,10 @@
     "dashboard": "Tableau de bord",
     "receipt": "Scanner reçu",
     "stockDeduction": "Déduire stock",
-    "dailySales": "Revenus",
+    "dailySales": "Ventes du jour",
     "manageStock": "Gérer le stock",
-    "manageMenus": "Gérer les menus"
+    "manageMenus": "Gérer les menus",
+    "menu": "Menu principal"
   },
   "dashboard": {
     "weeklyIncome": "Revenus cette semaine",

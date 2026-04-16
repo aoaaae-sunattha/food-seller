@@ -1,34 +1,33 @@
 import type { Metadata } from 'next'
+import { Inter, Noto_Sans_Thai } from 'next/font/google'
 import './globals.css'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import SessionProviderWrapper from '@/components/SessionProviderWrapper'
 import NavBar from '@/components/NavBar'
-import LanguageSelector from '@/components/LanguageSelector'
 import CommonDatalists from '@/components/CommonDatalists'
 
+const inter = Inter({ subsets: ['latin'], variable: '--font-inter' })
+const notoThai = Noto_Sans_Thai({ subsets: ['thai'], variable: '--font-noto-thai' })
+
 export const metadata: Metadata = {
-  title: 'ร้านอาหาร Manager',
-  viewport: 'width=device-width, initial-scale=1, maximum-scale=1',
+  title: 'Siam Manager — Professional Kitchen OS',
+  viewport: 'width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no',
 }
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   const session = await getServerSession(authOptions)
   return (
-    <html lang="th">
-      <body className="bg-slate-50 text-slate-900 min-h-screen font-sans antialiased">
+    <html lang="th" className={`${inter.variable} ${notoThai.variable}`}>
+      <body className="bg-background text-foreground min-h-screen font-sans antialiased flex overflow-x-hidden">
         <SessionProviderWrapper session={session}>
-          <header className="sticky top-0 z-40 w-full bg-white/80 backdrop-blur-md border-b border-slate-200">
-            <div className="max-w-3xl mx-auto px-6 h-16 flex items-center justify-between">
-              <span className="font-extrabold text-xl tracking-tight text-amber-600">🍜 ร้านอาหาร</span>
-              <LanguageSelector />
+          <NavBar />
+          <main className="flex-1 lg:ml-[240px] md:ml-[80px] p-6 lg:p-10 transition-all duration-300 min-h-screen">
+            <div className="max-w-[1600px] mx-auto">
+              {children}
             </div>
-          </header>
-          <main className="max-w-3xl mx-auto px-6 py-8 pb-32">
-            {children}
           </main>
           <CommonDatalists />
-          <NavBar />
         </SessionProviderWrapper>
       </body>
     </html>

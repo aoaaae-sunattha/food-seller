@@ -1,11 +1,12 @@
 {
   "nav": {
-    "dashboard": "Main Page",
-    "receipt": "Scan receipt",
+    "dashboard": "Dashboard",
+    "receipt": "Scan Receipt",
     "stockDeduction": "Stock Deduction",
-    "dailySales": "Income",
-    "manageStock": "Stock Management",
-    "manageMenus": "Menu management"
+    "dailySales": "Daily Sales",
+    "manageStock": "Manage Stock",
+    "manageMenus": "Manage Menus",
+    "menu": "Main Menu"
   },
   "dashboard": {
     "weeklyIncome": "Weekly Income",

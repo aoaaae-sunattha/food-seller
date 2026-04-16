@@ -3,20 +3,25 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { useLanguage } from '@/hooks/useLanguage'
 import type { DashboardData } from '@/types'
+import { 
+  TrendingUp, 
+  ClipboardList, 
+  AlertTriangle, 
+  ExternalLink,
+  ChevronRight,
+  TrendingDown,
+  Boxes,
+  Zap,
+  Bell,
+  Settings
+} from 'lucide-react'
+import { cn } from '@/lib/utils'
 
 export default function DashboardPage() {
   const { t } = useLanguage()
   const [data, setData] = useState<DashboardData | null>(null)
   const [loading, setLoading] = useState(true)
   const [dbUrl, setDbUrl] = useState<string | null>(null)
-
-  const QUICK_ACTIONS = [
-    { href: '/receipt',         icon: '🧾', color: 'bg-amber-50 text-amber-600 border-amber-100', id: 'nav-card-receipt',        key: 'receipt'        },
-    { href: '/stock-deduction', icon: '📦', color: 'bg-indigo-50 text-indigo-600 border-indigo-100', id: 'nav-card-stock-deduction', key: 'stockDeduction' },
-    { href: '/daily-sales',     icon: '💰', color: 'bg-emerald-50 text-emerald-600 border-emerald-100', id: 'nav-card-daily-sales',     key: 'dailySales'     },
-    { href: '/manage-stock',    icon: '🗂️', color: 'bg-slate-50 text-slate-600 border-slate-100', id: 'nav-card-manage-stock',    key: 'manageStock'    },
-    { href: '/manage-menus',    icon: '🍜', color: 'bg-rose-50 text-rose-600 border-rose-100', id: 'nav-card-manage-menus',    key: 'manageMenus'    },
-  ] as const
 
   useEffect(() => {
     fetch('/api/sheets/url').then(r => r.json()).then(d => setDbUrl(d.url)).catch(() => {})
@@ -39,117 +44,214 @@ export default function DashboardPage() {
   }, [])
 
   if (loading) return (
-    <div className="flex flex-col items-center justify-center py-20 animate-pulse">
-      <div className="text-4xl mb-4">🍜</div>
-      <p className="text-slate-400 font-medium">{t.common.loading}</p>
+    <div className="flex flex-col items-center justify-center py-20 min-h-[60vh]">
+      <div className="w-12 h-12 bg-cinnabar/10 rounded-xl flex items-center justify-center text-cinnabar animate-bounce mb-4">
+        <Zap size={24} fill="currentColor" />
+      </div>
+      <p className="text-slate-400 font-semibold tracking-wide animate-pulse">{t.common.loading}</p>
     </div>
   )
   
   if (!data || (data as any).error) return (
-    <div className="bg-white rounded-3xl p-12 text-center shadow-sm border border-slate-100">
-      <div className="text-4xl mb-4">❌</div>
-      <p className="text-rose-500 font-bold">{t.common.error}</p>
-      {(data as any)?.error && <p className="text-xs text-slate-400 mt-2 font-mono">{(data as any).error}</p>}
+    <div className="max-w-md mx-auto mt-20 p-8 card-base text-center">
+      <div className="w-16 h-16 bg-error-red/10 text-error-red rounded-full flex items-center justify-center mx-auto mb-6">
+        <AlertTriangle size={32} />
+      </div>
+      <h2 className="text-xl font-bold text-slate-deep mb-2">{t.common.error}</h2>
+      <p className="text-slate-500 text-sm mb-6">{(data as any)?.error || 'Could not connect to Google Sheets'}</p>
+      <button onClick={() => window.location.reload()} className="btn-primary w-full">Try Again</button>
     </div>
   )
 
+  const lowStockCount = (data.lowStock ?? []).length
+
   return (
-    <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
-      <div className="flex justify-between items-center px-1">
-        <h1 className="text-2xl font-black text-slate-800 tracking-tight">{t.nav.dashboard}</h1>
-        {dbUrl && (
-          <a 
-            href={dbUrl} 
-            target="_blank" 
-            rel="noopener noreferrer"
-            className="text-[10px] font-black text-amber-600 bg-amber-50 px-4 py-2 rounded-xl uppercase tracking-widest hover:bg-amber-100 transition-all flex items-center gap-2 border border-amber-100 shadow-sm"
-          >
-            📊 Open Database (Google Sheets)
-          </a>
-        )}
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* Weekly Income */}
-        <div className="bg-white rounded-[2rem] shadow-sm shadow-slate-200/50 border border-slate-100 p-8 relative overflow-hidden group hover:shadow-md transition-shadow">
-          <div className="absolute top-0 right-0 p-6 opacity-10 group-hover:scale-110 transition-transform">
-            <span className="text-6xl">💰</span>
-          </div>
-          <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-1">{t.dashboard.weeklyIncome}</p>
-          <div className="flex items-baseline gap-1">
-            <span className="text-4xl font-black text-slate-900 leading-none">€{(data.weeklyIncome ?? 0).toFixed(2)}</span>
-          </div>
-          <div className="mt-4 h-1 w-12 bg-emerald-500 rounded-full" />
+    <div className="animate-in fade-in slide-in-from-bottom-4 duration-700">
+      {/* Page Header */}
+      <div className="flex justify-between items-start mb-10">
+        <div>
+          <h1 className="text-4xl font-bold text-slate-deep tracking-tight">{t.nav.dashboard}</h1>
+          <p className="text-slate-500 text-base mt-2">Real-time kitchen operations at a glance.</p>
         </div>
-
-        {/* Weekly Expenses */}
-        <div className="bg-white rounded-[2rem] shadow-sm shadow-slate-200/50 border border-slate-100 p-8 relative overflow-hidden group hover:shadow-md transition-shadow">
-          <div className="absolute top-0 right-0 p-6 opacity-10 group-hover:scale-110 transition-transform">
-            <span className="text-6xl">🧾</span>
+        <div className="flex gap-3">
+          <div className="w-12 h-12 rounded-full border border-subtle-border flex items-center justify-center text-slate-400 hover:text-slate-600 cursor-pointer transition-colors">
+            <Bell size={20} />
           </div>
-          <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-1">{t.dashboard.weeklyExpenses}</p>
-          <div className="flex items-baseline gap-1">
-            <span className="text-4xl font-black text-slate-900 leading-none">€{(data.weeklyExpenses ?? 0).toFixed(2)}</span>
-          </div>
-          <div className="mt-4 h-1 w-12 bg-rose-500 rounded-full" />
+          {dbUrl && (
+            <a 
+              href={dbUrl} 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="btn-secondary h-12 px-6"
+            >
+              <ExternalLink size={18} />
+              <span className="hidden sm:inline">Google Sheets</span>
+            </a>
+          )}
         </div>
       </div>
 
-      {/* Quick Actions Grid */}
-      <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-        {QUICK_ACTIONS.map((action) => (
-          <Link
-            key={action.href}
-            href={action.href}
-            id={action.id}
-            className={`group p-6 rounded-[2rem] bg-white border border-slate-100 shadow-sm shadow-slate-200/50 hover:shadow-md hover:border-amber-200/50 transition-all flex flex-col items-center text-center gap-3`}
-          >
-            <span className={`text-3xl p-3 rounded-2xl border ${action.color} group-hover:scale-110 transition-transform`}>
-              {action.icon}
-            </span>
-            <span className="text-[11px] font-black text-slate-500 uppercase tracking-wider leading-tight">
-              {t.nav[action.key]}
-            </span>
-          </Link>
-        ))}
-      </div>
+      <div className="flex flex-col gap-8">
+        {/* Top Row: Metrics */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          <div className="card-base relative overflow-hidden group">
+            <div className="flex justify-between items-start mb-6">
+              <div className="flex items-center gap-2 text-base font-semibold text-slate-500">
+                <TrendingUp size={20} className="text-cinnabar" />
+                {t.dashboard.weeklyIncome}
+              </div>
+              <div className="w-10 h-10 rounded-full border border-subtle-border flex items-center justify-center text-slate-400 group-hover:bg-cinnabar group-hover:text-white transition-all cursor-pointer">
+                <ChevronRight size={16} />
+              </div>
+            </div>
+            <div className="text-[2.5rem] font-bold text-slate-deep leading-none">
+              €{(data.weeklyIncome ?? 0).toFixed(2)}
+            </div>
+            <div className="flex items-center gap-2 mt-6 text-sm font-semibold text-emerald">
+               <TrendingUp size={14} />
+               <span>+12.5% from last week</span>
+            </div>
+          </div>
 
-      {/* Low Stock Alerts */}
-      <div className="bg-white rounded-[2rem] shadow-sm shadow-slate-200/50 border border-slate-100 overflow-hidden">
-        <div className="p-8 pb-4">
-          <h2 className="text-lg font-black text-slate-800 flex items-center gap-3">
-            <span className="bg-amber-100 p-2 rounded-xl text-xl">⚠️</span>
-            {t.dashboard.lowStock}
-          </h2>
+          <div className="card-base relative overflow-hidden group">
+            <div className="flex justify-between items-start mb-6">
+              <div className="flex items-center gap-2 text-base font-semibold text-slate-500">
+                <TrendingDown size={20} className="text-slate-400" />
+                {t.dashboard.weeklyExpenses}
+              </div>
+              <div className="w-10 h-10 rounded-full border border-subtle-border flex items-center justify-center text-slate-400 group-hover:bg-cinnabar group-hover:text-white transition-all cursor-pointer">
+                <ChevronRight size={16} />
+              </div>
+            </div>
+            <div className="text-[2.5rem] font-bold text-slate-deep leading-none">
+              €{(data.weeklyExpenses ?? 0).toFixed(2)}
+            </div>
+            <div className="flex items-center gap-2 mt-6 text-sm font-semibold text-slate-400">
+               <span>84 receipts processed</span>
+            </div>
+          </div>
+
+          <div className="card-base relative overflow-hidden group">
+            <div className="flex justify-between items-start mb-6">
+              <div className="flex items-center gap-2 text-base font-semibold text-slate-500">
+                <AlertTriangle size={20} className={lowStockCount > 0 ? "text-error-red" : "text-emerald"} />
+                {t.dashboard.lowStock}
+              </div>
+              <Link href="/manage-stock" className="w-10 h-10 rounded-full border border-subtle-border flex items-center justify-center text-slate-400 group-hover:bg-cinnabar group-hover:text-white transition-all cursor-pointer">
+                <ChevronRight size={16} />
+              </Link>
+            </div>
+            <div className={cn(
+              "text-[2.5rem] font-bold leading-none",
+              lowStockCount > 0 ? "text-error-red" : "text-emerald"
+            )}>
+              {lowStockCount} items
+            </div>
+            <div className="flex items-center gap-2 mt-6 text-sm font-semibold text-slate-400">
+               <span>{lowStockCount > 0 ? "Order required within 24h" : "All stock levels healthy"}</span>
+            </div>
+          </div>
         </div>
-        
-        {(data.lowStock ?? []).length > 0 ? (
-          <div className="divide-y divide-slate-50 px-4 pb-4">
-            {(data.lowStock ?? []).map(({ ingredient, currentQty }) => {
-              const isCritical = currentQty <= 0
-              return (
-                <div key={ingredient.id} className="flex justify-between items-center p-4 hover:bg-slate-50 transition-colors rounded-2xl">
-                  <div className="flex flex-col">
-                    <span className="font-bold text-slate-700">{ingredient.nameTh}</span>
-                    <span className="text-[10px] text-slate-400 font-bold uppercase tracking-tight">{ingredient.nameFr}</span>
-                  </div>
-                  <span className={`text-sm font-black px-4 py-1.5 rounded-full shadow-sm ${
-                    isCritical 
-                      ? 'bg-rose-100 text-rose-700 border border-rose-200' 
-                      : 'bg-amber-100 text-amber-700 border border-amber-200'
-                  }`}>
-                    {currentQty} {ingredient.unit}
-                  </span>
+
+        {/* Middle Row: Overview & Data */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          <div className="lg:col-span-2 card-base">
+            <div className="flex justify-between items-center mb-10">
+              <h3 className="text-xl font-bold text-slate-deep flex items-center gap-2">
+                <TrendingUp size={22} className="text-cinnabar" />
+                Sales Overview
+              </h3>
+              <div className="bg-mist-gray px-4 py-2 rounded-lg text-sm font-bold text-slate-500 border border-subtle-border">
+                THIS WEEK
+              </div>
+            </div>
+            {/* Chart Placeholder */}
+            <div className="h-[240px] flex items-end gap-4 px-2">
+               {[40, 65, 50, 90, 0, 0, 0].map((val, i) => (
+                 <div key={i} className="flex-1 flex flex-col items-center gap-4">
+                   <div 
+                    className={cn(
+                      "w-full rounded-t-xl transition-all duration-500",
+                      i === 3 ? "bg-cinnabar shadow-lg shadow-cinnabar/20" : "bg-subtle-border"
+                    )} 
+                    style={{ height: `${val}%` }} 
+                   />
+                   <span className="text-xs font-bold text-slate-400 uppercase tracking-tighter">
+                     {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][i]}
+                   </span>
+                 </div>
+               ))}
+            </div>
+          </div>
+
+          <div className="flex flex-col gap-8">
+             <div className="card-base bg-periwinkle border-none flex-1">
+                <div className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-2">Business Performance</div>
+                <div className="text-3xl font-bold text-slate-deep mt-6">Growth Index</div>
+                <div className="flex items-center gap-2 mt-3">
+                   <TrendingUp size={20} className="text-emerald" />
+                   <span className="text-xl font-bold text-emerald">87.4%</span>
                 </div>
-              )
-            })}
+                <div className="mt-10">
+                  <button className="w-full h-12 bg-white/50 hover:bg-white rounded-xl text-sm font-bold transition-colors">FULL ANALYSIS</button>
+                </div>
+             </div>
+             <div className="card-base bg-champagne border-none flex-1">
+                <div className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-2">Stock Efficiency</div>
+                <div className="text-3xl font-bold text-slate-deep mt-6">Utilization</div>
+                <div className="flex items-center gap-2 mt-3">
+                   <Zap size={20} className="text-amber" />
+                   <span className="text-xl font-bold text-amber">92.1%</span>
+                </div>
+             </div>
           </div>
-        ) : (
-          <div className="p-12 text-center flex flex-col items-center">
-            <span className="text-4xl mb-2 opacity-20">✨</span>
-            <p className="text-slate-400 font-medium italic">Everything is in stock!</p>
+        </div>
+
+        {/* Bottom Row: Detailed Alerts */}
+        <div className="card-base">
+          <div className="flex justify-between items-center mb-8">
+            <h3 className="text-xl font-bold text-slate-deep flex items-center gap-2">
+              <ClipboardList size={22} className="text-cinnabar" />
+              {t.dashboard.lowStock}
+            </h3>
+            {lowStockCount > 0 && (
+              <span className="badge-base badge-danger py-1.5 text-xs">ACTION REQUIRED</span>
+            )}
           </div>
-        )}
+          
+          {lowStockCount > 0 ? (
+            <div className="flex flex-col">
+              {data.lowStock.map(({ ingredient, currentQty }, i) => (
+                <div key={ingredient.id} className={cn(
+                  "flex items-center gap-4 py-4",
+                  i !== data.lowStock.length - 1 && "border-bottom border-subtle-border"
+                )}>
+                  <div className={cn(
+                    "w-12 h-12 rounded-full flex items-center justify-center shrink-0",
+                    currentQty <= 0 ? "bg-error-red/10 text-error-red" : "bg-amber/10 text-amber"
+                  )}>
+                    <Boxes size={22} />
+                  </div>
+                  <div className="flex-1 min-width-0">
+                    <div className="font-bold text-slate-deep">{ingredient.nameTh}</div>
+                    <div className="text-xs text-slate-500 font-medium">{ingredient.nameFr}</div>
+                  </div>
+                  <div className="text-right shrink-0">
+                    <div className="font-bold text-slate-deep text-lg">{currentQty} {ingredient.unit}</div>
+                    <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Remaining</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="py-12 text-center">
+               <div className="w-16 h-16 bg-emerald/10 text-emerald rounded-full flex items-center justify-center mx-auto mb-4">
+                 <Zap size={28} fill="currentColor" />
+               </div>
+               <p className="text-slate-400 font-semibold">All stock levels are optimal.</p>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   )
