@@ -260,7 +260,7 @@ export default function ReceiptPage() {
           <div className="card-base space-y-10">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
               <div className="space-y-3">
-                <label className="text-xs font-bold text-slate-400 uppercase tracking-widest ml-1">Purchase Date</label>
+                <label className="text-sm font-bold text-slate-400 uppercase tracking-widest ml-1">Purchase Date</label>
                 <input 
                   type="date"
                   className="w-full h-16 bg-mist-gray border-none rounded-xl px-5 text-xl font-bold text-slate-deep focus:ring-2 focus:ring-cinnabar/20 outline-none transition-all"
@@ -269,7 +269,7 @@ export default function ReceiptPage() {
                 />
               </div>
               <div className="space-y-3">
-                <label className="text-xs font-bold text-slate-400 uppercase tracking-widest ml-1">Total Amount Paid</label>
+                <label className="text-sm font-bold text-slate-400 uppercase tracking-widest ml-1">Total Amount Paid</label>
                 <div className="relative">
                   <span className="absolute left-5 top-1/2 -translate-y-1/2 font-bold text-cinnabar text-xl">€</span>
                   <input 
@@ -284,7 +284,7 @@ export default function ReceiptPage() {
             </div>
 
             <div className="space-y-3">
-              <label className="text-xs font-bold text-slate-400 uppercase tracking-widest ml-1">{t.receipt.store}</label>
+              <label className="text-sm font-bold text-slate-400 uppercase tracking-widest ml-1">{t.receipt.store}</label>
               <input 
                 className="w-full h-16 bg-mist-gray border-none rounded-xl px-5 text-xl font-bold text-slate-deep focus:ring-2 focus:ring-cinnabar/20 outline-none transition-all"
                 value={store}
@@ -306,7 +306,7 @@ export default function ReceiptPage() {
                    </div>
                    <button 
                     onClick={handleReconcile}
-                    className="text-xs font-bold bg-cinnabar text-white px-4 py-2 rounded-xl active:scale-95 transition-all shadow-md shadow-cinnabar/20"
+                    className="text-sm font-bold bg-cinnabar text-white px-4 py-2 rounded-xl active:scale-95 transition-all shadow-md shadow-cinnabar/20"
                    >
                      RECONCILE NOW
                    </button>
@@ -349,7 +349,7 @@ export default function ReceiptPage() {
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead>
-                  <tr className="bg-mist-gray text-xs font-bold text-slate-400 uppercase tracking-widest border-bottom border-subtle-border">
+                  <tr className="bg-mist-gray text-sm font-bold text-slate-400 uppercase tracking-widest border-bottom border-subtle-border">
                     <th className="text-left py-5 px-8">Date</th>
                     <th className="text-left py-5 px-8">Store</th>
                     <th className="text-right py-5 px-8">Total</th>
@@ -366,7 +366,7 @@ export default function ReceiptPage() {
                         <td className="py-5 px-8 text-right text-base font-bold text-slate-deep">€{Number(h.total).toFixed(2)}</td>
                         <td className="py-5 px-8 text-center">
                           <span className={cn(
-                            "badge-base py-1.5 px-4 text-xs",
+                            "badge-base py-1.5 px-4 text-sm",
                             Number(h.discrepancy) === 0 ? "badge-success" : "badge-warning"
                           )}>
                             {Number(h.discrepancy) === 0 ? 'CLEARED' : 'ADJUSTED'}
@@ -406,7 +406,7 @@ export default function ReceiptPage() {
                                ) : (
                                  <table className="w-full text-sm">
                                    <thead>
-                                     <tr className="text-xs font-bold text-slate-400 uppercase border-bottom border-subtle-border">
+                                     <tr className="text-sm font-bold text-slate-400 uppercase border-bottom border-subtle-border">
                                        <th className="text-left pb-4">Item</th>
                                        <th className="text-center pb-4">Qty</th>
                                        <th className="text-right pb-4">Price</th>
@@ -418,7 +418,7 @@ export default function ReceiptPage() {
                                        <tr key={idx}>
                                          <td className="py-4">
                                            <div className="font-bold text-slate-deep text-base">{item.nameTh}</div>
-                                           <div className="text-xs text-slate-400 font-medium">{item.nameFr}</div>
+                                           <div className="text-sm text-slate-400 font-medium">{item.nameFr}</div>
                                          </td>
                                          <td className="py-4 text-center font-bold text-slate-500 text-base">{item.qty} {item.unit}</td>
                                          <td className="py-4 text-right font-medium text-slate-500 text-base">€{item.pricePerUnit.toFixed(2)}</td>

@@ -65,6 +65,8 @@
     "title": "Manage Menus",
     "add": "Add Menu",
     "name": "Menu Name",
+    "nameTh": "Name (Thai)",
+    "nameFr": "Name (French)",
     "price": "Price/box (€)",
     "ingredients": "Ingredients",
     "defaultQty": "Qty per batch",

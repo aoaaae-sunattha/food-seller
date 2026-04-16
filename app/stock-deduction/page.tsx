@@ -143,7 +143,7 @@ export default function StockDeductionPage() {
         <button 
           id="stock-quick-add-toggle"
           onClick={() => setShowQuickAdd(!showQuickAdd)}
-          className="text-slate-400 text-[10px] font-black uppercase tracking-widest flex items-center gap-1 hover:text-slate-600 transition-colors"
+          className="text-slate-400 text-[14px] font-black uppercase tracking-widest flex items-center gap-1 hover:text-slate-600 transition-colors"
         >
           {showQuickAdd ? t.common.cancel : `✨ ${t.manageStock.add} (Quick)`}
         </button>
@@ -160,7 +160,7 @@ export default function StockDeductionPage() {
       )}
       
       <section className="space-y-4">
-        <label className="text-xs font-bold text-slate-400 uppercase tracking-widest px-1">{t.stock.selectMenus}</label>
+        <label className="text-sm font-bold text-slate-400 uppercase tracking-widest px-1">{t.stock.selectMenus}</label>
         <div className="bg-white p-6 rounded-[2rem] shadow-sm border border-slate-100">
           <MenuChips menus={menus} selected={selectedMenus} onChange={setSelectedMenus} t={t} />
         </div>

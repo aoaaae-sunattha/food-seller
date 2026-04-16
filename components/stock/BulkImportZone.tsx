@@ -150,13 +150,13 @@ export default function BulkImportZone({ ingredients, onImportComplete }: Props)
     <div className="flex flex-col items-end gap-2">
       <button
         onClick={() => setShow(true)}
-        className="btn-secondary h-10 px-4 text-xs"
+        className="btn-secondary h-10 px-4 text-sm"
       >
         <FileUp size={16} /> {t.bulkImport.title}
       </button>
       <button
         onClick={downloadTemplate}
-        className="flex items-center gap-1.5 text-[10px] font-bold text-slate-400 uppercase tracking-widest hover:text-cinnabar transition-colors"
+        className="flex items-center gap-1.5 text-[14px] font-bold text-slate-400 uppercase tracking-widest hover:text-cinnabar transition-colors"
       >
         <Download size={10} /> {t.bulkImport.downloadTemplate}
       </button>
@@ -194,14 +194,14 @@ export default function BulkImportZone({ ingredients, onImportComplete }: Props)
            <FileUp size={28} />
         </div>
         <p className="font-bold text-slate-600">{t.bulkImport.dropzone}</p>
-        <p className="text-[10px] font-bold text-slate-400 mt-1 uppercase tracking-widest">CSV Format Only</p>
+        <p className="text-[14px] font-bold text-slate-400 mt-1 uppercase tracking-widest">CSV Format Only</p>
       </div>
 
       {items.length > 0 && (
         <div className="space-y-6 animate-in fade-in duration-300">
           <div className="max-h-80 overflow-auto rounded-xl border border-subtle-border">
             <table className="w-full text-sm">
-              <thead className="bg-mist-gray text-[10px] font-bold text-slate-400 uppercase tracking-widest sticky top-0 z-10 border-bottom border-subtle-border">
+              <thead className="bg-mist-gray text-[14px] font-bold text-slate-400 uppercase tracking-widest sticky top-0 z-10 border-bottom border-subtle-border">
                 <tr>
                   <th className="px-4 py-3 text-left">Status</th>
                   <th className="px-4 py-3 text-left">Ingredient</th>
@@ -225,7 +225,7 @@ export default function BulkImportZone({ ingredients, onImportComplete }: Props)
                     </td>
                     <td className="px-4 py-3">
                       <div className="font-bold text-slate-deep">{it.nameTh}</div>
-                      <div className="text-[10px] text-slate-400 font-medium">{it.nameFr}</div>
+                      <div className="text-[14px] text-slate-400 font-medium">{it.nameFr}</div>
                     </td>
                     <td className="px-4 py-3 text-center font-bold text-slate-500">{it.unit}</td>
                     <td className="px-4 py-3 text-right font-bold text-slate-600">{it.threshold}</td>
@@ -237,7 +237,7 @@ export default function BulkImportZone({ ingredients, onImportComplete }: Props)
           
           <div className="flex flex-col gap-4">
              {warningCount > 0 && (
-              <div className="flex items-center gap-2 text-xs font-bold text-amber bg-amber/5 p-3 rounded-lg border border-amber/10">
+              <div className="flex items-center gap-2 text-sm font-bold text-amber bg-amber/5 p-3 rounded-lg border border-amber/10">
                 <AlertTriangle size={16} />
                 {t.bulkImport.warningNote.replace('{{count}}', String(warningCount))}
               </div>

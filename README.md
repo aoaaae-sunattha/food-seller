@@ -1,4 +1,4 @@
-# Restaurant Manager
+# Lawan Thai Traiteur
 
 A tablet-optimized web application for managing Thai restaurant operations.
 

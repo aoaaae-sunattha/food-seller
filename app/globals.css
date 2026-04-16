@@ -46,7 +46,7 @@ body {
   }
   
   .badge-base {
-    @apply inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold;
+    @apply inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold;
   }
   
   .btn-primary {

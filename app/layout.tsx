@@ -11,7 +11,7 @@ const inter = Inter({ subsets: ['latin'], variable: '--font-inter' })
 const notoThai = Noto_Sans_Thai({ subsets: ['thai'], variable: '--font-noto-thai' })
 
 export const metadata: Metadata = {
-  title: 'Siam Manager — Professional Kitchen OS',
+  title: 'Lawan Thai Traiteur — Professional Kitchen OS',
   viewport: 'width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no',
 }
 

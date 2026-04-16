@@ -30,7 +30,7 @@ export default function LanguageSelector() {
           >
             <span className="text-base grayscale-[0.2]">{flag}</span>
             <span className={cn(
-                "text-[10px] font-bold uppercase tracking-widest",
+                "text-[14px] font-bold uppercase tracking-widest",
                 isActive ? "opacity-100" : "opacity-0 lg:group-hover:opacity-100"
             )}>
               {l}

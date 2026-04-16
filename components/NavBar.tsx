@@ -35,10 +35,13 @@ export default function NavBar() {
         <div className="w-12 h-12 bg-cinnabar rounded-2xl flex items-center justify-center text-white shrink-0 shadow-lg shadow-cinnabar/20">
           <Zap size={28} fill="currentColor" />
         </div>
-        <span className="font-bold text-2xl text-slate-deep tracking-tight hidden lg:block">Siam Manager</span>
+        <div className="hidden lg:flex flex-col">
+          <span className="font-bold text-xl text-slate-deep tracking-tight leading-none">Lawan</span>
+          <span className="font-bold text-[14px] text-cinnabar tracking-wider uppercase mt-1">Thai Traiteur</span>
+        </div>
       </div>
 
-      <div className="px-6 mb-6 text-xs font-bold text-slate-400 uppercase tracking-widest hidden lg:block">
+      <div className="px-6 mb-6 text-sm font-bold text-slate-400 uppercase tracking-widest hidden lg:block">
         {t.nav.menu || 'Menu'}
       </div>
 

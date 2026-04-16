@@ -65,6 +65,8 @@
     "title": "Gérer les menus",
     "add": "Ajouter un menu",
     "name": "Nom du menu",
+    "nameTh": "Nom (Thaï)",
+    "nameFr": "Nom (Français)",
     "price": "Prix/boîte (€)",
     "ingredients": "Ingrédients",
     "defaultQty": "Qté par lot",

@@ -215,7 +215,7 @@ export default function ManageStockPage() {
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             <div className="space-y-3">
-              <label className="text-xs font-bold text-slate-400 uppercase tracking-widest ml-1">{t.manageStock.name} (TH)</label>
+              <label className="text-sm font-bold text-slate-400 uppercase tracking-widest ml-1">{t.manageStock.name} (TH)</label>
               <input
                 className="w-full h-14 bg-mist-gray border-none rounded-xl px-5 text-xl font-bold text-slate-deep focus:ring-2 focus:ring-cinnabar/20 outline-none transition-all"
                 value={newIng.nameTh}
@@ -223,7 +223,7 @@ export default function ManageStockPage() {
               />
             </div>
             <div className="space-y-3">
-              <label className="text-xs font-bold text-slate-400 uppercase tracking-widest ml-1">{t.manageStock.name} (FR)</label>
+              <label className="text-sm font-bold text-slate-400 uppercase tracking-widest ml-1">{t.manageStock.name} (FR)</label>
               <input
                 className="w-full h-14 bg-mist-gray border-none rounded-xl px-5 text-xl font-bold text-slate-deep focus:ring-2 focus:ring-cinnabar/20 outline-none transition-all"
                 value={newIng.nameFr}
@@ -231,7 +231,7 @@ export default function ManageStockPage() {
               />
             </div>
             <div className="space-y-3">
-              <label className="text-xs font-bold text-slate-400 uppercase tracking-widest ml-1">{t.manageStock.unit}</label>
+              <label className="text-sm font-bold text-slate-400 uppercase tracking-widest ml-1">{t.manageStock.unit}</label>
               <select
                 className="w-full h-14 bg-mist-gray border-none rounded-xl px-5 text-xl font-bold text-slate-deep focus:ring-2 focus:ring-cinnabar/20 outline-none transition-all appearance-none cursor-pointer"
                 value={newIng.unit}
@@ -241,7 +241,7 @@ export default function ManageStockPage() {
               </select>
             </div>
             <div className="space-y-3">
-              <label className="text-xs font-bold text-slate-400 uppercase tracking-widest ml-1">{t.manageStock.threshold}</label>
+              <label className="text-sm font-bold text-slate-400 uppercase tracking-widest ml-1">{t.manageStock.threshold}</label>
               <NumberInput
                 className="w-full h-14 bg-mist-gray border-none rounded-xl px-5 text-xl font-bold text-slate-deep focus:ring-2 focus:ring-cinnabar/20 outline-none transition-all"
                 value={newIng.threshold ?? 0}
@@ -273,7 +273,7 @@ export default function ManageStockPage() {
                 <div className="p-10 bg-amber/5 space-y-8 animate-in fade-in duration-200">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                     <div className="space-y-3">
-                      <label className="text-xs font-bold text-slate-400 uppercase">Name (TH)</label>
+                      <label className="text-sm font-bold text-slate-400 uppercase">Name (TH)</label>
                       <input
                         className="w-full h-14 bg-white border border-subtle-border rounded-xl px-5 text-lg font-bold text-slate-deep outline-none focus:border-cinnabar"
                         value={editIngForm.nameTh}
@@ -281,7 +281,7 @@ export default function ManageStockPage() {
                       />
                     </div>
                     <div className="space-y-3">
-                      <label className="text-xs font-bold text-slate-400 uppercase">Name (FR)</label>
+                      <label className="text-sm font-bold text-slate-400 uppercase">Name (FR)</label>
                       <input
                         className="w-full h-14 bg-white border border-subtle-border rounded-xl px-5 text-lg font-bold text-slate-deep outline-none focus:border-cinnabar"
                         value={editIngForm.nameFr}
@@ -291,7 +291,7 @@ export default function ManageStockPage() {
                   </div>
                   <div className="grid grid-cols-2 gap-8">
                      <div className="space-y-3">
-                        <label className="text-xs font-bold text-slate-400 uppercase">Unit</label>
+                        <label className="text-sm font-bold text-slate-400 uppercase">Unit</label>
                         <select
                           className="w-full h-14 bg-white border border-subtle-border rounded-xl px-5 text-lg font-bold text-slate-deep outline-none cursor-pointer"
                           value={editIngForm.unit}
@@ -301,7 +301,7 @@ export default function ManageStockPage() {
                         </select>
                      </div>
                      <div className="space-y-3">
-                        <label className="text-xs font-bold text-slate-400 uppercase">Threshold</label>
+                        <label className="text-sm font-bold text-slate-400 uppercase">Threshold</label>
                         <NumberInput
                           className="w-full h-14 bg-white border border-subtle-border rounded-xl px-5 text-lg font-bold text-slate-deep outline-none"
                           value={editIngForm.threshold ?? 1}
@@ -345,7 +345,7 @@ export default function ManageStockPage() {
                           <div className="flex items-center gap-6">
                              <div className="text-right hidden sm:block">
                                 <div className={cn("font-bold text-2xl", isLow ? "text-error-red" : "text-emerald")}>{qty} {ing.unit}</div>
-                                <div className="text-[11px] font-bold text-slate-400 uppercase tracking-tighter">Threshold: {ing.threshold}</div>
+                                <div className="text-[14px] font-bold text-slate-400 uppercase tracking-tighter">Threshold: {ing.threshold}</div>
                              </div>
                              <button 
                                onClick={() => { setEditingQtyId(ing.id); setEditQtyValue(qty); setEditUnitValue(ing.unit) }}

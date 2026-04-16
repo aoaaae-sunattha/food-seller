@@ -105,7 +105,7 @@ export async function getOrCreateMonthSheet(accessToken?: string, date: Date = n
           headerData.push({ range: 'Receipt Extract!A1', values: [['date','store','name_fr','name_th','qty','unit','price','vat_rate','discount','total','receipt_id']] })
         }
         if (missingTabs.includes('Purchases')) {
-          headerData.push({ range: 'Purchases!A1', values: [['date','store','item_fr','item_th','qty','unit','price','vat_rate','discount','total','receipt_id']] })
+          headerData.push({ range: 'Purchases!A1', values: [['date','store','name_fr','name_th','qty','unit','price','vat_rate','discount','total','receipt_id']] })
         }
 
         if (headerData.length > 0) {
@@ -150,7 +150,7 @@ export async function getOrCreateMonthSheet(accessToken?: string, date: Date = n
         data: [
           { range: 'Purchases!A1', values: [['date','store','name_fr','name_th','qty','unit','price','vat_rate','discount','total','receipt_id']] },
           { range: 'Stock!A1', values: [['date','ingredient','amount_used','unit','reason','menu']] },
-          { range: 'Daily Sales!A1', values: [['date','menu','boxes','price_per_box','subtotal','cash','card','total']] },
+          { range: 'Daily Sales!A1', values: [['id','date','menu','boxes','price_per_box','subtotal','cash','card','total']] },
           { range: 'Config!A1', values: [['type','id','name_th','name_fr_or_price','unit_or_ingredients','threshold']] },
           { range: 'Monthly Summary!A1', values: [['category','metric','value']] },
           { range: 'Receipt Summaries!A1', values: [['date','store','total','vat','discount','drive_url','id']] },

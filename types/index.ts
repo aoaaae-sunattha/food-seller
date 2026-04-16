@@ -11,6 +11,7 @@ export interface Ingredient {
 export interface MenuTemplate {
   id: string
   nameTh: string
+  nameFr: string
   pricePerBox: number // €
   ingredients: MenuIngredient[]
 }
@@ -38,15 +39,15 @@ export interface ReceiptItem {
 export interface PurchaseRow {
   date: string        // ISO date YYYY-MM-DD
   store: string
-  item_fr: string
-  item_th: string
+  name_fr: string
+  name_th: string
   qty: number
   unit: string
   price: number       // Price per unit (TTC)
-  netPrice: number    // Price per unit (HT)
-  vatRate: number
-  vatAmount: number
+  vat_rate: number
+  discount: number
   total: number       // Line total (TTC)
+  receipt_id: string
 }
 
 export interface StockDeductionRow {
@@ -65,6 +66,7 @@ export type StockReason =
   | 'สูญหาย'
 
 export interface SalesRow {
+  id: string
   date: string
   menu: string
   boxes: number
@@ -72,7 +74,7 @@ export interface SalesRow {
   subtotal: number
   cash: number
   card: number
-  total: number
+  total: number       // recorded total (cash + card)
 }
 
 export interface StockQuantity {

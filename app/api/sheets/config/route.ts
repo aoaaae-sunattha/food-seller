@@ -19,14 +19,36 @@ function parseConfig(rows: string[][]): { ingredients: Ingredient[]; menus: Menu
         threshold: Number(row[5]),
       })
     } else if (row[0] === 'menu') {
-      const ingredientPairs = (row[4] || '').split(',').filter(Boolean).map(pair => {
+      // Logic for new schema: menu, id, nameTh, nameFr, price, ingredients
+      // If row[5] exists, it's likely the new schema. 
+      // If row[5] is empty but row[4] has ':', it might be the old schema.
+      
+      let nameFr = ''
+      let price = 0
+      let ingredientStr = ''
+
+      if (row[5] && row[5].includes(':')) {
+        // New schema: row[3] is nameFr, row[4] is price, row[5] is ingredients
+        nameFr = row[3] || ''
+        price = Number(row[4]) || 0
+        ingredientStr = row[5]
+      } else if (row[4] && row[4].includes(':')) {
+        // Old schema: row[3] is price, row[4] is ingredients
+        nameFr = ''
+        price = Number(row[3]) || 0
+        ingredientStr = row[4]
+      }
+
+      const ingredientPairs = ingredientStr.split(',').filter(Boolean).map(pair => {
         const [ingredientId, qty] = pair.split(':')
         return { ingredientId, defaultQty: Number(qty) }
       })
+      
       menus.push({
         id: row[1],
         nameTh: row[2],
-        pricePerBox: Number(row[3]),
+        nameFr,
+        pricePerBox: price,
         ingredients: ingredientPairs,
       })
     }
@@ -106,6 +128,11 @@ export async function POST(req: NextRequest) {
       const finalRows = [
         ...Array.from(updatedRowsMap.values()),
         ...menuRows.map(row => {
+          if (row.length === 5 || (row.length === 6 && row[5] === '')) {
+             // Legacy schema detected: menu, id, nameTh, price, ingredients
+             // Migrate to: menu, id, nameTh, nameFr (empty), price, ingredients
+             return ['menu', row[1], row[2], '', row[3], row[4]]
+          }
           const newRow = [...row]
           while (newRow.length < 6) newRow.push('')
           return newRow
@@ -147,7 +174,7 @@ export async function POST(req: NextRequest) {
         .map((i: { ingredientId: string; defaultQty: number }) => `${i.ingredientId}:${i.defaultQty}`)
         .join(',')
       await appendRows(accessToken, 'config', [[
-        'menu', id, body.nameTh, String(body.pricePerBox), ingredientStr,
+        'menu', id, body.nameTh, body.nameFr || '', String(body.pricePerBox), ingredientStr,
       ]])
       return NextResponse.json({ id })
     }
@@ -181,7 +208,7 @@ export async function PUT(req: NextRequest) {
           const ingredientStr = (body.ingredients || [])
             .map((i: { ingredientId: string; defaultQty: number }) => `${i.ingredientId}:${i.defaultQty}`)
             .join(',')
-          return ['menu', id, body.nameTh, String(body.pricePerBox), ingredientStr, '']
+          return ['menu', id, body.nameTh, body.nameFr || '', String(body.pricePerBox), ingredientStr]
         }
       }
       // Ensure all rows have 6 columns for consistency with updateTab

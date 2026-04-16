@@ -1,4 +1,4 @@
-# Restaurant Manager — Project Context
+# Lawan Thai Traiteur — Project Context
 
 ## Project Overview
 A tablet-optimized web application for managing a small Thai restaurant's daily operations (purchasing, stock, sales). The project leverages Google Sheets as a serverless database, providing the owner with familiar data access while maintaining a structured UI for daily tasks.

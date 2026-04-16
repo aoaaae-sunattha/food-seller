@@ -1,0 +1,82 @@
+- application [ref=e1]:
+  - iframe [ref=e2]:
+    
+  - iframe [ref=e3]:
+    
+  - banner "แถบเมนู" [ref=e4]:
+    - generic [ref=e7]:
+      - link "หน้าแรกชีต" [ref=e9] [cursor=pointer]:
+        - /url: https://docs.google.com/spreadsheets/?usp=sheets_web
+      - generic [ref=e16]:
+        - generic "ร้านอาหาร — เมษายน 2569" [ref=e18]:
+          - generic [ref=e20]: ร้านอาหาร — เมษายน 2569
+          - 'button "สถานะเอกสาร: บันทึกไปยังไดรฟ์แล้ว" [ref=e24]'
+        - generic [ref=e32]:
+          - button "Sunattha Saeheng" [ref=e241]:
+            - img "Sunattha Saeheng" [ref=e246] [cursor=pointer]
+          - generic [ref=e33]:
+            - button "แชร์ ทุกคนที่มีลิงก์ ทุกคนที่มีลิงก์สามารถเข้าถึง ไม่จำเป็นต้องลงชื่อเข้าใช้" [disabled] [ref=e34]: แชร์
+            - button "การดำเนินการแชร์อย่างรวดเร็ว" [disabled] [ref=e36]
+          - link "เข้าสู่ระบบ" [ref=e40] [cursor=pointer]:
+            - /url: https://accounts.google.com/ServiceLogin?service=wise&passive=1209600&osid=1&continue=https://docs.google.com/spreadsheets/d/1BQWcOlxaZ-04l8R38fcNoDtmihBL-48TPwovWpzkqcc/edit&followup=https://docs.google.com/spreadsheets/d/1BQWcOlxaZ-04l8R38fcNoDtmihBL-48TPwovWpzkqcc/edit&ltmpl=sheets&ec=GAZAmwI
+    - generic [ref=e41]:
+      - menubar [ref=e43]:
+        - menuitem "ไฟล์" [ref=e44] [cursor=pointer]
+        - menuitem "แก้ไข" [ref=e45] [cursor=pointer]
+        - menuitem "ดู" [ref=e46] [cursor=pointer]
+        - menuitem "แทรก" [disabled] [ref=e47]
+        - menuitem "รูปแบบ" [disabled] [ref=e48]
+        - menuitem "ข้อมูล" [ref=e49] [cursor=pointer]
+        - menuitem "เครื่องมือ" [ref=e50] [cursor=pointer]
+        - menuitem "ส่วนขยาย" [disabled] [ref=e51]
+        - menuitem "ความช่วยเหลือ" [ref=e52] [cursor=pointer]
+      - generic [ref=e53]:
+        - generic [ref=e54]:
+          - toolbar "ค้นหาเมนู (ตัวเลือก+/)" [ref=e55]:
+            - combobox "เมนู" [ref=e57]
+          - toolbar "หมายเลขหลัก" [ref=e58]:
+            - button "พิมพ์ (⌘P)" [ref=e59] [cursor=pointer]
+            - button "มุมมองตัวกรอง" [ref=e64] [cursor=pointer]
+            - combobox "ซูม" [ref=e73] [cursor=pointer]:
+              - option "รายการซูม และเลือก 100%" [selected] [ref=e76]:
+                - textbox "ซูม" [ref=e77]: 100%
+            - button "โหมด" [ref=e81] [cursor=pointer]:
+              - generic [ref=e82]: ดูอย่างเดียว
+        - toolbar "โหมดและมุมมอง" [ref=e85]:
+          - button "ซ่อนเมนู (Ctrl+Shift+F)" [ref=e86] [cursor=pointer]
+    - generic [ref=e93]:
+      - generic "ช่องชื่อ (⌘ + J)" [ref=e94]:
+        - textbox [ref=e95]: A1
+        - button "ปุ่มเมนูช่องชื่อ เลือกรายการในเมนู 1 รายการเพื่อไปยังช่วงที่ตั้งชื่อแล้วที่เกี่ยวข้อง" [ref=e97] [cursor=pointer]
+      - textbox [ref=e113]
+  - navigation "แถบแท็บชีต" [ref=e145]:
+    - toolbar [ref=e146]:
+      - button "แผ่นงานทั้งหมด" [ref=e147] [cursor=pointer]
+    - toolbar [ref=e156]:
+      - button "Purchases" [ref=e157] [cursor=pointer]:
+        - generic [ref=e161]: Purchases
+      - button "Stock" [ref=e165] [cursor=pointer]:
+        - generic [ref=e169]: Stock
+      - button "Daily Sales" [ref=e173] [cursor=pointer]:
+        - generic [ref=e177]: Daily Sales
+      - button "Monthly Summary" [ref=e181] [cursor=pointer]:
+        - generic [ref=e185]: Monthly Summary
+      - button "Config" [ref=e189] [cursor=pointer]:
+        - generic [ref=e193]: Config
+      - button "Receipt Extract" [ref=e197] [cursor=pointer]:
+        - generic [ref=e201]: Receipt Extract
+      - button "Receipt Summaries" [ref=e205]:
+        - generic [ref=e209]: Receipt Summaries
+      - button "Sheet1" [ref=e213] [cursor=pointer]:
+        - generic [ref=e217]: Sheet1
+    - toolbar [ref=e221]:
+      - button "เลื่อนไปทางซ้าย" [ref=e222] [cursor=pointer]
+      - button "เลื่อนทางขวา" [disabled] [ref=e227]
+  - generic [ref=e232]:
+    - textbox [active]
+  - link "เปิดการรองรับโปรแกรมอ่านหน้าจอ" [ref=e233] [cursor=pointer]:
+    - /url: "#"
+  - textbox [ref=e234]
+  - region
+  - region [ref=e235]: หากต้องการเปิดการสนับสนุนโปรแกรมอ่านหน้าจอ ให้กด ⌘+ตัวเลือก+Z หากต้องการเรียนรู้เกี่ยวกับแป้นพิมพ์ลัด ให้กด ⌘เครื่องหมายทับ (/)
+  - generic [ref=e251]: Sunattha Saeheng ได้เข้าร่วมในเอกสาร

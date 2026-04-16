@@ -193,7 +193,7 @@ export default function DailySalesPage() {
             <div className="flex-1 font-bold text-slate-deep text-xl">{sale.menu}</div>
             <div className="flex items-center gap-8">
                <div className="w-24 text-center">
-                  <label className="block text-[10px] font-bold text-slate-400 uppercase mb-2 tracking-widest">Boxes</label>
+                  <label className="block text-[14px] font-bold text-slate-400 uppercase mb-2 tracking-widest">Boxes</label>
                   <NumberInput 
                     className="w-full h-12 bg-mist-gray border-none rounded-xl text-center font-bold text-slate-deep focus:ring-2 focus:ring-cinnabar/20 outline-none text-lg"
                     value={sale.boxes}
@@ -201,7 +201,7 @@ export default function DailySalesPage() {
                   />
                </div>
                <div className="w-28 text-right">
-                  <label className="block text-[10px] font-bold text-slate-400 uppercase mb-2 tracking-widest">€/Box</label>
+                  <label className="block text-[14px] font-bold text-slate-400 uppercase mb-2 tracking-widest">€/Box</label>
                   <NumberInput 
                     className="w-full h-12 bg-mist-gray border-none rounded-xl text-right px-4 font-bold text-slate-deep focus:ring-2 focus:ring-cinnabar/20 outline-none text-lg"
                     value={sale.pricePerBox}
@@ -224,7 +224,7 @@ export default function DailySalesPage() {
         
         <div className="flex justify-between items-end relative z-10">
           <div>
-            <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Estimated Revenue</p>
+            <p className="text-sm font-bold text-slate-400 uppercase tracking-widest mb-2">Estimated Revenue</p>
             <div className="text-5xl font-bold text-white tracking-tight">€{totalSales.toFixed(2)}</div>
           </div>
           <div className={cn(
@@ -237,7 +237,7 @@ export default function DailySalesPage() {
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 relative z-10">
           <div className="space-y-3">
-            <label className="flex items-center gap-3 text-xs font-bold text-slate-400 uppercase tracking-widest ml-1">
+            <label className="flex items-center gap-3 text-sm font-bold text-slate-400 uppercase tracking-widest ml-1">
                <Banknote size={18} className="text-cinnabar" /> {t.sales.cash}
             </label>
             <div className="relative">
@@ -250,7 +250,7 @@ export default function DailySalesPage() {
             </div>
           </div>
           <div className="space-y-3">
-            <label className="flex items-center gap-3 text-xs font-bold text-slate-400 uppercase tracking-widest ml-1">
+            <label className="flex items-center gap-3 text-sm font-bold text-slate-400 uppercase tracking-widest ml-1">
                <CreditCard size={18} className="text-cinnabar" /> {t.sales.card}
             </label>
             <div className="relative">
@@ -284,7 +284,7 @@ export default function DailySalesPage() {
           <div className="card-base p-0 overflow-hidden">
             <table className="w-full">
               <thead>
-                <tr className="bg-mist-gray text-xs font-bold text-slate-400 uppercase tracking-widest border-bottom border-subtle-border">
+                <tr className="bg-mist-gray text-sm font-bold text-slate-400 uppercase tracking-widest border-bottom border-subtle-border">
                   <th className="text-left py-5 px-8">{t.manageMenus.name}</th>
                   <th className="text-center py-5 px-8">Qty</th>
                   <th className="text-right py-5 px-8">Rate</th>
@@ -303,7 +303,7 @@ export default function DailySalesPage() {
                         ) : (
                           <div>
                             <div className="font-bold text-slate-deep text-base">{h.menu}</div>
-                            <div className="text-[11px] font-bold text-slate-400 uppercase tracking-widest mt-1">{h.date}</div>
+                            <div className="text-[14px] font-bold text-slate-400 uppercase tracking-widest mt-1">{h.date}</div>
                           </div>
                         )}
                       </td>
@@ -350,7 +350,7 @@ export default function DailySalesPage() {
           <div className="card-base p-0 overflow-hidden">
             <table className="w-full">
               <thead>
-                <tr className="bg-slate-deep text-xs font-bold text-slate-400 uppercase tracking-widest">
+                <tr className="bg-slate-deep text-sm font-bold text-slate-400 uppercase tracking-widest">
                   <th className="text-left py-5 px-8">Date</th>
                   <th className="text-right py-5 px-8">Cash</th>
                   <th className="text-right py-5 px-8">Card</th>
@@ -360,7 +360,7 @@ export default function DailySalesPage() {
               <tbody className="divide-y divide-subtle-border">
                 {paymentHistory.map((h) => (
                   <tr key={h.id} className="hover:bg-mist-gray/30 transition-colors">
-                    <td className="py-5 px-8 text-xs font-bold text-slate-400 uppercase tracking-widest">{h.date}</td>
+                    <td className="py-5 px-8 text-sm font-bold text-slate-400 uppercase tracking-widest">{h.date}</td>
                     <td className="py-5 px-8 text-right font-medium text-slate-600 text-base">€{h.cash.toFixed(1)}</td>
                     <td className="py-5 px-8 text-right font-medium text-slate-600 text-base">€{h.card.toFixed(1)}</td>
                     <td className="py-5 px-8 text-right font-bold text-emerald text-xl">€{h.totalRecorded.toFixed(1)}</td>
@@ -382,7 +382,7 @@ export default function DailySalesPage() {
           <div className="card-base bg-error-red/5 border-error-red/10 p-0 overflow-hidden">
             <table className="w-full text-left text-sm font-bold border-collapse">
               <thead>
-                <tr className="bg-error-red/10 text-[10px] font-black uppercase text-error-red/70 tracking-widest">
+                <tr className="bg-error-red/10 text-[14px] font-black uppercase text-error-red/70 tracking-widest">
                   <th className="px-6 py-4">Original Entry</th>
                   <th className="px-6 py-4">Deletion Reason</th>
                   <th className="px-6 py-4 text-right">Audit Time</th>
@@ -393,10 +393,10 @@ export default function DailySalesPage() {
                   <tr key={i} className="text-error-red/80">
                     <td className="px-6 py-4">
                       <span className="line-through">{log.item.menu}</span>
-                      <p className="text-[9px] uppercase tracking-widest opacity-60 font-bold">{log.item.date}</p>
+                      <p className="text-[14px] uppercase tracking-widest opacity-60 font-bold">{log.item.date}</p>
                     </td>
                     <td className="px-6 py-4 italic font-medium">"{log.reason}"</td>
-                    <td className="px-6 py-4 text-right text-[10px] font-bold opacity-60 uppercase">{log.timestamp}</td>
+                    <td className="px-6 py-4 text-right text-[14px] font-bold opacity-60 uppercase">{log.timestamp}</td>
                   </tr>
                 ))}
               </tbody>

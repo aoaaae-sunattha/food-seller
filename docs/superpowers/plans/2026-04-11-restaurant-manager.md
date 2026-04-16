@@ -1,4 +1,4 @@
-# Restaurant Manager — Implementation Plan
+# Lawan Thai Traiteur — Implementation Plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
@@ -1680,7 +1680,7 @@ export default function NavBar() {
         <Link
           key={item.href}
           href={item.href}
-          className={`flex flex-col items-center text-xs gap-1 px-2 py-1 rounded ${
+          className={`flex flex-col items-center text-sm gap-1 px-2 py-1 rounded ${
             pathname === item.href ? 'text-blue-600 font-bold' : 'text-gray-500'
           }`}
         >
@@ -2229,7 +2229,7 @@ export default function IngredientSection({ menuName, rows, onChange, allIngredi
                   {allIngredients.map(a => <option key={a.nameTh} value={a.nameTh}>{a.nameTh}</option>)}
                 </select>
               )}
-              <span className="text-gray-400 text-xs">เหลือ {row.currentQty} {row.unit}</span>
+              <span className="text-gray-400 text-sm">เหลือ {row.currentQty} {row.unit}</span>
               <input
                 type="number"
                 className="border rounded px-1 py-1 text-right"

@@ -1,0 +1,82 @@
+- application [ref=e1]:
+  - iframe [ref=e2]:
+    
+  - iframe [ref=e3]:
+    
+  - banner "แถบเมนู" [ref=e4]:
+    - generic [ref=e7]:
+      - link "หน้าแรกชีต" [ref=e9] [cursor=pointer]:
+        - /url: https://docs.google.com/spreadsheets/?usp=sheets_web
+      - generic [ref=e16]:
+        - generic "ร้านอาหาร — เมษายน 2569" [ref=e18]:
+          - generic [ref=e20]: ร้านอาหาร — เมษายน 2569
+          - 'button "สถานะเอกสาร: บันทึกไปยังไดรฟ์แล้ว" [ref=e24]':
+            - generic [ref=e29] [cursor=pointer]: บันทึกไปยังไดรฟ์แล้ว
+        - generic [ref=e32]:
+          - generic [ref=e36]:
+            - button "แชร์ ทุกคนที่มีลิงก์ ทุกคนที่มีลิงก์สามารถเข้าถึง ไม่จำเป็นต้องลงชื่อเข้าใช้" [disabled] [ref=e37]: แชร์
+            - button "การดำเนินการแชร์อย่างรวดเร็ว" [disabled] [ref=e39]
+          - link "เข้าสู่ระบบ" [ref=e43] [cursor=pointer]:
+            - /url: https://accounts.google.com/ServiceLogin?service=wise&passive=1209600&osid=1&continue=https://docs.google.com/spreadsheets/d/1BQWcOlxaZ-04l8R38fcNoDtmihBL-48TPwovWpzkqcc/edit&followup=https://docs.google.com/spreadsheets/d/1BQWcOlxaZ-04l8R38fcNoDtmihBL-48TPwovWpzkqcc/edit&ltmpl=sheets&ec=GAZAmwI
+    - generic [ref=e44]:
+      - menubar [ref=e46]:
+        - menuitem "ไฟล์" [ref=e47] [cursor=pointer]
+        - menuitem "แก้ไข" [ref=e48] [cursor=pointer]
+        - menuitem "ดู" [ref=e49] [cursor=pointer]
+        - menuitem "แทรก" [disabled] [ref=e50]
+        - menuitem "รูปแบบ" [disabled] [ref=e51]
+        - menuitem "ข้อมูล" [ref=e52] [cursor=pointer]
+        - menuitem "เครื่องมือ" [ref=e53] [cursor=pointer]
+        - menuitem "ส่วนขยาย" [disabled] [ref=e54]
+        - menuitem "ความช่วยเหลือ" [ref=e55] [cursor=pointer]
+      - generic [ref=e56]:
+        - generic [ref=e57]:
+          - toolbar "ค้นหาเมนู (ตัวเลือก+/)" [ref=e58]:
+            - combobox "เมนู" [ref=e60]
+          - toolbar "หมายเลขหลัก" [ref=e61]:
+            - button "พิมพ์ (⌘P)" [ref=e62] [cursor=pointer]
+            - button "มุมมองตัวกรอง" [ref=e67] [cursor=pointer]
+            - combobox "ซูม" [ref=e76] [cursor=pointer]:
+              - option "รายการซูม และเลือก 100%" [selected] [ref=e79]:
+                - textbox "ซูม" [ref=e80]: 100%
+            - button "โหมด" [ref=e84] [cursor=pointer]:
+              - generic [ref=e85]: ดูอย่างเดียว
+        - toolbar "โหมดและมุมมอง" [ref=e88]:
+          - button "ซ่อนเมนู (Ctrl+Shift+F)" [ref=e89] [cursor=pointer]
+    - generic [ref=e96]:
+      - generic "ช่องชื่อ (⌘ + J)" [ref=e97]:
+        - textbox [ref=e98]: A1
+        - button "ปุ่มเมนูช่องชื่อ เลือกรายการในเมนู 1 รายการเพื่อไปยังช่วงที่ตั้งชื่อแล้วที่เกี่ยวข้อง" [ref=e100] [cursor=pointer]
+      - textbox [ref=e116]
+  - navigation "แถบแท็บชีต" [ref=e148]:
+    - toolbar [ref=e149]:
+      - button "แผ่นงานทั้งหมด" [ref=e150] [cursor=pointer]
+    - toolbar [ref=e159]:
+      - button "Purchases" [ref=e160]:
+        - generic [ref=e164]: Purchases
+      - button "Stock" [ref=e168] [cursor=pointer]:
+        - generic [ref=e172]: Stock
+      - button "Daily Sales" [ref=e176] [cursor=pointer]:
+        - generic [ref=e180]: Daily Sales
+      - button "Monthly Summary" [ref=e184] [cursor=pointer]:
+        - generic [ref=e188]: Monthly Summary
+      - button "Config" [ref=e192] [cursor=pointer]:
+        - generic [ref=e196]: Config
+      - button "Receipt Extract" [ref=e200] [cursor=pointer]:
+        - generic [ref=e204]: Receipt Extract
+      - button "Receipt Summaries" [ref=e208] [cursor=pointer]:
+        - generic [ref=e212]: Receipt Summaries
+      - button "Sheet1" [ref=e216] [cursor=pointer]:
+        - generic [ref=e220]: Sheet1
+    - toolbar [ref=e224]:
+      - button "เลื่อนไปทางซ้าย" [disabled] [ref=e225]
+      - button "เลื่อนทางขวา" [ref=e230] [cursor=pointer]
+  - generic [ref=e235]:
+    - textbox [active]
+  - link "เปิดการรองรับโปรแกรมอ่านหน้าจอ" [ref=e236] [cursor=pointer]:
+    - /url: "#"
+  - textbox [ref=e237]
+  - region
+  - region [ref=e238]: หากต้องการเปิดการสนับสนุนโปรแกรมอ่านหน้าจอ ให้กด ⌘+ตัวเลือก+Z หากต้องการเรียนรู้เกี่ยวกับแป้นพิมพ์ลัด ให้กด ⌘เครื่องหมายทับ (/)
+  - iframe [ref=e240]:
+    
