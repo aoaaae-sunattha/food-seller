@@ -4,6 +4,7 @@ import type { ReceiptItem } from '../../../../types'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { v4 as uuidv4 } from 'uuid'
+import { randomUUID } from 'crypto'
 
 export async function GET(req: NextRequest) {
   try {
@@ -97,6 +98,29 @@ export async function POST(req: NextRequest) {
         `receipt_${date}_${store.replace(/\s+/g, '_')}_${receiptId.slice(0,8)}.jpg`, 
         imageFile.type
       )
+    }
+
+    // 1.5. Check for missing ingredients in Config and add them
+    const configRows = await readRows(accessToken, 'config')
+    const existingIngs = new Set(
+      configRows
+        .filter(row => row[0] === 'ingredient')
+        .map(row => (row[2] || '').trim().toLowerCase())
+    )
+
+    const newIngRows = items
+      .filter(item => item.nameTh && !existingIngs.has(item.nameTh.trim().toLowerCase()))
+      .map(item => [
+        'ingredient',
+        randomUUID().slice(0, 8),
+        item.nameTh,
+        item.nameFr || '',
+        item.unit || 'kg',
+        '1' // Default threshold
+      ])
+
+    if (newIngRows.length > 0) {
+      await appendRows(accessToken, 'config', newIngRows)
     }
 
     // 2. Save Receipt Summary (date, store, total, discrepancy, drive_url, id)

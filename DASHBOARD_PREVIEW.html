@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Restaurant Manager — Cinnabar OS Preview</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+Thai:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        :root {
+            --cinnabar: #E66741;
+            --slate-deep: #111827;
+            --emerald: #74B83E;
+            --amber: #FBBF24;
+            --periwinkle: #EBEBFF;
+            --champagne: #FFF4E5;
+            --mist-gray: #F3F4F6;
+            --surface-white: #FFFFFF;
+            --error-red: #DC2626;
+            --subtle-border: #E5E7EB;
+            
+            --sidebar-width-lg: 240px;
+            --sidebar-width-md: 80px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: 'Inter', 'Noto Sans Thai', sans-serif;
+            background-color: var(--mist-gray);
+            color: var(--slate-deep);
+            display: flex;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* Sidebar Navigation */
+        nav {
+            width: var(--sidebar-width-lg);
+            background-color: var(--surface-white);
+            border-right: 1px solid var(--subtle-border);
+            display: flex;
+            flex-direction: column;
+            padding: 24px 0;
+            position: fixed;
+            height: 100vh;
+            z-index: 50;
+            transition: width 0.3s ease;
+        }
+
+        .nav-logo {
+            padding: 0 24px 40px;
+            font-weight: 700;
+            font-size: 1.5rem;
+            color: var(--slate-deep);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .nav-logo i { 
+            color: white; 
+            background: var(--cinnabar); 
+            padding: 8px; 
+            border-radius: 12px; 
+            width: 40px; 
+            height: 40px; 
+        }
+
+        .nav-item {
+            padding: 14px 24px;
+            margin: 2px 16px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            cursor: pointer;
+            color: #6B7280;
+            transition: all 0.2s ease;
+            text-decoration: none;
+            border-radius: 12px;
+            font-weight: 500;
+        }
+
+        .nav-item:hover { color: var(--slate-deep); background-color: var(--mist-gray); }
+        
+        .nav-item.active {
+            background-color: var(--cinnabar);
+            color: white;
+        }
+
+        .nav-label { font-size: 0.9375rem; }
+
+        /* Main Content */
+        main {
+            margin-left: var(--sidebar-width-lg);
+            flex: 1;
+            padding: 40px;
+            max-width: 1600px;
+            transition: margin-left 0.3s ease;
+        }
+
+        .header {
+            margin-bottom: 32px;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+        }
+
+        .header h1 {
+            font-family: 'Inter', sans-serif;
+            font-weight: 700;
+            font-size: 2rem;
+            color: var(--slate-deep);
+        }
+        
+        .header p { color: #6B7280; font-size: 0.875rem; margin-top: 4px; }
+
+        /* Bento Grid Layout */
+        .dashboard-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
+        
+        .grid-row { display: grid; gap: 24px; }
+        .grid-top { grid-template-columns: repeat(3, 1fr); }
+        .grid-middle { grid-template-columns: 2.2fr 1fr; }
+        .grid-bottom { grid-template-columns: 1.5fr 1fr; }
+
+        /* Cards */
+        .card {
+            background: var(--surface-white);
+            border-radius: 20px;
+            padding: 24px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+        
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .card-title {
+            font-size: 0.9375rem;
+            color: var(--slate-deep);
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .card-title i { color: var(--cinnabar); width: 18px; }
+
+        .data-value {
+            font-size: 2.25rem;
+            font-weight: 700;
+            color: var(--slate-deep);
+            line-height: 1.1;
+        }
+        
+        .data-sub {
+            font-size: 0.8125rem;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            margin-top: 8px;
+        }
+
+        /* Status Badges */
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 4px 12px;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+        
+        .badge-success { background-color: #DEF7EC; color: var(--emerald); }
+        .badge-warning { background-color: #FEF3C7; color: #D97706; }
+        .badge-danger { background-color: #FDE2E2; color: var(--error-red); }
+
+        /* Color-Themed Cards */
+        .card-periwinkle { background-color: var(--periwinkle); }
+        .card-champagne { background-color: var(--champagne); }
+
+        /* Activity Feed Lists */
+        .list-item {
+            display: flex;
+            align-items: center;
+            padding: 16px 0;
+            border-bottom: 1px solid var(--mist-gray);
+            gap: 16px;
+        }
+        
+        .list-item:last-child { border-bottom: none; padding-bottom: 0; }
+        
+        .item-img {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            background-color: var(--mist-gray);
+            object-fit: cover;
+        }
+        
+        .item-content { flex: 1; min-width: 0; }
+        .item-title { font-weight: 600; color: var(--slate-deep); font-size: 0.9375rem; }
+        .item-meta { font-size: 0.8125rem; color: #6B7280; margin-top: 2px; }
+        
+        /* Bar Chart */
+        .chart-container { height: 240px; display: flex; align-items: flex-end; gap: 16px; padding-top: 20px; }
+        .bar-group { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 8px; height: 100%; justify-content: flex-end; }
+        .bar { width: 100%; max-width: 56px; background-color: #F1F5F9; border-radius: 8px 8px 0 0; }
+        .bar.active { background: linear-gradient(to bottom, #E66741, #F08C6E); }
+        .bar-label { font-size: 0.75rem; color: #94A3B8; font-weight: 500; }
+
+        /* iPad / Tablet Responsiveness */
+        @media (max-width: 1024px) {
+            nav { width: var(--sidebar-width-md); }
+            .nav-logo span, .nav-label { display: none; }
+            .nav-logo { padding: 0; justify-content: center; margin-bottom: 30px; }
+            .nav-item { justify-content: center; margin: 4px 8px; padding: 16px 0; }
+            main { margin-left: var(--sidebar-width-md); padding: 24px; }
+            .grid-top, .grid-middle, .grid-bottom { grid-template-columns: 1fr; }
+        }
+
+        /* Pretext & Interaction */
+        [data-pretext] { overflow: hidden; }
+        [contenteditable="true"]:focus { outline: none; background: rgba(230, 103, 65, 0.05); border-radius: 4px; }
+        
+        .btn-circle {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            border: 1px solid var(--subtle-border);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            color: #6B7280;
+        }
+    </style>
+</head>
+<body class="touch-manipulation">
+    <!-- Navigation Sidebar -->
+    <nav>
+        <div class="nav-logo">
+            <i data-lucide="zap"></i>
+            <span>D.CC</span>
+        </div>
+        <div style="padding: 0 16px 20px; color: #94A3B8; font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em;">Menu</div>
+        <a href="#" class="nav-item active">
+            <i data-lucide="layout-grid"></i>
+            <span class="nav-label">Dashboard</span>
+        </a>
+        <a href="#" class="nav-item">
+            <i data-lucide="file-text"></i>
+            <span class="nav-label">Receipts</span>
+        </a>
+        <a href="#" class="nav-item">
+            <i data-lucide="package"></i>
+            <span class="nav-label">Stock</span>
+        </a>
+        <a href="#" class="nav-item">
+            <i data-lucide="bar-chart-2"></i>
+            <span class="nav-label">Analytics</span>
+        </a>
+        <div style="margin-top: auto;">
+            <a href="#" class="nav-item">
+                <i data-lucide="settings"></i>
+                <span class="nav-label">Settings</span>
+            </a>
+        </div>
+    </nav>
+
+    <!-- Main Content Area -->
+    <main>
+        <div class="header">
+            <div>
+                <h1 data-pretext contenteditable="true">Dashboard</h1>
+                <p>Welcome back!</p>
+            </div>
+            <div style="display: flex; gap: 16px; align-items: center;">
+                <div class="btn-circle"><i data-lucide="bell" style="width: 18px;"></i></div>
+                <div class="btn-circle"><i data-lucide="settings" style="width: 18px;"></i></div>
+            </div>
+        </div>
+
+        <div class="dashboard-grid">
+            <!-- Top Row: Metrics -->
+            <div class="grid-row grid-top">
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-title"><i data-lucide="clipboard-list"></i> Pending Receipts</div>
+                        <div class="btn-circle"><i data-lucide="arrow-up-right" style="width: 14px;"></i></div>
+                    </div>
+                    <div class="data-value" data-pretext contenteditable="true">25</div>
+                    <div class="data-sub"><span style="color: var(--emerald); font-weight: 600;">47%</span> Cleared</div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-title"><i data-lucide="package"></i> Low Stock Items</div>
+                        <div class="btn-circle"><i data-lucide="arrow-up-right" style="width: 14px;"></i></div>
+                    </div>
+                    <div class="data-value" data-pretext contenteditable="true">17</div>
+                    <div class="data-sub" style="color: var(--error-red);">Action Required</div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-title"><i data-lucide="trending-up"></i> Today's Sales</div>
+                        <div class="btn-circle"><i data-lucide="arrow-up-right" style="width: 14px;"></i></div>
+                    </div>
+                    <div class="data-value" data-pretext contenteditable="true">฿ 24,500</div>
+                    <div class="data-sub"><span style="color: var(--emerald); font-weight: 600;">87%</span> of Target</div>
+                </div>
+            </div>
+
+            <!-- Middle Row: Overview -->
+            <div class="grid-row grid-middle">
+                <!-- Revenue Chart -->
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-title">Total Revenue</div>
+                        <div style="font-size: 0.8125rem; background: var(--mist-gray); padding: 6px 12px; border-radius: 8px; font-weight: 600;">This Week <i data-lucide="chevron-down" style="width: 14px; display: inline; vertical-align: middle;"></i></div>
+                    </div>
+                    <div style="color: #6B7280; font-size: 0.75rem; margin-bottom: 8px;">Sales Overview</div>
+                    <div class="chart-container">
+                        <div class="bar-group"><div class="bar" style="height: 35%;"></div><span class="bar-label">Sun</span></div>
+                        <div class="bar-group"><div class="bar" style="height: 55%;"></div><span class="bar-label">Mon</span></div>
+                        <div class="bar-group"><div class="bar" style="height: 45%;"></div><span class="bar-label">Tue</span></div>
+                        <div class="bar-group"><div class="bar" style="height: 40%;"></div><span class="bar-label">Wed</span></div>
+                        <div class="bar-group"><div class="bar active" style="height: 85%;"></div><span class="bar-label" style="color: var(--cinnabar);">Thu</span></div>
+                        <div class="bar-group"><div class="bar" style="height: 0%;"></div><span class="bar-label">Fri</span></div>
+                        <div class="bar-group"><div class="bar" style="height: 0%;"></div><span class="bar-label">Sat</span></div>
+                    </div>
+                </div>
+
+                <!-- Business Data -->
+                <div class="card">
+                    <div class="card-header"><div class="card-title">Business Data</div></div>
+                    <div style="display: flex; flex-direction: column; gap: 16px;">
+                        <div class="card card-periwinkle" style="padding: 16px; box-shadow: none;">
+                            <div style="font-size: 0.75rem; color: #6B7280; font-weight: 600;">Number of Customers</div>
+                            <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-top: 8px;">
+                                <div style="font-size: 1.25rem; font-weight: 700;"><i data-lucide="users" style="width: 18px; color: #6B7280; vertical-align: middle; margin-right: 4px;"></i> 197</div>
+                                <i data-lucide="arrow-up-right" style="width: 16px; color: #6B7280;"></i>
+                            </div>
+                        </div>
+                        <div class="card card-champagne" style="padding: 16px; box-shadow: none;">
+                            <div style="font-size: 0.75rem; color: #6B7280; font-weight: 600;">Total Orders</div>
+                            <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-top: 8px;">
+                                <div style="font-size: 1.25rem; font-weight: 700;"><i data-lucide="shopping-bag" style="width: 18px; color: #6B7280; vertical-align: middle; margin-right: 4px;"></i> 270</div>
+                                <i data-lucide="arrow-up-right" style="width: 16px; color: #6B7280;"></i>
+                            </div>
+                        </div>
+                        <div class="card" style="padding: 16px; box-shadow: none; border: 1px solid var(--subtle-border);">
+                            <div style="font-size: 0.75rem; color: #6B7280; font-weight: 600;">Average Order Values</div>
+                            <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-top: 8px;">
+                                <div style="font-size: 1.25rem; font-weight: 700;">฿ 109.00</div>
+                                <i data-lucide="arrow-up-right" style="width: 16px; color: #6B7280;"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Bottom Row: Activity Feeds -->
+            <div class="grid-row grid-bottom">
+                <!-- Recent Activity -->
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-title">Recent Activity</div>
+                        <div class="btn-circle"><i data-lucide="arrow-up-right" style="width: 14px;"></i></div>
+                    </div>
+                    <div style="display: flex; flex-direction: column;">
+                        <div class="list-item">
+                            <img src="https://images.unsplash.com/photo-1559339352-11d035aa65de?w=100&h=100&fit=crop" class="item-img">
+                            <div class="item-content">
+                                <div class="item-title">Status Changed</div>
+                                <div class="item-meta">฿ 109.00 • #4587 • Wait 9min</div>
+                            </div>
+                            <div class="badge badge-success">Completed</div>
+                        </div>
+                        <div class="list-item">
+                            <img src="https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=100&h=100&fit=crop" class="item-img">
+                            <div class="item-content">
+                                <div class="item-title">Status Changed</div>
+                                <div class="item-meta">฿ 109.00 • #4587 • Wait 9min</div>
+                            </div>
+                            <div class="badge badge-warning">Pending</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Top Dishes -->
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-title">Top Dishes</div>
+                        <div style="font-size: 0.8125rem; color: #6B7280; font-weight: 600;">This Week <i data-lucide="chevron-down" style="width: 14px; display: inline; vertical-align: middle;"></i></div>
+                    </div>
+                    <div style="display: flex; flex-direction: column;">
+                        <div class="list-item">
+                            <img src="https://images.unsplash.com/photo-1563379926898-05f4575a45d8?w=100&h=100&fit=crop" class="item-img" style="border-radius: 8px;">
+                            <div class="item-content">
+                                <div class="item-title">Twice Cooked Pork</div>
+                            </div>
+                            <div style="text-align: right;"><span style="font-weight: 700;">960</span> <span style="font-size: 0.75rem; color: var(--cinnabar);">Orders</span></div>
+                        </div>
+                        <div class="list-item">
+                            <img src="https://images.unsplash.com/photo-1512058564366-18510be2db19?w=100&h=100&fit=crop" class="item-img" style="border-radius: 8px;">
+                            <div class="item-content">
+                                <div class="item-title">Fish Flavored Pork</div>
+                            </div>
+                            <div style="text-align: right;"><span style="font-weight: 700;">863</span> <span style="font-size: 0.75rem; color: var(--cinnabar);">Orders</span></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script type="module">
+        lucide.createIcons();
+        // Simple interactivity for bar chart and text
+        document.querySelectorAll('.bar').forEach(bar => {
+            bar.addEventListener('click', () => {
+                document.querySelectorAll('.bar').forEach(b => b.classList.remove('active'));
+                bar.classList.add('active');
+            });
+        });
+    </script>
+</body>
+</html>
