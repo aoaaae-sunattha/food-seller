@@ -13,7 +13,7 @@ export default function LanguageSelector() {
   const { lang, setLang } = useLanguage()
 
   return (
-    <div className="flex bg-mist-gray p-1 rounded-xl border border-subtle-border">
+    <div role="group" aria-label="Change language" className="flex bg-mist-gray p-1 rounded-xl border border-subtle-border">
       {FLAGS.map(({ lang: l, flag, label }) => {
         const isActive = lang === l
         return (

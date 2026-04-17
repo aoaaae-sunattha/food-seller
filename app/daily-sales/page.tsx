@@ -186,7 +186,7 @@ export default function DailySalesPage() {
       {/* Menu Input Form */}
       <div className="grid grid-cols-1 gap-5">
         {menuSales.map((sale, i) => (
-          <div key={sale.menu} className="card-base flex items-center gap-6 group hover:border-cinnabar/30 transition-all p-8">
+          <div key={sale.menu} data-testid={`sale-row-${i}`} className="card-base flex items-center gap-6 group hover:border-cinnabar/30 transition-all p-8">
             <div className="w-14 h-14 bg-mist-gray rounded-2xl flex items-center justify-center text-slate-400 group-hover:bg-cinnabar/10 group-hover:text-cinnabar transition-colors shrink-0">
                <ShoppingBag size={28} />
             </div>
@@ -194,7 +194,8 @@ export default function DailySalesPage() {
             <div className="flex items-center gap-8">
                <div className="w-24 text-center">
                   <label className="block text-[14px] font-bold text-slate-400 uppercase mb-2 tracking-widest">Boxes</label>
-                  <NumberInput 
+                  <NumberInput
+                    data-testid={`sale-boxes-${i}`}
                     className="w-full h-12 bg-mist-gray border-none rounded-xl text-center font-bold text-slate-deep focus:ring-2 focus:ring-cinnabar/20 outline-none text-lg"
                     value={sale.boxes}
                     onChange={val => handleBoxChange(i, val)}
@@ -202,7 +203,8 @@ export default function DailySalesPage() {
                </div>
                <div className="w-28 text-right">
                   <label className="block text-[14px] font-bold text-slate-400 uppercase mb-2 tracking-widest">€/Box</label>
-                  <NumberInput 
+                  <NumberInput
+                    data-testid={`sale-price-${i}`}
                     className="w-full h-12 bg-mist-gray border-none rounded-xl text-right px-4 font-bold text-slate-deep focus:ring-2 focus:ring-cinnabar/20 outline-none text-lg"
                     value={sale.pricePerBox}
                     onChange={val => handlePriceChange(i, val)}

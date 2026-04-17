@@ -54,6 +54,7 @@ export default function NavBar() {
             <Link
               key={item.href}
               href={item.href}
+              aria-label={t.nav[item.key]}
               className={cn(
                 "flex items-center gap-4 px-4 py-4 rounded-2xl transition-all duration-200 group",
                 isActive 
@@ -81,6 +82,7 @@ export default function NavBar() {
         
         <Link
           href="/settings"
+          aria-label="Settings"
           className={cn(
             "flex items-center gap-4 px-4 py-4 rounded-2xl text-slate-500 hover:text-slate-deep hover:bg-mist-gray transition-all",
             pathname === '/settings' && "bg-mist-gray text-slate-deep"

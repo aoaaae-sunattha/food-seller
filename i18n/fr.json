@@ -96,6 +96,7 @@
     "edit": "Modifier",
     "delete": "Supprimer",
     "loading": "Chargement...",
-    "error": "Une erreur s'est produite"
+    "error": "Une erreur s'est produite",
+    "changeLanguage": "Changer la langue"
   }
 }

@@ -6,4 +6,5 @@ module.exports = {
     '^@/(.*)$': '<rootDir>/$1',
   },
   moduleDirectories: ['node_modules', '<rootDir>'],
+  testPathIgnorePatterns: ['/node_modules/', '/e2e/'],
 }
