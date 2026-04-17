@@ -18,7 +18,10 @@ import {
   ShoppingBag,
   Zap,
   AlertCircle,
-  Plus
+  Plus,
+  Search,
+  Utensils,
+  ChevronRight
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
@@ -61,6 +64,11 @@ export default function DailySalesPage() {
 
   const [showAddMenu, setShowAddMenu] = useState(false)
   const [searchTerm, setSearchTerm] = useState('')
+  const [priceError, setPriceError] = useState(false)
+
+  // Delete modal state
+  const [itemToDelete, setItemToDelete] = useState<SaleHistoryItem | null>(null)
+  const [deleteReason, setDeleteReason] = useState('')
 
   // Edit state
   const [editingId, setEditingId] = useState<string | null>(null)
@@ -81,14 +89,17 @@ export default function DailySalesPage() {
 
   const handleBoxChange = (id: string, val: number) => {
     setMenuSales(prev => prev.map(s => s.id === id ? { ...s, boxes: val } : s))
+    if (priceError) setPriceError(false)
   }
 
   const handlePriceChange = (id: string, val: number) => {
     setMenuSales(prev => prev.map(s => s.id === id ? { ...s, pricePerBox: val } : s))
+    if (priceError) setPriceError(false)
   }
 
   const removeRow = (id: string) => {
     setMenuSales(prev => prev.filter(s => s.id !== id))
+    if (priceError) setPriceError(false)
   }
 
   const addRow = (menuName: string, price: number) => {
@@ -98,6 +109,7 @@ export default function DailySalesPage() {
       boxes: 0,
       pricePerBox: price
     }])
+    if (priceError) setPriceError(false)
   }
 
   const totalSales = menuSales.reduce((sum, s) => sum + (s.boxes * s.pricePerBox), 0)
@@ -108,16 +120,25 @@ export default function DailySalesPage() {
   const totalRecorded = cash + card
 
   async function handleSave() {
+    const salesToSave = menuSales.filter(s => s.boxes > 0)
+    const hasZeroPrice = salesToSave.some(s => s.pricePerBox <= 0)
+
+    if (hasZeroPrice) {
+      setPriceError(true)
+      return
+    }
+
     setSaving(true)
     const date = new Date().toISOString().split('T')[0]
     try {
       const res = await fetch('/api/sheets/sales', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ date, menuSales: menuSales.filter(s => s.boxes > 0), cash, card })
+        body: JSON.stringify({ date, menuSales: salesToSave, cash, card })
       })
       if (res.ok) {
         setDone(true)
+        setPriceError(false)
         setTimeout(() => setDone(false), 3000)
         setCash(0)
         setCard(0)
@@ -155,19 +176,24 @@ export default function DailySalesPage() {
     }
   }
 
-  async function handleDelete(item: SaleHistoryItem) {
-    const reason = prompt(`${t.sales.delete} "${item.menu}"? ${t.sales.reason}:`)
-    if (reason === null) return
+  function openDeleteConfirm(item: SaleHistoryItem) {
+    setItemToDelete(item)
+    setDeleteReason('')
+  }
+
+  async function confirmDelete() {
+    if (!itemToDelete || !deleteReason.trim()) return
     setSaving(true)
     try {
-      const res = await fetch(`/api/sheets/sales?id=${item.id}&reason=${encodeURIComponent(reason)}`, {
+      const res = await fetch(`/api/sheets/sales?id=${itemToDelete.id}&reason=${encodeURIComponent(deleteReason)}`, {
         method: 'DELETE'
       })
       if (res.ok) {
-        setDeletedLogs(prev => [{ item, reason, timestamp: new Date().toLocaleTimeString() }, ...prev])
+        setDeletedLogs(prev => [{ item: itemToDelete, reason: deleteReason, timestamp: new Date().toLocaleTimeString() }, ...prev])
         const hRes = await fetch('/api/sheets/sales')
         const hData = await hRes.json()
         setHistory(hData.history ?? [])
+        setItemToDelete(null)
       }
     } catch (err: any) {
       console.error(err)
@@ -208,7 +234,14 @@ export default function DailySalesPage() {
             <div className="w-14 h-14 bg-mist-gray rounded-2xl flex items-center justify-center text-slate-400 group-hover:bg-cinnabar/10 group-hover:text-cinnabar transition-colors shrink-0">
                <ShoppingBag size={28} />
             </div>
-            <div className="flex-1 font-bold text-slate-deep text-xl">{sale.menu}</div>
+            <div className="flex-1">
+               <p className="font-bold text-slate-deep text-xl">{sale.menu}</p>
+               {sale.boxes > 0 && sale.pricePerBox <= 0 && (
+                 <p className="text-orange-500 font-bold text-sm mt-1">
+                   There is no price assigned, please add (Or remove the menu before submitting)
+                 </p>
+               )}
+            </div>
             <div className="flex items-center gap-8">
                <div className="w-24 text-center">
                   <label className="block text-[14px] font-bold text-slate-400 uppercase mb-2 tracking-widest">Boxes</label>
@@ -247,39 +280,110 @@ export default function DailySalesPage() {
       <div className="relative">
         <button
           className="w-full py-6 border-2 border-dashed border-slate-200 rounded-2xl text-slate-400 font-bold hover:border-cinnabar hover:text-cinnabar transition-all flex items-center justify-center gap-2"
-          onClick={() => setShowAddMenu(!showAddMenu)}
+          onClick={() => setShowAddMenu(true)}
         >
           <Plus size={24} /> Add Menu or Custom Entry
         </button>
 
         {showAddMenu && (
-          <div className="absolute top-full left-0 w-full mt-2 bg-white shadow-2xl rounded-2xl border border-slate-100 z-50 p-4 animate-in fade-in slide-in-from-top-2">
-            <input
-              autoFocus
-              className="w-full h-12 bg-mist-gray rounded-xl px-4 outline-none focus:ring-2 focus:ring-cinnabar/20 font-bold"
-              placeholder="Search menus or type custom name..."
-              value={searchTerm}
-              onChange={e => setSearchTerm(e.target.value)}
+          <div className="fixed inset-0 z-[100] flex items-start justify-center pt-[15vh] px-4">
+            {/* Backdrop */}
+            <div 
+              className="fixed inset-0 bg-slate-900/60 backdrop-blur-md animate-in fade-in duration-300"
+              onClick={() => setShowAddMenu(false)}
             />
-            <div className="mt-4 max-h-60 overflow-y-auto space-y-1">
-              {filteredMenus.map(m => (
-                <button
-                  key={m.id}
-                  onClick={() => { addRow(m.nameTh, m.pricePerBox); setShowAddMenu(false); setSearchTerm('') }}
-                  className="w-full text-left p-3 hover:bg-mist-gray rounded-lg font-bold text-slate-deep flex justify-between"
-                >
-                  <span>{m.nameTh}</span>
-                  <span className="text-slate-400">€{m.pricePerBox}</span>
-                </button>
-              ))}
-              {searchTerm && !filteredMenus.some(m => m.nameTh === searchTerm) && (
-                <button
-                  onClick={() => { addRow(searchTerm, 12.0); setShowAddMenu(false); setSearchTerm('') }}
-                  className="w-full text-left p-3 hover:bg-cinnabar/10 text-cinnabar rounded-lg font-bold flex items-center gap-2"
-                >
-                  <Plus size={18} /> Add Custom: "{searchTerm}"
-                </button>
-              )}
+            
+            {/* Modal Content */}
+            <div className="relative w-full max-w-2xl bg-white rounded-3xl shadow-2xl overflow-hidden border border-white/20 animate-in zoom-in-95 slide-in-from-top-4 duration-300">
+              <div className="p-6 border-b border-mist-gray">
+                <div className="relative">
+                  <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={22} />
+                  <input
+                    autoFocus
+                    className="w-full h-14 bg-mist-gray rounded-2xl pl-12 pr-12 outline-none focus:ring-2 focus:ring-cinnabar/20 font-bold text-xl text-slate-deep placeholder:text-slate-400"
+                    placeholder="Search menus or type custom name..."
+                    value={searchTerm}
+                    onChange={e => setSearchTerm(e.target.value)}
+                    onKeyDown={e => {
+                      if (e.key === 'Escape') setShowAddMenu(false)
+                    }}
+                  />
+                  <button 
+                    onClick={() => setShowAddMenu(false)}
+                    className="absolute right-4 top-1/2 -translate-y-1/2 w-8 h-8 bg-slate-200 text-slate-500 rounded-full flex items-center justify-center hover:bg-slate-300 transition-colors"
+                  >
+                    <X size={16} />
+                  </button>
+                </div>
+              </div>
+
+              <div className="max-h-[50vh] overflow-y-auto p-3 space-y-1 custom-scrollbar">
+                {filteredMenus.length > 0 ? (
+                  <div className="px-3 pt-2 pb-1">
+                    <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">Available Menus</p>
+                  </div>
+                ) : searchTerm && !filteredMenus.length ? (
+                  <div className="p-8 text-center">
+                    <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-4">
+                       <Search className="text-slate-300" size={32} />
+                    </div>
+                    <p className="text-slate-500 font-bold text-lg">No menus found matching "{searchTerm}"</p>
+                  </div>
+                ) : null}
+
+                {filteredMenus.map(m => {
+                  const isAdded = menuSales.some(s => s.menu === m.nameTh)
+                  return (
+                    <button
+                      key={m.id}
+                      onClick={() => { addRow(m.nameTh, m.pricePerBox); setShowAddMenu(false); setSearchTerm('') }}
+                      className="w-full text-left p-4 hover:bg-mist-gray rounded-xl font-bold text-slate-deep flex items-center justify-between group transition-all"
+                    >
+                      <div className="flex items-center gap-4">
+                        <div className="w-10 h-10 bg-slate-100 rounded-xl flex items-center justify-center text-slate-400 group-hover:bg-white group-hover:shadow-sm transition-all">
+                          <Utensils size={18} />
+                        </div>
+                        <div className="flex flex-col">
+                          <span>{m.nameTh}</span>
+                          {isAdded && <span className="text-[10px] text-emerald font-black uppercase tracking-tighter">Already in list</span>}
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <span className="badge-base bg-slate-100 text-slate-500 py-1.5 px-3">€{m.pricePerBox}</span>
+                        <ChevronRight className="text-slate-300 group-hover:translate-x-1 transition-transform" size={18} />
+                      </div>
+                    </button>
+                  )
+                })}
+
+                {searchTerm && !filteredMenus.some(m => m.nameTh.toLowerCase() === searchTerm.toLowerCase()) && (
+                  <div className="mt-4 pt-4 border-t border-mist-gray">
+                    <div className="px-3 pb-2">
+                      <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">Custom Entry</p>
+                    </div>
+                    <button
+                      onClick={() => { addRow(searchTerm, 12.0); setShowAddMenu(false); setSearchTerm('') }}
+                      className="w-full text-left p-4 bg-cinnabar/5 hover:bg-cinnabar/10 text-cinnabar rounded-xl font-bold flex items-center justify-between group transition-all"
+                    >
+                      <div className="flex items-center gap-4">
+                        <div className="w-10 h-10 bg-cinnabar/10 rounded-xl flex items-center justify-center">
+                          <Plus size={20} />
+                        </div>
+                        <div className="flex flex-col">
+                          <span>Add "{searchTerm}"</span>
+                          <span className="text-[10px] opacity-70">Custom item with default €12 price</span>
+                        </div>
+                      </div>
+                      <ArrowRight size={18} />
+                    </button>
+                  </div>
+                )}
+              </div>
+              
+              <div className="bg-slate-50 p-4 flex items-center justify-between text-[11px] font-bold text-slate-400 uppercase tracking-widest px-6">
+                <span>Press ESC to close</span>
+                <span className="flex items-center gap-1.5"><History size={12} /> {filteredMenus.length} items found</span>
+              </div>
             </div>
           </div>
         )}
@@ -287,17 +391,13 @@ export default function DailySalesPage() {
 
       {/* Payment Summary Card */}
       <div className="card-base bg-slate-deep text-white border-none shadow-xl shadow-slate-900/20 space-y-10 p-10 relative overflow-hidden">
-        <div className="absolute top-0 right-0 p-10 opacity-5">
-           <Banknote size={200} />
-        </div>
-        
-        <div className="flex justify-between items-end relative z-10">
+        <div className="flex justify-between items-start relative z-10">
           <div>
             <p className="text-sm font-bold text-slate-400 uppercase tracking-widest mb-2">Estimated Revenue</p>
             <div className="text-5xl font-bold text-white tracking-tight">€{totalSales.toFixed(2)}</div>
           </div>
           <div className={cn(
-            "badge-base py-2 px-4 text-sm",
+            "badge-base py-2 px-4 text-sm -mt-[14px]",
             totalRecorded === totalSales ? "bg-emerald/20 text-emerald" : "bg-amber/20 text-amber"
           )}>
             {totalRecorded === totalSales ? "BALANCED" : "GAP: €" + (totalRecorded - totalSales).toFixed(2)}
@@ -334,6 +434,18 @@ export default function DailySalesPage() {
         </div>
       </div>
 
+      {priceError && (
+        <div className="flex items-center gap-4 p-6 bg-error-red/10 border-2 border-error-red/30 rounded-2xl text-error-red animate-in zoom-in-95 duration-300 shadow-lg shadow-error-red/5">
+           <div className="w-12 h-12 bg-error-red text-white rounded-xl flex items-center justify-center shrink-0 shadow-lg shadow-error-red/20">
+             <AlertCircle size={28} />
+           </div>
+           <div>
+             <p className="font-bold text-lg leading-tight">Price Missing</p>
+             <p className="text-error-red/80 font-semibold mt-1">Please set up the price or remove this menu before submit</p>
+           </div>
+        </div>
+      )}
+
       <button 
         onClick={handleSave}
         disabled={saving || totalSales === 0}
@@ -345,72 +457,81 @@ export default function DailySalesPage() {
       {/* History Tables */}
       <div className="pt-16 space-y-16">
         {/* Items History */}
-        <section className="space-y-8">
-          <h2 className="text-2xl font-bold text-slate-deep flex items-center gap-3 ml-1">
-             <ShoppingBag size={24} className="text-cinnabar" />
-             Menu Sales History
-          </h2>
-          <div className="card-base p-0 overflow-hidden">
-            <table className="w-full">
-              <thead>
-                <tr className="bg-mist-gray text-sm font-bold text-slate-400 uppercase tracking-widest border-bottom border-subtle-border">
-                  <th className="text-left py-5 px-8">{t.manageMenus.name}</th>
-                  <th className="text-center py-5 px-8">Qty</th>
-                  <th className="text-right py-5 px-8">Rate</th>
-                  <th className="text-right py-5 px-8">Total</th>
-                  <th className="text-right py-5 px-8">Action</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-subtle-border">
-                {history.map((h) => {
-                  const isEditing = editingId === h.id
-                  return (
-                    <tr key={h.id} className="hover:bg-mist-gray/30 transition-colors group">
-                      <td className="py-5 px-8">
-                        {isEditing ? (
-                          <input className="w-full h-11 bg-white border border-cinnabar/30 rounded-xl px-4 text-base font-bold" value={editForm.menu} onChange={e => setEditForm({...editForm, menu: e.target.value})} />
-                        ) : (
-                          <div>
-                            <div className="font-bold text-slate-deep text-base">{h.menu}</div>
-                            <div className="text-[14px] font-bold text-slate-400 uppercase tracking-widest mt-1">{h.date}</div>
-                          </div>
-                        )}
-                      </td>
-                      <td className="py-5 px-8 text-center font-bold text-slate-500 text-base">
-                        {isEditing ? (
-                          <NumberInput className="w-20 h-11 bg-white border border-cinnabar/30 rounded-xl text-center font-bold" value={editForm.boxes ?? 0} onChange={val => setEditForm({...editForm, boxes: val})} />
-                        ) : h.boxes}
-                      </td>
-                      <td className="py-5 px-8 text-right font-medium text-slate-400 text-base">
-                        {isEditing ? (
-                          <NumberInput className="w-20 h-11 bg-white border border-cinnabar/30 rounded-xl text-right pr-3 font-bold" value={editForm.pricePerBox ?? 0} onChange={val => setEditForm({...editForm, pricePerBox: val})} />
-                        ) : `€${h.pricePerBox.toFixed(1)}`}
-                      </td>
-                      <td className="py-5 px-8 text-right font-bold text-cinnabar text-lg">€{h.total.toFixed(1)}</td>
-                      <td className="py-5 px-8 text-right">
-                         <div className="flex justify-end gap-3">
-                           {isEditing ? (
-                             <>
-                               <button onClick={handleUpdate} className="w-10 h-10 bg-emerald/10 text-emerald rounded-xl flex items-center justify-center active:scale-90"><Check size={20} /></button>
-                               <button onClick={() => setEditingId(null)} className="w-10 h-10 bg-mist-gray text-slate-400 rounded-xl flex items-center justify-center active:scale-90"><X size={20} /></button>
-                             </>
-                           ) : (
-                             <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                               <button onClick={() => { setEditingId(h.id); setEditForm(h); }} className="w-10 h-10 bg-mist-gray text-slate-400 hover:text-cinnabar rounded-xl flex items-center justify-center"><Edit2 size={18} /></button>
-                               <button onClick={() => handleDelete(h)} className="w-10 h-10 bg-mist-gray text-slate-300 hover:text-error-red rounded-xl flex items-center justify-center"><Trash2 size={18} /></button>
-                             </div>
-                           )}
-                         </div>
-                      </td>
+        {history.length > 0 && (
+          <section className="space-y-8">
+            <h2 className="text-2xl font-bold text-slate-deep flex items-center gap-3 ml-1">
+               <ShoppingBag size={24} className="text-cinnabar" />
+               Daily Menu Sales History
+            </h2>
+            <div className="card-base p-0 overflow-hidden">
+              <div className="overflow-x-auto">
+                <table className="w-full text-left border-collapse">
+                  <thead>
+                    <tr className="bg-mist-gray text-sm font-bold text-slate-400 uppercase tracking-widest">
+                      <th className="py-5 px-8">Date</th>
+                      <th className="py-5 px-8">Menu Item</th>
+                      <th className="py-5 px-8 text-center">Boxes</th>
+                      <th className="py-5 px-8 text-right">Price</th>
+                      <th className="py-5 px-8 text-right">Subtotal</th>
+                      <th className="py-5 px-8 text-right w-32">Actions</th>
                     </tr>
-                  )
-                })}
-              </tbody>
-            </table>
-          </div>
-        </section>
+                  </thead>
+                  <tbody className="divide-y divide-subtle-border">
+                    {history.map((h) => {
+                      const isEditing = editingId === h.id
+                      return (
+                        <tr key={h.id} className="hover:bg-mist-gray/30 transition-colors group">
+                          <td className="py-5 px-8 text-sm font-bold text-slate-400 uppercase tracking-widest">{h.date}</td>
+                          <td className="py-5 px-8 font-bold text-slate-deep text-lg">{h.menu}</td>
+                          <td className="py-5 px-8 text-center">
+                             {isEditing ? (
+                               <NumberInput
+                                 className="w-20 h-10 border border-cinnabar/30 rounded-lg text-center font-bold bg-white"
+                                 value={editForm.boxes ?? 0}
+                                 onChange={val => setEditForm({ ...editForm, boxes: val })}
+                               />
+                             ) : (
+                               <span className="badge-base bg-slate-100 text-slate-600 font-bold px-3 py-1">{h.boxes}</span>
+                             )}
+                          </td>
+                          <td className="py-5 px-8 text-right font-medium text-slate-500">
+                             {isEditing ? (
+                               <NumberInput
+                                 className="w-24 h-10 border border-cinnabar/30 rounded-lg text-right px-3 font-bold bg-white"
+                                 value={editForm.pricePerBox ?? 0}
+                                 onChange={val => setEditForm({ ...editForm, pricePerBox: val })}
+                               />
+                             ) : (
+                               `€${h.pricePerBox.toFixed(1)}`
+                             )}
+                          </td>
+                          <td className="py-5 px-8 text-right font-bold text-cinnabar text-lg">€{h.total.toFixed(1)}</td>
+                          <td className="py-5 px-8 text-right">
+                             <div className="flex justify-end gap-3">
+                               {isEditing ? (
+                                 <>
+                                   <button onClick={handleUpdate} className="w-10 h-10 bg-emerald/10 text-emerald rounded-xl flex items-center justify-center active:scale-90"><Check size={20} /></button>
+                                   <button onClick={() => setEditingId(null)} className="w-10 h-10 bg-mist-gray text-slate-400 rounded-xl flex items-center justify-center active:scale-90"><X size={20} /></button>
+                                 </>
+                               ) : (
+                                 <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                   <button onClick={() => { setEditingId(h.id); setEditForm(h); }} className="w-10 h-10 bg-mist-gray text-slate-400 hover:text-cinnabar rounded-xl flex items-center justify-center"><Edit2 size={18} /></button>
+                                   <button onClick={() => openDeleteConfirm(h)} className="w-10 h-10 bg-mist-gray text-slate-300 hover:text-error-red rounded-xl flex items-center justify-center"><Trash2 size={18} /></button>
+                                 </div>
+                               )}
+                             </div>
+                          </td>
+                        </tr>
+                      )
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </section>
+        )}
 
-        {/* Payments History */}
+        {/* Payment History */}
         <section className="space-y-8">
           <h2 className="text-2xl font-bold text-slate-deep flex items-center gap-3 ml-1">
              <CreditCard size={24} className="text-cinnabar" />
@@ -470,6 +591,70 @@ export default function DailySalesPage() {
                 ))}
               </tbody>
             </table>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {itemToDelete && (
+        <div className="fixed inset-0 z-[110] flex items-center justify-center p-4">
+          {/* Backdrop (non-clickable) */}
+          <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-md animate-in fade-in duration-300" />
+          
+          {/* Modal Content */}
+          <div className="relative w-full max-w-lg bg-white rounded-3xl shadow-2xl overflow-hidden border border-white/20 animate-in zoom-in-95 slide-in-from-bottom-4 duration-300">
+            {/* Top Close Button */}
+            <button 
+              onClick={() => setItemToDelete(null)}
+              className="absolute top-5 right-5 w-10 h-10 bg-slate-100 text-slate-400 hover:text-slate-600 rounded-full flex items-center justify-center transition-colors z-20"
+              aria-label="Close"
+            >
+              <X size={20} />
+            </button>
+
+            <div className="p-8 text-center border-b border-mist-gray">
+              <div className="w-20 h-20 bg-error-red/10 text-error-red rounded-full flex items-center justify-center mx-auto mb-6">
+                <Trash2 size={40} />
+              </div>
+              <h3 className="text-2xl font-black text-slate-deep tracking-tight mb-2">Delete Record?</h3>
+              <p className="text-slate-500 font-medium">
+                Are you sure you want to delete the sale for <span className="text-slate-deep font-bold">"{itemToDelete.menu}"</span>? 
+                This action cannot be undone.
+              </p>
+            </div>
+
+            <div className="p-8 space-y-6 bg-slate-50/50">
+              <div className="space-y-3">
+                <label className="text-xs font-bold text-slate-400 uppercase tracking-widest ml-1">Reason for deletion</label>
+                <input
+                  autoFocus
+                  className={`w-full h-14 bg-white border ${!deleteReason.trim() ? 'border-error-red focus:ring-error-red/20' : 'border-slate-200 focus:ring-slate-400/20'} rounded-2xl px-5 outline-none font-bold text-lg text-slate-deep placeholder:text-slate-300 transition-all`}
+                  placeholder="e.g., Wrong quantity, duplicate entry..."
+                  value={deleteReason}
+                  onChange={e => setDeleteReason(e.target.value)}
+                />
+              </div>
+
+              <div className="flex gap-4">
+                <button 
+                  onClick={() => setItemToDelete(null)}
+                  className="flex-1 h-16 bg-white border-2 border-slate-200 text-slate-500 font-bold rounded-2xl hover:bg-slate-50 active:scale-95 transition-all"
+                >
+                  Cancel
+                </button>
+                <button 
+                  onClick={confirmDelete}
+                  disabled={saving || !deleteReason.trim()}
+                  className="flex-1 h-16 bg-error-red text-white font-bold rounded-2xl shadow-lg shadow-error-red/30 hover:bg-error-red/90 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none transition-all flex items-center justify-center gap-2"
+                >
+                  {saving ? <div className="w-6 h-6 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : <><Trash2 size={20} /> Delete</>}
+                </button>
+              </div>
+            </div>
+            
+            <div className="bg-slate-100/50 p-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest text-center">
+              Safety Check: History will be logged
+            </div>
           </div>
         </div>
       )}

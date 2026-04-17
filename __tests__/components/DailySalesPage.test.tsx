@@ -81,4 +81,52 @@ describe('DailySalesPage', () => {
     // We can't directly check keys in DOM, but we can verify that randomUUID was called
     expect(crypto.randomUUID).toHaveBeenCalledTimes(2)
   })
+
+  test('delete button in modal is disabled if reason is empty', async () => {
+    const mockHistory = [
+      { id: '1', timestamp: '12:00', menu: 'Pad Thai', boxes: 2, pricePerBox: 10, total: 20, method: 'cash' }
+    ];
+    
+    (global.fetch as jest.Mock).mockImplementation((url: string) => {
+      if (url === '/api/sheets/config') {
+        return Promise.resolve({ ok: true, json: () => Promise.resolve({ menus: [] }) })
+      }
+      if (url === '/api/sheets/sales') {
+        return Promise.resolve({ ok: true, json: () => Promise.resolve({ history: mockHistory }) })
+      }
+      return Promise.resolve({ ok: true, json: () => Promise.resolve({}) })
+    })
+
+    render(<DailySalesPage />)
+    
+    await waitFor(() => expect(screen.queryByText('Loading...')).not.toBeInTheDocument())
+    
+    // Find trash button
+    const allButtons = screen.getAllByRole('button')
+    const trashButton = allButtons.find(b => b.className.includes('hover:text-error-red'))
+    
+    if (!trashButton) throw new Error('Trash button not found')
+    
+    fireEvent.click(trashButton)
+    
+    // Check if modal is open
+    expect(screen.getByText(/Delete Record\?/i)).toBeInTheDocument()
+    
+    // Find the Delete button in modal
+    const confirmDeleteButton = screen.getByRole('button', { name: /Delete/i })
+    
+    // Should be disabled initially (empty reason)
+    expect(confirmDeleteButton).toBeDisabled()
+
+    // Type a reason
+    const reasonInput = screen.getByPlaceholderText(/e\.g\., Wrong quantity/i)
+    fireEvent.change(reasonInput, { target: { value: 'Wrong entry' } })
+
+    // Should be enabled now
+    expect(confirmDeleteButton).not.toBeDisabled()
+
+    // Clear reason
+    fireEvent.change(reasonInput, { target: { value: '' } })
+    expect(confirmDeleteButton).toBeDisabled()
+  })
 })
