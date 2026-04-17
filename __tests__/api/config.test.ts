@@ -17,7 +17,7 @@ beforeEach(() => {
   mockedGetServerSession.mockResolvedValue({ accessToken: 'fake-token' })
   readRows.mockResolvedValue([
     ['ingredient', 'i1', 'ข้าว', 'Riz', 'kg', '5'],
-    ['menu', 'm1', 'ผัดไทย', '12', 'i1:0.2'],
+    ['menu', 'm1', 'ผัดไทย', '', '12', 'i1:0.2'],
   ])
   appendRows.mockResolvedValue(undefined)
 })
@@ -52,26 +52,26 @@ test('PUT /api/sheets/config updates ingredient', async () => {
   const res = await PUT(req as any)
   expect(res.status).toBe(200)
   expect(updateTab).toHaveBeenCalledWith('fake-token', 'config', 
-    ['type','id','name_th','name_fr_or_price','unit_or_ingredients','threshold'],
+    ['type', 'id', 'name_th', 'name_fr_or_price', 'unit_or_ingredients', 'threshold'],
     [
       ['ingredient', 'i1', 'ข้าวหอม', 'Riz Jasmin', 'kg', '10'],
-      ['menu', 'm1', 'ผัดไทย', '12', 'i1:0.2', ''],
+      ['menu', 'm1', 'ผัดไทย', '', '12', 'i1:0.2'],
     ]
   )
 })
 
 test('PUT /api/sheets/config updates menu', async () => {
-  const body = { id: 'm1', type: 'menu', nameTh: 'ผัดไทยกุ้ง', pricePerBox: 15, ingredients: [{ ingredientId: 'i1', defaultQty: 0.3 }] }
+  const body = { id: 'm1', type: 'menu', nameTh: 'ผัดไทยกุ้ง', nameFr: 'Pad Thai', pricePerBox: 15, ingredients: [{ ingredientId: 'i1', defaultQty: 0.3 }] }
   const req = {
     json: jest.fn().mockResolvedValue(body)
   }
   const res = await PUT(req as any)
   expect(res.status).toBe(200)
   expect(updateTab).toHaveBeenCalledWith('fake-token', 'config', 
-    ['type','id','name_th','name_fr_or_price','unit_or_ingredients','threshold'],
+    ['type', 'id', 'name_th', 'name_fr_or_price', 'unit_or_ingredients', 'threshold'],
     [
       ['ingredient', 'i1', 'ข้าว', 'Riz', 'kg', '5'],
-      ['menu', 'm1', 'ผัดไทยกุ้ง', '15', 'i1:0.3', ''],
+      ['menu', 'm1', 'ผัดไทยกุ้ง', 'Pad Thai', '15', 'i1:0.3'],
     ]
   )
 })
@@ -83,9 +83,9 @@ test('DELETE /api/sheets/config removes row', async () => {
   const res = await DELETE(req as any)
   expect(res.status).toBe(200)
   expect(updateTab).toHaveBeenCalledWith('fake-token', 'config', 
-    ['type','id','name_th','name_fr_or_price','unit_or_ingredients','threshold'],
+    ['type', 'id', 'name_th', 'name_fr_or_price', 'unit_or_ingredients', 'threshold'],
     [
-      ['menu', 'm1', 'ผัดไทย', '12', 'i1:0.2', ''],
+      ['menu', 'm1', 'ผัดไทย', '', '12', 'i1:0.2'],
     ]
   )
 })
@@ -112,10 +112,10 @@ test('POST /api/sheets/config bulk updates and adds ingredients', async () => {
   expect(data.added).toBe(1)
   expect(data.updated).toBe(1)
   expect(updateTab).toHaveBeenCalledWith('fake-token', 'config', 
-    ['type','id','name_th','name_fr_or_price','unit_or_ingredients','threshold'],
+    ['type', 'id', 'name_th', 'name_fr_or_price', 'unit_or_ingredients', 'threshold'],
     expect.arrayContaining([
       ['ingredient', 'i1', 'ข้าว', 'Riz Jasmin', 'kg', '10'], // Updated
-      ['menu', 'm1', 'ผัดไทย', '12', 'i1:0.2', ''],          // Kept
+      ['menu', 'm1', 'ผัดไทย', '', '12', 'i1:0.2'],          // Kept (migrated to new schema)
       ['ingredient', expect.any(String), 'กระเทียม', 'Ail', 'kg', '1'], // Added
     ])
   )

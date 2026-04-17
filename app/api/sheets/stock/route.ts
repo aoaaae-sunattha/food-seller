@@ -30,9 +30,16 @@ export async function GET(_req: NextRequest) {
 
     // Subtract deductions (column 1 = ingredient, column 2 = amount_used)
     for (const row of stockRows) {
-      const name = row[1]
-      const qty = Number(row[2])
-      if (name && !isNaN(qty)) quantities[name] = (quantities[name] || 0) - qty
+      const ingredient = row[1]
+      const amountUsed = Number(row[2])
+      const menu = row[5]
+
+      if (ingredient && !isNaN(amountUsed)) {
+        quantities[ingredient] = (quantities[ingredient] || 0) - amountUsed
+      } else if (!ingredient && menu && !isNaN(amountUsed)) {
+        // Menu-level production/stock entry
+        quantities[menu] = (quantities[menu] || 0) - amountUsed
+      }
     }
 
     return NextResponse.json({ quantities })

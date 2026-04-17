@@ -4,7 +4,7 @@ import ItemReviewTable from '@/components/receipt/ItemReviewTable'
 import type { ReceiptItem } from '@/types'
 
 const items: ReceiptItem[] = [
-  { nameFr: 'Riz jasmin', nameTh: '', qty: 5, unit: 'kg', pricePerUnit: 2, total: 10 },
+  { nameFr: 'Riz jasmin', nameTh: '', qty: 5, unit: 'kg', pricePerUnit: 2, total: 10, netPrice: 9.48, vatRate: 5.5, vatAmount: 0.52, discount: 0 },
 ]
 
 test('renders item row', () => {
