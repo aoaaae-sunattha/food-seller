@@ -34,6 +34,15 @@ export default function ReceiptPage() {
   const [loading, setLoading] = useState(false)
   const [done, setDone] = useState(false)
   
+  // Filter state
+  const [filterStore, setFilterStore] = useState('')
+  const [filterStartDate, setFilterStartDate] = useState('')
+  const [filterEndDate, setFilterEndDate] = useState('')
+  
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1)
+  const ITEMS_PER_PAGE = 10
+  
   // Details state
   const [expandedId, setExpandedId] = useState<string | null>(null)
   const [modalLoading, setModalLoading] = useState(false)
@@ -43,6 +52,10 @@ export default function ReceiptPage() {
   useEffect(() => {
     fetchHistory()
   }, [])
+
+  useEffect(() => {
+    setCurrentPage(1)
+  }, [filterStore, filterStartDate, filterEndDate])
 
   async function fetchHistory() {
     try {
@@ -56,6 +69,19 @@ export default function ReceiptPage() {
       console.error('Failed to fetch history', e)
     }
   }
+
+  const filteredHistory = history.filter(h => {
+    const s = String(h.store || '').toLowerCase()
+    const matchStore = s.includes(filterStore.toLowerCase())
+    const hDate = new Date(h.date)
+    const matchStart = filterStartDate ? hDate >= new Date(filterStartDate) : true
+    const matchEnd = filterEndDate ? hDate <= new Date(filterEndDate) : true
+    return matchStore && matchStart && matchEnd
+  })
+
+  const totalHistorySum = filteredHistory.reduce((sum, h) => sum + Number(h.total || 0), 0)
+  const totalPages = Math.ceil(filteredHistory.length / ITEMS_PER_PAGE)
+  const paginatedHistory = filteredHistory.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE)
 
   async function toggleDetails(summary: any) {
     if (expandedId === summary.id) {
@@ -338,11 +364,56 @@ export default function ReceiptPage() {
 
       {/* History Section */}
       <div className="space-y-6 pt-6">
-        <div className="flex items-center justify-between ml-1">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 ml-1">
           <h2 className="text-2xl font-bold text-slate-deep flex items-center gap-3">
             <History size={24} className="text-cinnabar" />
             Purchase History
           </h2>
+          
+          <div className="flex flex-wrap items-center gap-4 bg-white/50 p-2 rounded-2xl border border-subtle-border">
+            <div className="relative group">
+              <input
+                type="text"
+                placeholder={t.receipt.filterStore}
+                className="h-11 bg-mist-gray border-none rounded-xl px-4 pl-10 text-sm font-bold text-slate-deep focus:ring-2 focus:ring-cinnabar/20 outline-none transition-all w-full md:w-48"
+                value={filterStore}
+                onChange={e => setFilterStore(e.target.value)}
+              />
+              <ScanLine size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-cinnabar transition-colors" />
+            </div>
+            
+            <div className="flex items-center gap-2">
+              <input
+                type="date"
+                className="h-11 bg-mist-gray border-none rounded-xl px-4 text-sm font-bold text-slate-deep focus:ring-2 focus:ring-cinnabar/20 outline-none transition-all"
+                value={filterStartDate}
+                onChange={e => setFilterStartDate(e.target.value)}
+                placeholder={t.receipt.startDate}
+              />
+              <span className="text-slate-400 font-bold">→</span>
+              <input
+                type="date"
+                className="h-11 bg-mist-gray border-none rounded-xl px-4 text-sm font-bold text-slate-deep focus:ring-2 focus:ring-cinnabar/20 outline-none transition-all"
+                value={filterEndDate}
+                onChange={e => setFilterEndDate(e.target.value)}
+                placeholder={t.receipt.endDate}
+              />
+            </div>
+
+            {(filterStore || filterStartDate || filterEndDate) && (
+              <button 
+                onClick={() => {
+                  setFilterStore('')
+                  setFilterStartDate('')
+                  setFilterEndDate('')
+                }}
+                className="h-11 px-4 bg-mist-gray text-slate-500 hover:text-cinnabar font-bold text-xs uppercase tracking-widest rounded-xl transition-all flex items-center gap-2"
+              >
+                <X size={14} />
+                Clear
+              </button>
+            )}
+          </div>
         </div>
         
         <div className="card-base p-0 overflow-hidden">
@@ -361,7 +432,7 @@ export default function ReceiptPage() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-subtle-border">
-                  {history.map((h) => (
+                  {paginatedHistory.map((h) => (
                     <React.Fragment key={h.id}>
                       <tr className="hover:bg-mist-gray/30 transition-colors group">
                         <td className="py-5 px-8 text-base font-bold text-slate-700">{h.date}</td>
@@ -438,10 +509,48 @@ export default function ReceiptPage() {
                     </React.Fragment>
                   ))}
                 </tbody>
+                <tfoot className="bg-mist-gray/50 border-t-2 border-subtle-border">
+                  <tr>
+                    <td colSpan={2} className="py-6 px-8 text-base font-bold text-slate-500 uppercase tracking-wider">{t.receipt.totalSum}</td>
+                    <td className="py-6 px-8 text-right text-2xl font-black text-cinnabar">€{totalHistorySum.toFixed(2)}</td>
+                    <td colSpan={2}></td>
+                  </tr>
+                </tfoot>
               </table>
             </div>
           )}
         </div>
+
+        {/* Pagination Controls */}
+        {totalPages > 1 && (
+          <div className="flex items-center justify-center gap-6 pt-4">
+            <button
+              onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+              disabled={currentPage === 1}
+              className="btn-secondary h-12 px-6 flex items-center gap-2 disabled:opacity-30 disabled:cursor-not-allowed"
+            >
+              <ChevronDown size={20} className="rotate-90" />
+              {t.common.prev}
+            </button>
+            
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-bold text-slate-400 uppercase tracking-widest">Page</span>
+              <span className="w-10 h-10 bg-white border border-subtle-border rounded-xl flex items-center justify-center font-bold text-slate-deep shadow-sm">
+                {currentPage}
+              </span>
+              <span className="text-sm font-bold text-slate-400 uppercase tracking-widest">of {totalPages}</span>
+            </div>
+
+            <button
+              onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+              disabled={currentPage === totalPages}
+              className="btn-secondary h-12 px-6 flex items-center gap-2 disabled:opacity-30 disabled:cursor-not-allowed"
+            >
+              {t.common.next}
+              <ChevronDown size={20} className="-rotate-90" />
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Delete Dialog */}
