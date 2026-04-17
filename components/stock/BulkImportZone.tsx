@@ -199,40 +199,44 @@ export default function BulkImportZone({ ingredients, onImportComplete }: Props)
 
       {items.length > 0 && (
         <div className="space-y-6 animate-in fade-in duration-300">
-          <div className="max-h-80 overflow-auto rounded-xl border border-subtle-border">
-            <table className="w-full text-sm">
-              <thead className="bg-mist-gray text-[14px] font-bold text-slate-400 uppercase tracking-widest sticky top-0 z-10 border-bottom border-subtle-border">
-                <tr>
-                  <th className="px-4 py-3 text-left">Status</th>
-                  <th className="px-4 py-3 text-left">Ingredient</th>
-                  <th className="px-4 py-3 text-center">Unit</th>
-                  <th className="px-4 py-3 text-right">Limit</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-subtle-border">
-                {items.map((it, idx) => (
-                  <tr key={idx} className={cn("hover:bg-mist-gray/30 transition-colors", !it.isValid && "bg-error-red/5")}>
-                    <td className="px-4 py-3">
-                      <span className={cn(
-                        "badge-base scale-90 origin-left",
-                        it.status === 'new' ? "badge-success" :
-                        it.status === 'update' ? "bg-cinnabar/10 text-cinnabar" :
-                        it.status === 'warning' ? "badge-warning" :
-                        "badge-danger"
-                      )}>
-                        {t.bulkImport[it.status]}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3">
-                      <div className="font-bold text-slate-deep">{it.nameTh}</div>
-                      <div className="text-[14px] text-slate-400 font-medium">{it.nameFr}</div>
-                    </td>
-                    <td className="px-4 py-3 text-center font-bold text-slate-500">{it.unit}</td>
-                    <td className="px-4 py-3 text-right font-bold text-slate-600">{it.threshold}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+          <div className="max-h-96 overflow-auto space-y-2 pr-2 scrollbar-thin">
+            {items.map((it, idx) => (
+              <div 
+                key={idx} 
+                className={cn(
+                  "flex gap-3 bg-slate-50 p-2 rounded-xl border border-slate-100 items-center transition-all",
+                  !it.isValid && "bg-error-red/5 border-error-red/10 shadow-inner"
+                )}
+              >
+                <div className="w-20 shrink-0">
+                  <span className={cn(
+                    "badge-base scale-75 origin-left",
+                    it.status === 'new' ? "badge-success" :
+                    it.status === 'update' ? "bg-cinnabar/10 text-cinnabar" :
+                    it.status === 'warning' ? "badge-warning" :
+                    "badge-danger"
+                  )}>
+                    {t.bulkImport[it.status]}
+                  </span>
+                </div>
+                
+                <div className="flex-1 min-w-0">
+                  <div className="font-bold text-slate-deep truncate">{it.nameTh}</div>
+                  <div className="text-[14px] text-slate-400 font-medium truncate uppercase tracking-wide">{it.nameFr}</div>
+                </div>
+
+                <div className="flex items-center gap-4 shrink-0 px-2">
+                  <div className="text-center min-w-[50px]">
+                    <div className="text-[14px] font-black text-amber-600 uppercase">{it.unit}</div>
+                    <div className="text-[14px] text-slate-400 font-bold uppercase tracking-tighter">Unit</div>
+                  </div>
+                  <div className="text-right min-w-[50px]">
+                    <div className="text-[14px] font-black text-slate-600">{it.threshold}</div>
+                    <div className="text-[14px] text-slate-400 font-bold uppercase tracking-tighter">Limit</div>
+                  </div>
+                </div>
+              </div>
+            ))}
           </div>
           
           <div className="flex flex-col gap-4">

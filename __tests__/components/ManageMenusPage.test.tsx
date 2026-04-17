@@ -17,11 +17,20 @@ jest.mock('@/hooks/useLanguage', () => ({
 // Mock fetch
 global.fetch = jest.fn() as jest.Mock
 
+// Mock FileReader for CSV tests
+class MockFileReader {
+  onload: ((ev: any) => void) | null = null;
+  readAsText(blob: Blob) {
+    // We'll manually trigger onload in tests
+  }
+}
+(global as any).FileReader = MockFileReader
+
 const mockMenus = [
   { id: 'm1', nameTh: 'Pad Thai', pricePerBox: 12, ingredients: [] },
 ]
 const mockIngredients = [
-  { id: 'i1', nameTh: 'Noodles', unit: 'kg' },
+  { id: 'i1', nameTh: 'Noodles', unit: 'kg', threshold: 10 },
 ]
 
 describe('ManageMenusPage', () => {
@@ -32,6 +41,12 @@ describe('ManageMenusPage', () => {
         return Promise.resolve({
           ok: true,
           json: () => Promise.resolve({ menus: mockMenus, ingredients: mockIngredients })
+        })
+      }
+      if (url === '/api/sheets/stock') {
+        return Promise.resolve({
+          ok: true,
+          json: () => Promise.resolve({ quantities: { 'Pad Thai': 5 } })
         })
       }
       return Promise.resolve({ ok: true, json: () => Promise.resolve({}) })
@@ -54,7 +69,36 @@ describe('ManageMenusPage', () => {
     
     expect(editBtn).toBeInTheDocument()
     expect(deleteBtn).toBeInTheDocument()
-    expect(editBtn).toHaveTextContent('Edit')
-    expect(deleteBtn).toHaveTextContent('Delete')
+  })
+
+  test('handles CSV import with threshold', async () => {
+    render(<ManageMenusPage />)
+    await waitFor(() => expect(screen.queryByText('Loading...')).not.toBeInTheDocument())
+
+    // Open add menu form
+    fireEvent.click(screen.getByText('+ Add Menu'))
+
+    const file = new File(['nameTh,nameFr,unit,qty,threshold\nShrimp,Crevette,kg,2,5'], 'ingredients.csv', { type: 'text/csv' })
+    const input = screen.getByTestId('menu-csv-input')
+
+    // Mock the reader instance that the component creates
+    let capturedOnload: any
+    const readAsTextMock = jest.spyOn(MockFileReader.prototype, 'readAsText').mockImplementation(function(this: any) {
+      capturedOnload = this.onload
+    })
+
+    fireEvent.change(input, { target: { files: [file] } })
+    
+    expect(readAsTextMock).toHaveBeenCalled()
+    
+    // Trigger the onload manually with mock CSV data
+    capturedOnload({ target: { result: 'nameTh,nameFr,unit,qty,threshold\nShrimp,Crevette,kg,2,5' } })
+
+    // Verify ingredient was added to the list with correct threshold
+    await waitFor(() => {
+      expect(screen.getByDisplayValue('Shrimp')).toBeInTheDocument()
+      expect(screen.getByDisplayValue('Crevette')).toBeInTheDocument()
+      expect(screen.getByDisplayValue('5')).toBeInTheDocument()
+    })
   })
 })

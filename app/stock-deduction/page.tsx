@@ -12,6 +12,7 @@ export default function StockDeductionPage() {
   const [allIngredients, setAllIngredients] = useState<Ingredient[]>([])
   const [selectedMenus, setSelectedMenus] = useState<string[]>([])
   const [deductions, setDeductions] = useState<Record<string, DeductionRow[]>>({})
+  const [batchSizes, setBatchSizes] = useState<Record<string, number>>({})
   const [quantities, setQuantities] = useState<Record<string, number>>({})
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
@@ -35,6 +36,7 @@ export default function StockDeductionPage() {
     const nextDeductions = { ...deductions }
     selectedMenus.forEach(menuName => {
       if (!nextDeductions[menuName]) {
+        setBatchSizes(prev => ({ ...prev, [menuName]: 1 }))
         const template = menus.find(m => m.nameTh === menuName)
         if (template) {
           nextDeductions[menuName] = template.ingredients.map(ti => {
@@ -45,14 +47,15 @@ export default function StockDeductionPage() {
               unit: ing?.unit || 'kg',
               reason: 'ใช้ทำอาหาร' as const
             }
-            })
-            } else {
-            nextDeductions[menuName] = [{ ingredientName: '', amountUsed: 0, unit: 'kg', reason: 'ใช้ทำอาหาร' as const }]
-            }
-            }
-            })
-            setDeductions(nextDeductions)
-            }, [selectedMenus, menus, allIngredients])
+          })
+        } else {
+          nextDeductions[menuName] = [{ ingredientName: '', amountUsed: 0, unit: 'kg', reason: 'ใช้ทำอาหาร' as const }]
+        }
+      }
+    })
+    setDeductions(nextDeductions)
+  }, [selectedMenus, menus, allIngredients])
+
   async function handleSave() {
     setSaving(true)
     const date = new Date().toISOString().split('T')[0]
@@ -82,6 +85,19 @@ export default function StockDeductionPage() {
 
     const rows: StockDeductionRow[] = []
     selectedMenus.forEach(menuName => {
+      // Record boxes prepared (negative deduction = Addition to menu stock)
+      const count = batchSizes[menuName] || 0
+      if (count > 0) {
+        rows.push({
+          date,
+          ingredient: '', // indicate this is a menu-level entry
+          amount_used: -count, // Addition
+          unit: 'boxes',
+          reason: 'ใช้ทำอาหาร' as any,
+          menu: menuName
+        })
+      }
+
       deductions[menuName]?.forEach(d => {
         if (d.ingredientName && d.amountUsed > 0) {
           rows.push({
@@ -168,30 +184,43 @@ export default function StockDeductionPage() {
 
       <section className="space-y-6">
         {selectedMenus.map(menuName => (
-          <IngredientSection
-            key={menuName}
-            menuName={menuName}
-            allIngredients={allIngredients}
-            quantities={quantities}
-            rows={deductions[menuName] || []}
-            t={t}
-            onRowChange={(idx, patch) => {
-              const menuRows = [...(deductions[menuName] || [])]
-              menuRows[idx] = { ...menuRows[idx], ...patch }
-              setDeductions({ ...deductions, [menuName]: menuRows })
-            }}
-            onAddRow={() => {
-              setDeductions({
-                ...deductions,
-                [menuName]: [...(deductions[menuName] || []), { ingredientName: '', amountUsed: 0, unit: 'kg', reason: 'ใช้ทำอาหาร' as const }]
-              })
-            }}
-            onRemoveRow={(idx) => {
-              const menuRows = [...(deductions[menuName] || [])]
-              menuRows.splice(idx, 1)
-              setDeductions({ ...deductions, [menuName]: menuRows })
-            }}
-          />
+          <div key={menuName} className="space-y-4">
+            <div className="flex items-center justify-between px-6 py-2 bg-slate-50 rounded-2xl border border-slate-100">
+               <span className="font-bold text-slate-700">{menuName}</span>
+               <div className="flex items-center gap-4">
+                 <span className="text-[14px] font-bold text-slate-400 uppercase tracking-widest">Boxes Prepared:</span>
+                 <input 
+                   type="number" 
+                   className="w-20 h-10 border border-slate-200 rounded-xl px-3 text-center font-bold text-amber-600 outline-none focus:border-amber-500"
+                   value={batchSizes[menuName] || 0}
+                   onChange={e => setBatchSizes({ ...batchSizes, [menuName]: Number(e.target.value) })}
+                 />
+               </div>
+            </div>
+            <IngredientSection
+              menuName={menuName}
+              allIngredients={allIngredients}
+              quantities={quantities}
+              rows={deductions[menuName] || []}
+              t={t}
+              onRowChange={(idx, patch) => {
+                const menuRows = [...(deductions[menuName] || [])]
+                menuRows[idx] = { ...menuRows[idx], ...patch }
+                setDeductions({ ...deductions, [menuName]: menuRows })
+              }}
+              onAddRow={() => {
+                setDeductions({
+                  ...deductions,
+                  [menuName]: [...(deductions[menuName] || []), { ingredientName: '', amountUsed: 0, unit: 'kg', reason: 'ใช้ทำอาหาร' as const }]
+                })
+              }}
+              onRemoveRow={(idx) => {
+                const menuRows = [...(deductions[menuName] || [])]
+                menuRows.splice(idx, 1)
+                setDeductions({ ...deductions, [menuName]: menuRows })
+              }}
+            />
+          </div>
         ))}
       </section>
 
