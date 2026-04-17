@@ -3,25 +3,27 @@ import {  useState, useEffect  } from 'react'
 import { NumberInput } from '@/components/NumberInput'
 import { useLanguage } from '@/hooks/useLanguage'
 import type { MenuTemplate } from '@/types'
-import { 
-  TrendingUp, 
-  Banknote, 
-  CreditCard, 
-  History, 
-  Trash2, 
-  Edit2, 
-  Save, 
-  X, 
-  Check, 
+import {
+  TrendingUp,
+  Banknote,
+  CreditCard,
+  History,
+  Trash2,
+  Edit2,
+  Save,
+  X,
+  Check,
   ArrowRight,
   PieChart,
   ShoppingBag,
   Zap,
-  AlertCircle
+  AlertCircle,
+  Plus
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 interface MenuSale {
+  id: string
   menu: string
   boxes: number
   pricePerBox: number
@@ -57,6 +59,9 @@ export default function DailySalesPage() {
   const [history, setHistory] = useState<SaleHistoryItem[]>([])
   const [deletedLogs, setDeletedLogs] = useState<DeleteLog[]>([])
 
+  const [showAddMenu, setShowAddMenu] = useState(false)
+  const [searchTerm, setSearchTerm] = useState('')
+
   // Edit state
   const [editingId, setEditingId] = useState<string | null>(null)
   const [editForm, setEditForm] = useState<Partial<SaleHistoryItem>>({})
@@ -68,25 +73,38 @@ export default function DailySalesPage() {
     ]).then(([configData, salesData]) => {
       const menus = configData.menus ?? []
       setMenus(menus)
-      setMenuSales(menus.map((m: MenuTemplate) => ({ menu: m.nameTh, boxes: 0, pricePerBox: m.pricePerBox })))
+      setMenuSales(menus.map((m: MenuTemplate) => ({ id: crypto.randomUUID(), menu: m.nameTh, boxes: 0, pricePerBox: m.pricePerBox })))
       setHistory(salesData.history ?? [])
       setLoading(false)
     })
   }, [])
 
-  const handleBoxChange = (idx: number, val: number) => {
-    const next = [...menuSales]
-    next[idx].boxes = val
-    setMenuSales(next)
+  const handleBoxChange = (id: string, val: number) => {
+    setMenuSales(prev => prev.map(s => s.id === id ? { ...s, boxes: val } : s))
   }
 
-  const handlePriceChange = (idx: number, val: number) => {
-    const next = [...menuSales]
-    next[idx].pricePerBox = val
-    setMenuSales(next)
+  const handlePriceChange = (id: string, val: number) => {
+    setMenuSales(prev => prev.map(s => s.id === id ? { ...s, pricePerBox: val } : s))
+  }
+
+  const removeRow = (id: string) => {
+    setMenuSales(prev => prev.filter(s => s.id !== id))
+  }
+
+  const addRow = (menuName: string, price: number) => {
+    setMenuSales(prev => [...prev, {
+      id: crypto.randomUUID(),
+      menu: menuName,
+      boxes: 0,
+      pricePerBox: price
+    }])
   }
 
   const totalSales = menuSales.reduce((sum, s) => sum + (s.boxes * s.pricePerBox), 0)
+
+  const filteredMenus = menus.filter(m =>
+    m.nameTh.toLowerCase().includes(searchTerm.toLowerCase())
+  )
   const totalRecorded = cash + card
 
   async function handleSave() {
@@ -103,7 +121,7 @@ export default function DailySalesPage() {
         setTimeout(() => setDone(false), 3000)
         setCash(0)
         setCard(0)
-        setMenuSales(menus.map(m => ({ menu: m.nameTh, boxes: 0, pricePerBox: m.pricePerBox })))
+        setMenuSales(menus.map(m => ({ id: crypto.randomUUID(), menu: m.nameTh, boxes: 0, pricePerBox: m.pricePerBox })))
         const hRes = await fetch('/api/sheets/sales')
         const hData = await hRes.json()
         setHistory(hData.history ?? [])
@@ -186,7 +204,7 @@ export default function DailySalesPage() {
       {/* Menu Input Form */}
       <div className="grid grid-cols-1 gap-5">
         {menuSales.map((sale, i) => (
-          <div key={sale.menu} data-testid={`sale-row-${i}`} className="card-base flex items-center gap-6 group hover:border-cinnabar/30 transition-all p-8">
+          <div key={sale.id} data-testid={`sale-row-${i}`} className="card-base flex items-center gap-6 group hover:border-cinnabar/30 transition-all p-8">
             <div className="w-14 h-14 bg-mist-gray rounded-2xl flex items-center justify-center text-slate-400 group-hover:bg-cinnabar/10 group-hover:text-cinnabar transition-colors shrink-0">
                <ShoppingBag size={28} />
             </div>
@@ -198,7 +216,7 @@ export default function DailySalesPage() {
                     data-testid={`sale-boxes-${i}`}
                     className="w-full h-12 bg-mist-gray border-none rounded-xl text-center font-bold text-slate-deep focus:ring-2 focus:ring-cinnabar/20 outline-none text-lg"
                     value={sale.boxes}
-                    onChange={val => handleBoxChange(i, val)}
+                    onChange={val => handleBoxChange(sale.id, val)}
                   />
                </div>
                <div className="w-28 text-right">
@@ -207,15 +225,64 @@ export default function DailySalesPage() {
                     data-testid={`sale-price-${i}`}
                     className="w-full h-12 bg-mist-gray border-none rounded-xl text-right px-4 font-bold text-slate-deep focus:ring-2 focus:ring-cinnabar/20 outline-none text-lg"
                     value={sale.pricePerBox}
-                    onChange={val => handlePriceChange(i, val)}
+                    onChange={val => handlePriceChange(sale.id, val)}
                   />
                </div>
                <div className="w-24 text-right font-bold text-cinnabar text-2xl">
                  €{(sale.boxes * sale.pricePerBox).toFixed(1)}
                </div>
+               <button
+                 onClick={() => removeRow(sale.id)}
+                 className="p-2 text-slate-300 hover:text-error-red transition-colors"
+                 title="Remove from today's list"
+               >
+                 <Trash2 size={20} />
+               </button>
             </div>
           </div>
         ))}
+      </div>
+
+      {/* Add Menu Button */}
+      <div className="relative">
+        <button
+          className="w-full py-6 border-2 border-dashed border-slate-200 rounded-2xl text-slate-400 font-bold hover:border-cinnabar hover:text-cinnabar transition-all flex items-center justify-center gap-2"
+          onClick={() => setShowAddMenu(!showAddMenu)}
+        >
+          <Plus size={24} /> Add Menu or Custom Entry
+        </button>
+
+        {showAddMenu && (
+          <div className="absolute top-full left-0 w-full mt-2 bg-white shadow-2xl rounded-2xl border border-slate-100 z-50 p-4 animate-in fade-in slide-in-from-top-2">
+            <input
+              autoFocus
+              className="w-full h-12 bg-mist-gray rounded-xl px-4 outline-none focus:ring-2 focus:ring-cinnabar/20 font-bold"
+              placeholder="Search menus or type custom name..."
+              value={searchTerm}
+              onChange={e => setSearchTerm(e.target.value)}
+            />
+            <div className="mt-4 max-h-60 overflow-y-auto space-y-1">
+              {filteredMenus.map(m => (
+                <button
+                  key={m.id}
+                  onClick={() => { addRow(m.nameTh, m.pricePerBox); setShowAddMenu(false); setSearchTerm('') }}
+                  className="w-full text-left p-3 hover:bg-mist-gray rounded-lg font-bold text-slate-deep flex justify-between"
+                >
+                  <span>{m.nameTh}</span>
+                  <span className="text-slate-400">€{m.pricePerBox}</span>
+                </button>
+              ))}
+              {searchTerm && !filteredMenus.some(m => m.nameTh === searchTerm) && (
+                <button
+                  onClick={() => { addRow(searchTerm, 12.0); setShowAddMenu(false); setSearchTerm('') }}
+                  className="w-full text-left p-3 hover:bg-cinnabar/10 text-cinnabar rounded-lg font-bold flex items-center gap-2"
+                >
+                  <Plus size={18} /> Add Custom: "{searchTerm}"
+                </button>
+              )}
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Payment Summary Card */}
