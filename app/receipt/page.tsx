@@ -235,7 +235,7 @@ export default function ReceiptPage() {
       
       {/* OCR Loading State */}
       {loading && !items.length && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center backdrop-blur-md bg-slate-900/20 px-6">
+        <div role="status" aria-live="polite" aria-label="Analyzing receipt" className="fixed inset-0 z-[100] flex items-center justify-center backdrop-blur-md bg-slate-900/20 px-6">
           <div className="card-base max-w-md w-full text-center space-y-8 relative overflow-hidden">
              <div className="absolute top-0 left-0 w-full h-1.5 bg-cinnabar/20 overflow-hidden">
                 <div className="h-full bg-cinnabar w-1/3 animate-[progress_2s_infinite]" />
@@ -261,8 +261,9 @@ export default function ReceiptPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
               <div className="space-y-3">
                 <label className="text-sm font-bold text-slate-400 uppercase tracking-widest ml-1">Purchase Date</label>
-                <input 
+                <input
                   type="date"
+                  data-testid="ocr-date"
                   className="w-full h-16 bg-mist-gray border-none rounded-xl px-5 text-xl font-bold text-slate-deep focus:ring-2 focus:ring-cinnabar/20 outline-none transition-all"
                   value={date}
                   onChange={e => setDate(e.target.value)}
@@ -272,9 +273,10 @@ export default function ReceiptPage() {
                 <label className="text-sm font-bold text-slate-400 uppercase tracking-widest ml-1">Total Amount Paid</label>
                 <div className="relative">
                   <span className="absolute left-5 top-1/2 -translate-y-1/2 font-bold text-cinnabar text-xl">€</span>
-                  <input 
+                  <input
                     type="number"
                     step="0.01"
+                    data-testid="ocr-total"
                     className="w-full h-16 bg-mist-gray border-none rounded-xl pl-10 pr-5 text-xl font-bold text-slate-deep focus:ring-2 focus:ring-cinnabar/20 outline-none transition-all"
                     value={total}
                     onChange={e => setTotal(Number(e.target.value))}
@@ -285,7 +287,8 @@ export default function ReceiptPage() {
 
             <div className="space-y-3">
               <label className="text-sm font-bold text-slate-400 uppercase tracking-widest ml-1">{t.receipt.store}</label>
-              <input 
+              <input
+                data-testid="ocr-store"
                 className="w-full h-16 bg-mist-gray border-none rounded-xl px-5 text-xl font-bold text-slate-deep focus:ring-2 focus:ring-cinnabar/20 outline-none transition-all"
                 value={store}
                 onChange={e => setStore(e.target.value)}
@@ -327,7 +330,7 @@ export default function ReceiptPage() {
               disabled={loading || items.length === 0}
               className="btn-primary flex-1 h-16 text-lg"
             >
-              {loading ? <Loader2 className="animate-spin" /> : t.receipt.confirm}
+              {loading ? <Loader2 className="animate-spin" aria-label="Saving..." /> : t.receipt.confirm}
             </button>
           </div>
         </div>

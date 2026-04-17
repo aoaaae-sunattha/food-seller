@@ -448,8 +448,9 @@ export default function ManageMenusPage() {
                 {t.stock.addIngredient}
               </button>
               
-              <button 
+              <button
                 onClick={() => setShowQuickAdd(!showQuickAdd)}
+                aria-label="Add ingredient quickly"
                 className="text-slate-400 text-[14px] font-black uppercase tracking-widest flex items-center gap-1 hover:text-slate-600 transition-colors"
               >
                 {showQuickAdd ? t.common.cancel : `✨ ${t.manageStock.add} (Quick)`}
@@ -492,7 +493,7 @@ export default function ManageMenusPage() {
           const qty = quantities[menu.nameTh] ?? 0
 
           return (
-          <div key={menu.id} id={`menu-item-${menu.id}`} className="flex gap-4 bg-slate-50 p-4 rounded-xl border border-slate-100 items-center hover:bg-slate-100 transition-colors group">
+          <div key={menu.id} data-testid={`menu-item-${menu.id}`} className="flex gap-4 bg-slate-50 p-4 rounded-xl border border-slate-100 items-center hover:bg-slate-100 transition-colors group">
             <div className="flex items-center gap-4 flex-1">
               <div className="w-12 h-12 bg-amber-50 rounded-xl flex items-center justify-center text-2xl shadow-sm border border-amber-100 shrink-0">
                 🍜
@@ -517,7 +518,7 @@ export default function ManageMenusPage() {
 
               <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                 <button
-                  id={`menu-edit-${menu.id}`}
+                  data-testid={`menu-edit-${menu.id}`}
                   onClick={() => handleEdit(menu)}
                   className="w-10 h-10 bg-white text-slate-400 hover:text-amber-600 border border-slate-200 rounded-lg flex items-center justify-center transition-all"
                   title="Edit"
@@ -525,7 +526,7 @@ export default function ManageMenusPage() {
                   <Edit2 size={18} />
                 </button>
                 <button
-                  id={`menu-delete-${menu.id}`}
+                  data-testid={`menu-delete-${menu.id}`}
                   onClick={() => handleDelete(menu.id)}
                   className="w-10 h-10 bg-white text-slate-300 hover:text-red-500 border border-slate-200 rounded-lg flex items-center justify-center transition-all"
                   title="Delete"

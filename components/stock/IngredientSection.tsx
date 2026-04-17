@@ -38,7 +38,7 @@ export default function IngredientSection({ menuName, rows, onRowChange, onAddRo
         {rows.map((row, i) => {
           const currentStock = quantities[row.ingredientName] || 0
           return (
-            <div key={i} className="flex flex-col gap-2 bg-slate-50/50 p-4 rounded-2xl border border-slate-50 relative group">
+            <div key={i} data-testid={`stock-row-${i}`} className="flex flex-col gap-2 bg-slate-50/50 p-4 rounded-2xl border border-slate-50 relative group">
               <button 
                 onClick={() => onRemoveRow(i)}
                 className="absolute -top-2 -right-2 w-6 h-6 bg-white border border-slate-100 rounded-full flex items-center justify-center text-slate-300 hover:text-rose-500 hover:border-rose-100 shadow-sm opacity-0 group-hover:opacity-100 transition-all z-10"
@@ -49,6 +49,7 @@ export default function IngredientSection({ menuName, rows, onRowChange, onAddRo
                 <div className="flex-1">
                   <input 
                     id={`stock-item-name-${menuName}-${i}`}
+                    data-testid={`stock-item-name-${i}`}
                     list="ing-suggestions"
                     className="w-full bg-transparent font-bold text-slate-800 outline-none text-base border-b border-transparent focus:border-amber-500/20"
                     placeholder="Type or Choose Ingredient..."

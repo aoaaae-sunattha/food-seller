@@ -60,13 +60,13 @@ describe('ManageMenusPage', () => {
     
     expect(screen.getByText('Pad Thai')).toBeInTheDocument()
     
-    // Check for IDs as per requirements
-    const menuItem = document.getElementById('menu-item-m1')
+    // Check for data-testid as per requirements
+    const menuItem = document.querySelector('[data-testid="menu-item-m1"]')
     expect(menuItem).toBeInTheDocument()
-    
-    const editBtn = document.getElementById('menu-edit-m1')
-    const deleteBtn = document.getElementById('menu-delete-m1')
-    
+
+    const editBtn = document.querySelector('[data-testid="menu-edit-m1"]')
+    const deleteBtn = document.querySelector('[data-testid="menu-delete-m1"]')
+
     expect(editBtn).toBeInTheDocument()
     expect(deleteBtn).toBeInTheDocument()
   })
