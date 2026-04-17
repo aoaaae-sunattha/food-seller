@@ -86,21 +86,21 @@ export default function IngredientSection({ menuName, rows, onRowChange, onAddRo
                 </div>
               </div>
 
-              <div className="flex gap-3 items-center pt-1">
+              <div className="flex gap-3 items-center pt-9">
                 <div className="flex-1 relative">
-                  <span className="absolute -top-4 left-1 text-[14px] font-black text-slate-300 uppercase tracking-tighter">{t.stock.amountUsed}</span>
+                  <span className="absolute -top-5 left-1 text-[14px] font-black text-slate-300 uppercase tracking-tighter">{t.stock.amountUsed}</span>
                   <NumberInput 
                     id={`stock-item-qty-${menuName}-${i}`}
-                    className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 font-black text-amber-600 outline-none focus:border-amber-500 shadow-sm transition-all"
+                    className="w-full h-11 bg-white border border-slate-200 rounded-xl px-3 py-2 font-black text-amber-600 outline-none focus:border-amber-500 shadow-sm transition-all"
                     value={row.amountUsed}
                     onChange={val => onRowChange(i, { amountUsed: val })}
                   />
                 </div>
                 <div className="flex-1 relative">
-                  <span className="absolute -top-4 left-1 text-[14px] font-black text-slate-300 uppercase tracking-tighter">{t.stock.reason}</span>
+                  <span className="absolute -top-5 left-1 text-[14px] font-black text-slate-300 uppercase tracking-tighter">{t.stock.reason}</span>
                   <select 
                     id={`stock-item-reason-${menuName}-${i}`}
-                    className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-sm font-bold text-slate-500 outline-none cursor-pointer uppercase tracking-tight shadow-sm"
+                    className="w-full h-11 bg-white border border-slate-200 rounded-xl px-3 py-2 text-sm font-bold text-slate-500 outline-none cursor-pointer uppercase tracking-tight shadow-sm"
                     value={row.reason}
                     onChange={e => onRowChange(i, { reason: e.target.value as StockReason })}
                   >

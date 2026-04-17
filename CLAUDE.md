@@ -34,7 +34,7 @@ Four exported functions cover all data access:
 - `readRows(accessToken, tab)` — returns all data rows (excludes header) from a tab
 - `updateTab(accessToken, tab, header, rows)` — clears the tab then writes header + all rows (full overwrite)
 
-`TabKey` values: `'purchases' | 'stock' | 'sales' | 'config' | 'summary'`
+`TabKey` values: `'purchases' | 'stock' | 'sales' | 'config' | 'summary' | 'receipt_summaries' | 'receipt_extract' | 'inventory'`
 
 **Mutation pattern for PUT/DELETE:** all edits use read-modify-write — call `readRows`, transform the array, then call `updateTab`. There is no row-level update API; the entire tab is rewritten each time.
 
@@ -55,9 +55,15 @@ Config POST also accepts `{ bulk: true, items: [...] }` for batch ingredient ups
 
 The sales tab has 9 columns: `id, date, menu, boxes, price_per_box, subtotal, cash, card, total`. The `id` is an 8-char UUID prefix prepended at write time. Legacy rows written before this change have only 8 columns; the GET route detects `row.length === 9` and maps accordingly, generating a synthetic `legacy-` id for older rows. **Note:** the `SalesRow` type in `types/index.ts` predates the id column and does not match the live sheet schema.
 
-### Stock computation
+### Inventory and Stock computation
 
-`GET /api/sheets/stock` computes current stock quantities on-the-fly: it sums purchase quantities (col 3 = item_th, col 4 = qty) then subtracts deduction quantities (col 1 = ingredient, col 2 = amount_used). Quantities are keyed by Thai ingredient name, not by ID.
+The `Inventory` tab is the single source of truth for current stock quantities.
+- `GET /api/sheets/stock` returns quantities directly from this tab.
+- `GET /api/sheets/dashboard` uses this tab for low-stock alerts.
+- `POST /api/sheets/stock` (deductions) and `POST /api/sheets/purchases` update this tab incrementally via the `updateInventory` helper in `lib/sheets.ts`.
+- `PUT /api/sheets/stock` performs absolute overrides of quantity (used by Manage Stock page).
+
+The `Stock` tab remains as a historical log of deductions (usage), while the `Purchases` tab logs purchase history.
 
 ### Auth flow
 

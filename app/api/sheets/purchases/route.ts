@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { appendRows, readRows, updateTab, uploadReceiptImage } from '../../../../lib/sheets'
+import { appendRows, readRows, updateInventory, updateTab, uploadReceiptImage } from '../../../../lib/sheets'
 import type { ReceiptItem } from '../../../../types'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
@@ -146,6 +146,19 @@ export async function POST(req: NextRequest) {
 
     // 4. Save to Receipt Extract (Raw extraction per user request)
     await appendRows(accessToken, 'receipt_extract', rows)
+
+    // 5. Update Inventory balances
+    const adjustments = items
+      .filter(item => item.nameTh)
+      .map(item => ({
+        ingredient: item.nameTh,
+        qtyDelta: item.qty,
+        unit: item.unit
+      }))
+    
+    if (adjustments.length > 0) {
+      await updateInventory(accessToken, adjustments)
+    }
 
     return NextResponse.json({ ok: true, driveUrl, id: receiptId })
   } catch (error: any) {

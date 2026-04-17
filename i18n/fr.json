@@ -22,7 +22,11 @@
     "qty": "Qté",
     "unit": "Unité",
     "price": "Prix/unité",
-    "total": "Total"
+    "total": "Total",
+    "filterStore": "Filtrer par magasin",
+    "startDate": "Date de début",
+    "endDate": "Date de fin",
+    "totalSum": "Somme totale"
   },
   "stock": {
     "deduct": "Déduire stock",
@@ -97,6 +101,8 @@
     "delete": "Supprimer",
     "loading": "Chargement...",
     "error": "Une erreur s'est produite",
-    "changeLanguage": "Changer la langue"
+    "changeLanguage": "Changer la langue",
+    "next": "Suivant",
+    "prev": "Précédent"
   }
 }

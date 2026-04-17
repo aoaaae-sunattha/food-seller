@@ -79,7 +79,7 @@ export interface SalesRow {
 
 export interface StockQuantity {
   ingredient: Ingredient
-  currentQty: number  // sum of purchases - sum of deductions
+  currentQty: number  // Current balance from Inventory tab
 }
 
 export interface DashboardData {

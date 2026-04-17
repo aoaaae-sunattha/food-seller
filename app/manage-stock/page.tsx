@@ -128,7 +128,6 @@ export default function ManageStockPage() {
     if (delta === 0 && !unitChanged) { setEditingQtyId(null); return }
     setSaving(true)
     try {
-      const date = new Date().toISOString().slice(0, 10)
       if (unitChanged) {
         await fetch('/api/sheets/config', {
           method: 'PUT',
@@ -137,23 +136,14 @@ export default function ManageStockPage() {
         })
         setIngredients(ingredients.map(i => i.id === ing.id ? { ...i, unit: editUnitValue } : i))
       }
-      if (delta !== 0) {
-        const unit = editUnitValue
-        if (delta > 0) {
-          await fetch('/api/sheets/purchases', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ date, store: 'Manual', items: [{ nameFr: ing.nameFr, nameTh: ing.nameTh, qty: delta, unit, pricePerUnit: 0, total: 0 }] })
-          })
-        } else {
-          await fetch('/api/sheets/stock', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ rows: [{ date, ingredient: ing.nameTh, amount_used: Math.abs(delta), unit, reason: 'manual_adjustment', menu: '' }] })
-          })
-        }
-        setQuantities({ ...quantities, [ing.nameTh]: editQtyValue })
-      }
+      
+      await fetch('/api/sheets/stock', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ingredient: ing.nameTh, qty: editQtyValue, unit: editUnitValue })
+      })
+      
+      setQuantities({ ...quantities, [ing.nameTh]: editQtyValue })
       setEditingQtyId(null)
       showSuccess()
     } catch (err: any) {
@@ -213,25 +203,25 @@ export default function ManageStockPage() {
           <div className="flex items-center gap-3 text-cinnabar font-bold text-lg mb-2">
              <Plus size={24} /> New Ingredient
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            <div className="space-y-3">
-              <label className="text-sm font-bold text-slate-400 uppercase tracking-widest ml-1">{t.manageStock.name} (TH)</label>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
+            <div className="flex flex-col gap-2.5">
+              <label className="text-xs font-bold text-slate-400 uppercase tracking-widest ml-1">{t.manageStock.name} (TH)</label>
               <input
                 className="w-full h-14 bg-mist-gray border-none rounded-xl px-5 text-xl font-bold text-slate-deep focus:ring-2 focus:ring-cinnabar/20 outline-none transition-all"
                 value={newIng.nameTh}
                 onChange={e => setNewIng({ ...newIng, nameTh: e.target.value })}
               />
             </div>
-            <div className="space-y-3">
-              <label className="text-sm font-bold text-slate-400 uppercase tracking-widest ml-1">{t.manageStock.name} (FR)</label>
+            <div className="flex flex-col gap-2.5">
+              <label className="text-xs font-bold text-slate-400 uppercase tracking-widest ml-1">{t.manageStock.name} (FR)</label>
               <input
                 className="w-full h-14 bg-mist-gray border-none rounded-xl px-5 text-xl font-bold text-slate-deep focus:ring-2 focus:ring-cinnabar/20 outline-none transition-all"
                 value={newIng.nameFr}
                 onChange={e => setNewIng({ ...newIng, nameFr: e.target.value })}
               />
             </div>
-            <div className="space-y-3">
-              <label className="text-sm font-bold text-slate-400 uppercase tracking-widest ml-1">{t.manageStock.unit}</label>
+            <div className="flex flex-col gap-2.5">
+              <label className="text-xs font-bold text-slate-400 uppercase tracking-widest ml-1">{t.manageStock.unit}</label>
               <select
                 className="w-full h-14 bg-mist-gray border-none rounded-xl px-5 text-xl font-bold text-slate-deep focus:ring-2 focus:ring-cinnabar/20 outline-none transition-all appearance-none cursor-pointer"
                 value={newIng.unit}
@@ -240,8 +230,8 @@ export default function ManageStockPage() {
                 {UNITS.map(u => <option key={u} value={u}>{u}</option>)}
               </select>
             </div>
-            <div className="space-y-3">
-              <label className="text-sm font-bold text-slate-400 uppercase tracking-widest ml-1">{t.manageStock.threshold}</label>
+            <div className="flex flex-col gap-2.5">
+              <label className="text-xs font-bold text-slate-400 uppercase tracking-widest ml-1">{t.manageStock.threshold}</label>
               <NumberInput
                 className="w-full h-14 bg-mist-gray border-none rounded-xl px-5 text-xl font-bold text-slate-deep focus:ring-2 focus:ring-cinnabar/20 outline-none transition-all"
                 value={newIng.threshold ?? 0}
@@ -271,17 +261,17 @@ export default function ManageStockPage() {
             <div key={ing.id}>
               {isEditingIng ? (
                 <div className="p-10 bg-amber/5 space-y-8 animate-in fade-in duration-200">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                    <div className="space-y-3">
-                      <label className="text-sm font-bold text-slate-400 uppercase">Name (TH)</label>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
+                    <div className="flex flex-col gap-2.5">
+                      <label className="text-xs font-bold text-slate-400 uppercase tracking-widest ml-1">Name (TH)</label>
                       <input
                         className="w-full h-14 bg-white border border-subtle-border rounded-xl px-5 text-lg font-bold text-slate-deep outline-none focus:border-cinnabar"
                         value={editIngForm.nameTh}
                         onChange={e => setEditIngForm({ ...editIngForm, nameTh: e.target.value })}
                       />
                     </div>
-                    <div className="space-y-3">
-                      <label className="text-sm font-bold text-slate-400 uppercase">Name (FR)</label>
+                    <div className="flex flex-col gap-2.5">
+                      <label className="text-xs font-bold text-slate-400 uppercase tracking-widest ml-1">Name (FR)</label>
                       <input
                         className="w-full h-14 bg-white border border-subtle-border rounded-xl px-5 text-lg font-bold text-slate-deep outline-none focus:border-cinnabar"
                         value={editIngForm.nameFr}
@@ -289,9 +279,9 @@ export default function ManageStockPage() {
                       />
                     </div>
                   </div>
-                  <div className="grid grid-cols-2 gap-8">
-                     <div className="space-y-3">
-                        <label className="text-sm font-bold text-slate-400 uppercase">Unit</label>
+                  <div className="grid grid-cols-2 gap-10">
+                     <div className="flex flex-col gap-2.5">
+                        <label className="text-xs font-bold text-slate-400 uppercase tracking-widest ml-1">Unit</label>
                         <select
                           className="w-full h-14 bg-white border border-subtle-border rounded-xl px-5 text-lg font-bold text-slate-deep outline-none cursor-pointer"
                           value={editIngForm.unit}
@@ -300,8 +290,8 @@ export default function ManageStockPage() {
                           {UNITS.map(u => <option key={u} value={u}>{u}</option>)}
                         </select>
                      </div>
-                     <div className="space-y-3">
-                        <label className="text-sm font-bold text-slate-400 uppercase">Threshold</label>
+                     <div className="flex flex-col gap-2.5">
+                        <label className="text-xs font-bold text-slate-400 uppercase tracking-widest ml-1">Threshold</label>
                         <NumberInput
                           className="w-full h-14 bg-white border border-subtle-border rounded-xl px-5 text-lg font-bold text-slate-deep outline-none"
                           value={editIngForm.threshold ?? 1}

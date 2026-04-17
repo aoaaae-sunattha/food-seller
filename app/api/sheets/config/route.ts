@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { readRows, appendRows, updateTab } from '../../../../lib/sheets'
+import { readRows, appendRows, updateTab, renameInventoryItem } from '../../../../lib/sheets'
 import type { Ingredient, MenuTemplate } from '../../../../types'
 import { randomUUID } from 'crypto'
 import { getServerSession } from 'next-auth'
@@ -197,9 +197,13 @@ export async function PUT(req: NextRequest) {
     const { id, type } = body
 
     const rows = await readRows(accessToken, 'config')
+    let oldName = ''
+    let newName = body.nameTh
+
     const updatedRows = rows.map(row => {
       if (row[1] === id) {
         if (type === 'ingredient') {
+          oldName = row[2]
           return ['ingredient', id, body.nameTh, body.nameFr, body.unit, String(body.threshold)]
         } else if (type === 'menu') {
           const ingredientStr = (body.ingredients || [])
@@ -216,6 +220,12 @@ export async function PUT(req: NextRequest) {
 
     const header = ['type', 'id', 'name_th', 'name_fr_or_price', 'unit_or_ingredients', 'threshold']
     await updateTab(accessToken, 'config', header, updatedRows)
+
+    // Keep Inventory in sync if an ingredient was renamed
+    if (type === 'ingredient' && oldName && oldName !== newName) {
+      await renameInventoryItem(accessToken, oldName, newName)
+    }
+
     return NextResponse.json({ success: true })
   } catch (error: any) {
     console.error('Config PUT error:', error.message)
@@ -234,8 +244,16 @@ export async function DELETE(req: NextRequest) {
     if (!id) return NextResponse.json({ error: 'Missing id' }, { status: 400 })
 
     const rows = await readRows(accessToken, 'config')
+    let targetIngredientName = ''
+    
     const filteredRows = rows
-      .filter(row => row[1] !== id)
+      .filter(row => {
+        if (row[1] === id) {
+          if (row[0] === 'ingredient') targetIngredientName = row[2]
+          return false
+        }
+        return true
+      })
       .map(row => {
         const newRow = [...row]
         while (newRow.length < 6) newRow.push('')
@@ -244,6 +262,16 @@ export async function DELETE(req: NextRequest) {
 
     const header = ['type', 'id', 'name_th', 'name_fr_or_price', 'unit_or_ingredients', 'threshold']
     await updateTab(accessToken, 'config', header, filteredRows)
+
+    // Cleanup inventory if an ingredient was deleted
+    if (targetIngredientName) {
+      const inventoryRows = await readRows(accessToken, 'inventory')
+      const filteredInventory = inventoryRows.filter(row => row[0] !== targetIngredientName)
+      if (filteredInventory.length !== inventoryRows.length) {
+        await updateTab(accessToken, 'inventory', ['ingredient','qty','unit','last_updated'], filteredInventory)
+      }
+    }
+
     return NextResponse.json({ success: true })
   } catch (error: any) {
     console.error('Config DELETE error:', error.message)
