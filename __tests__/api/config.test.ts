@@ -6,10 +6,11 @@ jest.mock('../../lib/sheets', () => ({
   readRows: jest.fn(),
   appendRows: jest.fn(),
   updateTab: jest.fn(),
+  renameInventoryItem: jest.fn().mockResolvedValue(undefined),
   getOrCreateMonthSheet: jest.fn().mockResolvedValue('sheet-id'),
 }))
 
-const { readRows, appendRows, updateTab } = require('../../lib/sheets')
+const { readRows, appendRows, updateTab, renameInventoryItem } = require('../../lib/sheets')
 const mockedGetServerSession = getServerSession as jest.Mock
 
 beforeEach(() => {

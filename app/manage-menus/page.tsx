@@ -38,6 +38,7 @@ export default function ManageMenusPage() {
   const [showAdd, setShowAdd] = useState(false)
   const [showQuickAdd, setShowQuickAdd] = useState(false)
   const [editingId, setEditingId] = useState<string | null>(null)
+  const [itemToDelete, setItemToDelete] = useState<MenuTemplate | null>(null)
   const [newMenu, setNewMenu] = useState<Partial<MenuTemplate>>({ nameTh: '', nameFr: '', pricePerBox: 0, ingredients: [] })
   const csvInputRef = useRef<HTMLInputElement>(null)
 
@@ -151,20 +152,28 @@ export default function ManageMenusPage() {
     setShowAdd(true)
   }
 
-  async function handleDelete(id: string) {
-    if (!confirm('Are you sure you want to delete this menu?')) return
+  function openDeleteConfirm(menu: MenuTemplate) {
+    setItemToDelete(menu)
+  }
+
+  async function confirmDelete() {
+    if (!itemToDelete) return
+    setSaving(true)
     try {
-      const res = await fetch(`/api/sheets/config?id=${id}&type=menu`, {
+      const res = await fetch(`/api/sheets/config?id=${itemToDelete.id}&type=menu`, {
         method: 'DELETE'
       })
       if (res.ok) {
-        setMenus(menus.filter(m => m.id !== id))
+        setMenus(menus.filter(m => m.id !== itemToDelete.id))
+        setItemToDelete(null)
       } else {
         const err = await res.json().catch(() => ({}))
         throw new Error(err.error || 'Delete failed')
       }
     } catch (err: any) {
       alert(err.message)
+    } finally {
+      setSaving(false)
     }
   }
 
@@ -527,7 +536,7 @@ export default function ManageMenusPage() {
                 </button>
                 <button
                   data-testid={`menu-delete-${menu.id}`}
-                  onClick={() => handleDelete(menu.id)}
+                  onClick={() => openDeleteConfirm(menu)}
                   className="w-10 h-10 bg-white text-slate-300 hover:text-red-500 border border-slate-200 rounded-lg flex items-center justify-center transition-all"
                   title="Delete"
                 >
@@ -538,6 +547,61 @@ export default function ManageMenusPage() {
           </div>
         )})}
       </div>
+
+      {/* Delete Confirmation Modal */}
+      {itemToDelete && (
+        <div className="fixed inset-0 z-[110] flex items-center justify-center p-4">
+          {/* Backdrop (non-clickable) */}
+          <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-md animate-in fade-in duration-300" />
+          
+          {/* Modal Content */}
+          <div className="relative w-full max-w-lg bg-white rounded-3xl shadow-2xl overflow-hidden border border-white/20 animate-in zoom-in-95 slide-in-from-bottom-4 duration-300">
+            {/* Top Close Button */}
+            <button 
+              onClick={() => setItemToDelete(null)}
+              className="absolute top-5 right-5 w-10 h-10 bg-slate-50 text-slate-400 hover:text-slate-600 rounded-full flex items-center justify-center transition-colors z-20"
+              aria-label="Close"
+            >
+              <X size={20} />
+            </button>
+
+            <div className="p-8 text-center bg-white">
+              <div className="w-20 h-20 bg-red-50 text-red-500 rounded-full flex items-center justify-center mx-auto mb-6">
+                <Trash2 size={40} />
+              </div>
+              <h3 className="text-2xl font-black text-slate-deep tracking-tight mb-2">Delete Menu?</h3>
+              <p className="text-slate-500 font-medium">
+                Are you sure you want to delete <span className="text-slate-deep font-bold">"{itemToDelete.nameTh}"</span>? 
+                This will remove the menu template from the system.
+              </p>
+            </div>
+
+            <div className="p-8 pt-0 flex gap-4 bg-white">
+              <button 
+                onClick={() => setItemToDelete(null)}
+                className="flex-1 h-16 bg-white border-2 border-slate-200 text-slate-500 font-bold rounded-2xl hover:bg-slate-50 active:scale-95 transition-all"
+              >
+                {t.common.cancel}
+              </button>
+              <button 
+                onClick={confirmDelete}
+                disabled={saving}
+                className="flex-1 h-16 bg-red-600 text-white font-bold rounded-2xl shadow-lg shadow-red-600/20 hover:bg-red-700 active:scale-95 transition-all flex items-center justify-center gap-2"
+              >
+                {saving ? (
+                  <div className="w-6 h-6 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                ) : (
+                  <>{t.common.delete || 'Delete'}</>
+                )}
+              </button>
+            </div>
+            
+            <div className="bg-slate-50 p-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest text-center">
+              Safety Check: This action is permanent
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

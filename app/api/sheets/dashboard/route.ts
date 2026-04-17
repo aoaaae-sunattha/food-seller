@@ -26,47 +26,30 @@ export async function GET(_req: NextRequest) {
     const now = new Date()
     const weekStart = startOfWeek(now).toISOString().slice(0, 10)
 
-    const [salesRows, purchaseRows, stockRows, configRows] = await Promise.all([
+    const [salesRows, purchaseRows, configRows, inventoryRows] = await Promise.all([
       readRows(accessToken, 'sales'),
       readRows(accessToken, 'purchases'),
-      readRows(accessToken, 'stock'),
       readRows(accessToken, 'config'),
+      readRows(accessToken, 'inventory'),
     ])
 
-    // Weekly income: sum column 7 (total) for rows in this week
+    // Weekly income: sum totalRecorded (column 9, index 8) for rows in this week
     const weeklyIncome = salesRows
-      .filter(r => r[0] >= weekStart)
-      .reduce((sum, r) => sum + Number(r[7]), 0)
+      .filter(r => r[1] >= weekStart)
+      .reduce((sum, r) => sum + Number(r[8] || 0), 0)
 
-    // Weekly expenses: sum column 7 (total) from purchases this week
+    // Weekly expenses: sum total (column 10, index 9) from purchases this week
     const weeklyExpenses = purchaseRows
       .filter(r => r[0] >= weekStart)
-      .reduce((sum, r) => sum + Number(r[7]), 0)
+      .reduce((sum, r) => sum + Number(r[9] || 0), 0)
 
-    // Stock quantities for ingredients
+    // Stock quantities from Inventory tab
     const quantities: Record<string, number> = {}
-    for (const r of purchaseRows) {
-      const name = r[3]; if (name) quantities[name] = (quantities[name] || 0) + Number(r[4])
+    for (const r of inventoryRows) {
+      const name = r[0]
+      const qty = Number(r[1])
+      if (name && !isNaN(qty)) quantities[name] = qty
     }
-    for (const r of stockRows) {
-      const name = r[1]; if (name) quantities[name] = (quantities[name] || 0) - Number(r[2])
-    }
-
-    // Stock quantities for menus (boxes prepared)
-    const menuQuantities: Record<string, number> = {}
-    // We don't have a "Menu Purchase" but we might have "Stock Additions" for menus?
-    // Looking at stockRows, if r[5] (menu) is set but r[1] (ingredient) is empty, it might be a menu addition?
-    // Actually, current system doesn't seem to have "Menu Production" rows yet.
-    // However, Sales deduct from menus.
-    for (const r of salesRows) {
-      const name = r[2]
-      const boxes = Number(r[3])
-      if (name && !isNaN(boxes)) menuQuantities[name] = (menuQuantities[name] || 0) - boxes
-    }
-
-    // We need a way to see "Boxes Prepared". 
-    // Let's assume stockRows with reason 'production' or similar adds to menuQuantities.
-    // For now, let's just use the config parsing to get both.
 
     const ingredients: Ingredient[] = []
     const menus: MenuTemplate[] = []
@@ -81,11 +64,11 @@ export async function GET(_req: NextRequest) {
           threshold: Number(row[5]),
         })
       } else if (row[0] === 'menu') {
-        let nameFr = '', price = 0, ingredientStr = ''
+        let nameFr = '', price = 0
         if (row[5] && row[5].includes(':')) {
-          nameFr = row[3] || '', price = Number(row[4]) || 0, ingredientStr = row[5]
+          nameFr = row[3] || '', price = Number(row[4]) || 0
         } else if (row[4] && row[4].includes(':')) {
-          nameFr = '', price = Number(row[3]) || 0, ingredientStr = row[4]
+          nameFr = '', price = Number(row[3]) || 0
         }
         menus.push({ id: row[1], nameTh: row[2], nameFr, pricePerBox: price, ingredients: [] })
       }
@@ -102,8 +85,7 @@ export async function GET(_req: NextRequest) {
     console.error('Dashboard GET error:', error.message)
     return NextResponse.json({ 
       error: 'Failed to aggregate dashboard data',
-      details: error.message,
-      code: error.code
+      details: error.message
     }, { status: 500 })
   }
 }

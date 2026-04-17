@@ -15,7 +15,7 @@ export function buildMonthTitle(date: Date): string {
   return `ร้านอาหาร — ${month} ${year}`
 }
 
-export type TabKey = 'purchases' | 'stock' | 'sales' | 'config' | 'summary' | 'receipt_summaries' | 'receipt_extract'
+export type TabKey = 'purchases' | 'stock' | 'sales' | 'config' | 'summary' | 'receipt_summaries' | 'receipt_extract' | 'inventory'
 
 const TAB_NAMES: Record<TabKey, string> = {
   purchases: 'Purchases',
@@ -25,6 +25,7 @@ const TAB_NAMES: Record<TabKey, string> = {
   summary: 'Monthly Summary',
   receipt_summaries: 'Receipt Summaries',
   receipt_extract: 'Receipt Extract',
+  inventory: 'Inventory',
 }
 
 export function getSheetTitle(tab: TabKey): string {
@@ -107,6 +108,9 @@ export async function getOrCreateMonthSheet(accessToken?: string, date: Date = n
         if (missingTabs.includes('Purchases')) {
           headerData.push({ range: 'Purchases!A1', values: [['date','store','name_fr','name_th','qty','unit','price','vat_rate','discount','total','receipt_id']] })
         }
+        if (missingTabs.includes('Inventory')) {
+          headerData.push({ range: 'Inventory!A1', values: [['ingredient','qty','unit','last_updated']] })
+        }
 
         if (headerData.length > 0) {
           await sheets.spreadsheets.values.batchUpdate({
@@ -135,6 +139,7 @@ export async function getOrCreateMonthSheet(accessToken?: string, date: Date = n
           { properties: { title: 'Config' } },
           { properties: { title: 'Receipt Summaries' } },
           { properties: { title: 'Receipt Extract' } },
+          { properties: { title: 'Inventory' } },
         ],
       },
     })
@@ -155,21 +160,24 @@ export async function getOrCreateMonthSheet(accessToken?: string, date: Date = n
           { range: 'Monthly Summary!A1', values: [['category','metric','value']] },
           { range: 'Receipt Summaries!A1', values: [['date','store','total','vat','discount','drive_url','id']] },
           { range: 'Receipt Extract!A1', values: [['date','store','name_fr','name_th','qty','unit','price','vat_rate','discount','total','receipt_id']] },
+          { range: 'Inventory!A1', values: [['ingredient','qty','unit','last_updated']] },
         ],
       },
     })
     console.log('Headers added.')
 
-    // Copy Config from previous month if it exists
+    // Copy Config and Inventory from previous month if it exists
     const prevDate = new Date(date.getFullYear(), date.getMonth() - 1, 1)
     const prevTitle = buildMonthTitle(prevDate)
-    console.log('Checking for previous month config:', prevTitle)
+    console.log('Checking for previous month data:', prevTitle)
     const prevSearch = await drive.files.list({
       q: `mimeType='application/vnd.google-apps.spreadsheet' and name='${prevTitle}' and trashed=false`,
       fields: 'files(id)',
     })
     if (prevSearch.data.files && prevSearch.data.files.length > 0) {
       const prevId = prevSearch.data.files[0].id!
+      
+      // Copy Config
       console.log('Copying config from:', prevId)
       const prevConfig = await sheets.spreadsheets.values.get({
         spreadsheetId: prevId,
@@ -183,6 +191,22 @@ export async function getOrCreateMonthSheet(accessToken?: string, date: Date = n
           requestBody: { values: prevConfig.data.values },
         })
         console.log('Config copied.')
+      }
+
+      // Copy Inventory
+      console.log('Copying inventory from:', prevId)
+      const prevInv = await sheets.spreadsheets.values.get({
+        spreadsheetId: prevId,
+        range: 'Inventory!A:Z',
+      })
+      if (prevInv.data.values && prevInv.data.values.length > 0) {
+        await sheets.spreadsheets.values.update({
+          spreadsheetId: newId,
+          range: 'Inventory!A1',
+          valueInputOption: 'RAW',
+          requestBody: { values: prevInv.data.values },
+        })
+        console.log('Inventory copied.')
       }
     }
 
@@ -223,6 +247,58 @@ export async function readRows(accessToken: string | undefined, tab: TabKey): Pr
     range: `${TAB_NAMES[tab]}!A2:Z`,
   })
   return (res.data.values as string[][]) || []
+}
+
+/**
+ * Updates the Inventory tab with incremental adjustments.
+ * This reads the current state, applies deltas, and writes back.
+ */
+export async function updateInventory(accessToken: string | undefined, adjustments: { ingredient: string; qtyDelta: number; unit: string }[]): Promise<void> {
+  const inventoryRows = await readRows(accessToken, 'inventory')
+  const date = new Date().toISOString().slice(0, 10)
+  
+  // Map existing into an object for fast lookup
+  const inventoryMap: Record<string, { qty: number, unit: string, last_updated: string }> = {}
+  inventoryRows.forEach(row => {
+    inventoryMap[row[0]] = { qty: Number(row[1]) || 0, unit: row[2], last_updated: row[3] }
+  })
+  
+  // Apply deltas
+  adjustments.forEach(adj => {
+    if (!inventoryMap[adj.ingredient]) {
+      inventoryMap[adj.ingredient] = { qty: 0, unit: adj.unit, last_updated: date }
+    }
+    inventoryMap[adj.ingredient].qty = Number((inventoryMap[adj.ingredient].qty + adj.qtyDelta).toFixed(3))
+    inventoryMap[adj.ingredient].last_updated = date
+  })
+  
+  // Convert back to rows
+  const newRows = Object.entries(inventoryMap).map(([ingredient, data]) => [ingredient, data.qty, data.unit, data.last_updated])
+  
+  // Write back using updateTab
+  await updateTab(accessToken, 'inventory', ['ingredient','qty','unit','last_updated'], newRows)
+}
+
+/**
+ * Renames an ingredient in the Inventory tab while preserving its quantity.
+ */
+export async function renameInventoryItem(accessToken: string | undefined, oldName: string, newName: string): Promise<void> {
+  if (oldName === newName) return
+  const inventoryRows = await readRows(accessToken, 'inventory')
+  const date = new Date().toISOString().slice(0, 10)
+  
+  let found = false
+  const updatedRows = inventoryRows.map(row => {
+    if (row[0] === oldName) {
+      found = true
+      return [newName, row[1], row[2], date]
+    }
+    return row
+  })
+
+  if (found) {
+    await updateTab(accessToken, 'inventory', ['ingredient','qty','unit','last_updated'], updatedRows)
+  }
 }
 
 /**

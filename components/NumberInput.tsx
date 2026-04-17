@@ -23,15 +23,15 @@ export function NumberInput({ value, onChange, className = '', ...props }: Numbe
   return (
     <input
       {...props}
-      type="number"
-      min="0"
-      className={`${className} [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none`}
+      type="text"
+      inputMode="decimal"
+      className={className}
       value={localValue}
       onChange={e => {
         const val = e.target.value
-        // Only allow non-negative numbers
-        if (val !== '' && Number(val) < 0) return
-        
+        // Only allow valid non-negative decimal numbers
+        if (val !== '' && !/^\d*\.?\d*$/.test(val)) return
+
         setLocalValue(val)
         onChange(val === '' ? 0 : Number(val))
       }}

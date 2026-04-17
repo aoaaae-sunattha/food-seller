@@ -15,13 +15,15 @@ beforeEach(() => {
   mockedGetServerSession.mockResolvedValue({ accessToken: 'fake-token' })
   readRows.mockImplementation((token: string, tab: string) => {
     if (tab === 'sales') return Promise.resolve([
-      ['2026-04-09', 'ผัดไทย', '10', '12', '120', '100', '20', '120'],
-      ['2026-04-10', 'ผัดไทย', '5', '12', '60', '60', '0', '60'],
+      ['id1', '2026-04-09', 'ผัดไทย', '10', '12', '120', '100', '20', '120'],
+      ['id2', '2026-04-10', 'ผัดไทย', '5', '12', '60', '60', '0', '60'],
     ])
     if (tab === 'purchases') return Promise.resolve([
-      ['2026-04-08', 'Carrefour', 'Riz', 'ข้าว', '10', 'kg', '2', '20'],
+      ['2026-04-08', 'Carrefour', 'Riz', 'ข้าว', '10', 'kg', '2', '20', '0', '20', 'rid1'],
     ])
-    if (tab === 'stock') return Promise.resolve([])
+    if (tab === 'inventory') return Promise.resolve([
+      ['ข้าว', '3', 'kg', '2026-04-11'],
+    ])
     if (tab === 'config') return Promise.resolve([
       ['ingredient', 'i1', 'ข้าว', 'Riz', 'kg', '5'],
     ])
@@ -29,12 +31,13 @@ beforeEach(() => {
   })
 })
 
-test('GET returns weekly income, expenses and low stock', async () => {
+test('GET returns weekly income, expenses and low stock from inventory', async () => {
   const res = await GET({} as any)
   expect(res.status).toBe(200)
   const data = await res.json()
   expect(data.weeklyIncome).toBe(180)  // 120 + 60
   expect(data.weeklyExpenses).toBe(20) // 1 purchase this week
-  expect(Array.isArray(data.lowStock)).toBe(true)
-  expect(readRows).toHaveBeenCalledWith('fake-token', 'sales')
+  expect(data.lowStock[0].ingredient.nameTh).toBe('ข้าว')
+  expect(data.lowStock[0].currentQty).toBe(3) // 3 <= 5 threshold
+  expect(readRows).toHaveBeenCalledWith('fake-token', 'inventory')
 })
